@@ -1,0 +1,71 @@
+<resources>
+
+    <string name="app_name">CLdemo</string>
+    <string name="edit_message">Enter a message</string>
+    <string name="button_send">Send</string>
+    <string name="button_start">Start</string>
+    <string name="button_stop">Stop</string>
+    <string name="menu_settings">Settings</string>
+    <string name="title_activity_main">CLdemo</string>
+    <string name="text_context_logging">Context Logging</string>
+    
+    <string name="pref_tracing_cat">Tracing</string>
+    <string name="pref_trace">Method Tracing</string>
+    <string name="pref_key_trace">pref_trace</string>
+    <string name="pref_trace_summ">Enable method tracing</string>
+    
+    <string name="pref_target_cat">Data targets</string>
+    <string name="pref_target_intent">Display</string>
+    <string name="pref_target_intent_summ">Show logs on the display</string>
+    
+    <string name="pref_logging_cat">Logging</string>
+    
+    <string name="pref_acceleration_listener">Acceleration</string>
+    <string name="pref_acceleration_listener_summ">Acceleration in directions X,Y,Z</string>
+    <string name="pref_key_acceleration_listener">pref_acceleration_listener</string>
+	
+	<string name="pref_traffic_listener">Traffic</string>
+    <string name="pref_traffic_listener_summ">Network traffic meter</string>
+    <string name="pref_key_traffic_listener">pref_traffic_listener</string>
+    
+    <string name="pref_wifi_state_listener">Wifi state</string>
+    <string name="pref_wifi_state_listener_summ">Wifi service state</string>
+	<string name="pref_key_wifi_state_listener">pref_wifi_state_listener</string>
+	
+    <string name="pref_wifirssi_listener">Wifi RSSI</string>
+    <string name="pref_wifirssi_listener_summ">Wifi strength</string>
+	<string name="pref_key_wifirssi_listener">pref_wifirssi_listener</string>
+	
+	<string name="pref_wifi_connection_state_listener">Wifi connection</string>
+    <string name="pref_wifi_connection_state_listener_summ">Wifi connection state</string>
+	<string name="pref_key_wifi_connection_state_listener">pref_wifi_connection_state_listener</string>
+	
+	<string name="pref_wifibssid_listener">Wifi BSSID</string>
+    <string name="pref_wifibssid_listener_summ">Access point MAC</string>
+	<string name="pref_key_wifibssid_listener">pref_wifibssid_listener</string>
+	
+	<string name="pref_screen_state_listener">Screen state</string>
+    <string name="pref_screen_state_listener_summ">On/Off state</string>
+	<string name="pref_key_screen_state_listener">pref_screen_state_listener</string>
+	
+	<string name="pref_screen_brightness_listener">Screen brigthness</string>
+    <string name="pref_screen_brightness_listener_summ">Screen brigthness level</string>
+	<string name="pref_key_screen_brightness_listener">pref_screen_brightness_listener</string>
+	
+	<string name="pref_cpu_listener">Cpu</string>
+    <string name="pref_cpu_listener_summ">Cpu usage</string>
+	<string name="pref_key_cpu_listener">pref_cpu_listener</string>
+	
+	<string name="pref_gps_status_listener">GPS status</string>
+    <string name="pref_gps_status_listener_summ">GPS satellites avaibility</string>
+	<string name="pref_key_gps_status_listener">gps_status_listener</string>
+	
+	<string name="pref_gps_location_listener">GPS location</string>
+    <string name="pref_gps_location_listener_summ">GPS location</string>
+	<string name="pref_key_gps_location_listener">gps_location_listener</string>
+	
+	<string name="pref_new_test_listener">TEST</string>
+    <string name="pref_new_test_listener_summ">newly implemented listener</string>
+	<string name="pref_key_new_test_listener">new_test_listener</string>
+	
+</resources>
