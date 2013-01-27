@@ -19,6 +19,8 @@ package com.android.traceview;
 import org.eclipse.jface.resource.FontRegistry;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
+import org.eclipse.swt.events.ControlEvent;
+import org.eclipse.swt.events.ControlListener;
 import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseMoveListener;
@@ -62,6 +64,15 @@ public class TimeLineView extends Composite implements Observer {
     private RowLabels mLabels;
     private SashForm mSashForm;
     private int mScrollOffsetY;
+
+	// >>>>>added
+	private final HashMap<String, LogRowData> mLogRowByName;
+	private LogRowData[] mLogRows;
+	final SashForm mLogSashForm;
+	private final LogRowLabels mLogLabels;
+	private final LogRowLabels mLogSurface;
+	private int mLogScrollOffsetY;
+	// <<<<<<added
 
     public static final int PixelsPerTick = 50;
     private TickScaler mScaleInfo = new TickScaler(0, 0, 0, PixelsPerTick);
@@ -107,6 +118,13 @@ public class TimeLineView extends Composite implements Observer {
     private Call mHighlightCall;
     private static final int MinInclusiveRange = 3;
 
+	// <<<<<<<<added
+	private int mMouseLogRow = -1;
+	private int mNumLogRows;
+	private int mStartLogRow;
+	private int mEndLogRow;
+	// >>>>>>>>added
+
     /** Setting the fonts looks good on Linux but bad on Macs */
     private boolean mSetFonts = false;
 
@@ -127,6 +145,10 @@ public class TimeLineView extends Composite implements Observer {
         public Block getParentBlock();
     }
 
+	public static interface LogRow extends Row {
+		public int getType();
+	}
+
     public static interface Row {
         public int getId();
         public String getName();
@@ -142,10 +164,20 @@ public class TimeLineView extends Composite implements Observer {
         }
     }
 
-    public TimeLineView(Composite parent, TraceReader reader,
+	public static class LogRecord {
+		LogRow row;
+
+		public LogRecord(LogRow row) {
+			this.row = row;
+		}
+	}
+
+	public TimeLineView(Composite parent, TraceReader reader,
+			ContextLogReader logReader,
             SelectionController selectionController) {
         super(parent, SWT.NONE);
         mRowByName = new HashMap<String, RowData>();
+		mLogRowByName = new HashMap<String, LogRowData>();
         this.mSelectionController = selectionController;
         selectionController.addObserver(this);
         mUnits = reader.getTraceUnits();
@@ -184,9 +216,11 @@ public class TimeLineView extends Composite implements Observer {
 
         setLayout(new FillLayout());
 
+        SashForm mBigSashForm = new SashForm(this, SWT.VERTICAL);
+        
         // Create a sash form for holding two canvas views, one for the
         // thread labels and one for the thread timeline.
-        mSashForm = new SashForm(this, SWT.HORIZONTAL);
+        mSashForm = new SashForm(mBigSashForm, SWT.HORIZONTAL);
         mSashForm.setBackground(mColorGray);
         mSashForm.SASH_WIDTH = 3;
 
@@ -226,6 +260,103 @@ public class TimeLineView extends Composite implements Observer {
         gridData = new GridData(GridData.FILL_BOTH);
         mSurface.setLayoutData(gridData);
         mSashForm.setWeights(new int[] { 1, 5 });
+        
+		// >>>>>>>>>>>>>add
+
+		mLogSashForm = new SashForm(mBigSashForm, SWT.HORIZONTAL);
+        mLogSashForm.SASH_WIDTH = 3;
+        
+        Composite logLabelsComposite = new Composite(mLogSashForm, SWT.NONE);
+		layout = new GridLayout(1, true /* make columns equal width */);
+		layout.marginHeight = 0;
+		layout.marginWidth = 0;
+		layout.verticalSpacing = 1;
+		logLabelsComposite.setLayout(layout);
+		// logLabelsComposite.setBackground(display.getSystemColor(SWT.COLOR_CYAN));
+		mLogLabels = new LogRowLabels(logLabelsComposite);
+        gridData = new GridData(GridData.FILL_BOTH);
+        mLogLabels.setLayoutData(gridData);
+        
+		// final ScrollBar vLogBar = mLogLabels.getVerticalBar();
+		// vLogBar.addListener(SWT.Selection, new Listener() {
+		// @Override
+		// public void handleEvent(Event e) {
+		// mLogScrollOffsetY = vLogBar.getSelection();
+		// Point dim = mSurface.getSize();
+		// int newScrollOffsetY = computeVisibleLogRows(dim.y);
+		// if (newScrollOffsetY != mLogScrollOffsetY) {
+		// mLogScrollOffsetY = newScrollOffsetY;
+		// vLogBar.setSelection(newScrollOffsetY);
+		// }
+		// mLogLabels.redraw();
+		// }
+		// });
+
+        Composite logDataComposite = new Composite(mLogSashForm, SWT.NONE);
+		layout = new GridLayout(1, true /* make columns equal width */);
+		layout.marginHeight = 0;
+		layout.marginWidth = 0;
+		layout.verticalSpacing = 1;
+		logDataComposite.setLayout(layout);
+        logDataComposite.setBackground(display.getSystemColor(SWT.COLOR_RED));
+		mLogSurface = new LogRowLabels(logDataComposite);
+        gridData = new GridData(GridData.FILL_BOTH);
+        mLogSurface.setLayoutData(gridData);
+        mLogSashForm.setWeights(new int[] {1,5});
+        
+        mBigSashForm.setWeights(new int[] {5,2});
+        
+		// logLabelsComposite.addControlListener(new ControlListener() {
+		//
+		// @Override
+		// public void controlResized(ControlEvent arg0) {
+		// mSashForm.setWeights(mLogSashForm.getWeights());
+		//
+		// }
+		//
+		// @Override
+		// public void controlMoved(ControlEvent arg0) {
+		// // TODO Auto-generated method stub
+		//
+		// }
+		// });
+
+		mLogLabels.addMouseMoveListener(new MouseMoveListener() {
+			@Override
+			public void mouseMove(MouseEvent me) {
+				mLogLabels.mouseMove(me);
+			}
+		});
+
+		mLogLabels.addControlListener(new ControlListener() {
+
+			@Override
+			public void controlResized(ControlEvent arg0) {
+				mSashForm.setWeights(mLogSashForm.getWeights());
+			}
+
+			@Override
+			public void controlMoved(ControlEvent arg0) {
+				// TODO Auto-generated method stub
+
+			}
+		});
+        
+        corner.addControlListener(new ControlListener() {
+			
+			@Override
+			public void controlResized(ControlEvent arg0) {
+				mLogSashForm.setWeights(mSashForm.getWeights());
+			}
+			
+			@Override
+			public void controlMoved(ControlEvent arg0) {
+				// TODO Auto-generated method stub
+				
+			}
+		});
+
+		// <<<<<<<<<Added
 
         final ScrollBar vBar = mSurface.getVerticalBar();
         vBar.addListener(SWT.Selection, new Listener() {
@@ -341,6 +472,7 @@ public class TimeLineView extends Composite implements Observer {
         });
 
         setData(reader.getThreadTimeRecords());
+		setLogData(logReader.getLogRecords());
     }
 
     @Override
@@ -373,9 +505,39 @@ public class TimeLineView extends Composite implements Observer {
                 startHighlighting();
             }
         }
-        if (foundHighlight == false)
-            mSurface.clearHighlights();
+        if (foundHighlight == false) {
+			mSurface.clearHighlights();
+		}
     }
+
+	public void setLogData(ArrayList<LogRecord> logRecords) {
+		if (logRecords == null) {
+			logRecords = new ArrayList<LogRecord>();
+		}
+
+		for (LogRecord rec : logRecords) {
+			LogRow row = rec.row;
+
+			String rowName = row.getName();
+			LogRowData rd = mLogRowByName.get(rowName);
+			if (rd == null) {
+				rd = new LogRowData(row);
+				mLogRowByName.put(rowName, rd);
+			}
+			
+		}
+
+		// Sort the rows into decreasing elapsed time
+		Collection<LogRowData> rv = mLogRowByName.values();
+		mLogRows = rv.toArray(new LogRowData[rv.size()]);
+
+		mNumLogRows = mLogRows.length;
+
+		// Assign ranks to the sorted rows
+		// for (int ii = 0; ii < mLogRows.length; ++ii) {
+		// mLogRows[ii].mRank = ii;
+		// }
+	}
 
     public void setData(ArrayList<Record> records) {
         if (records == null)
@@ -644,6 +806,83 @@ public class TimeLineView extends Composite implements Observer {
             gcImage.dispose();
         }
     }
+
+	private class LogRowLabels extends Canvas {
+
+		/** The space between the row label and the sash line */
+		private static final int labelMarginX = 2;
+
+		public LogRowLabels(Composite parent) {
+			super(parent, SWT.NO_BACKGROUND);
+			addPaintListener(new PaintListener() {
+				@Override
+				public void paintControl(PaintEvent pe) {
+					draw(pe.display, pe.gc);
+				}
+			});
+		}
+
+		private void mouseMove(MouseEvent me) {
+			int rownum = (me.y + mLogScrollOffsetY) / rowYSpace;
+			if (mMouseLogRow != rownum) {
+				mMouseLogRow = rownum;
+				redraw();
+				// mSurface.redraw();
+			}
+		}
+
+		private void draw(Display display, GC gc) {
+			// if (mSegments.length == 0) {
+			// // gc.setBackground(colorBackground);
+			// // gc.fillRectangle(getBounds());
+			// return;
+			// }
+			Point dim = getSize();
+
+			// Create an image for double-buffering
+			Image image = new Image(display, getBounds());
+
+			// Set up the off-screen gc
+			GC gcImage = new GC(image);
+			if (mSetFonts) {
+				gcImage.setFont(mFontRegistry.get("medium")); //$NON-NLS-1$
+			}
+
+			if (mNumLogRows > 2) {
+				// Draw the row background stripes
+				gcImage.setBackground(mColorRowBack);
+				for (int ii = 1; ii < mNumLogRows; ii += 2) {
+					LogRowData rd = mLogRows[ii];
+					int y1 = rd.mRank * rowYSpace - mLogScrollOffsetY;
+					gcImage.fillRectangle(0, y1, dim.x, rowYSpace);
+				}
+			}
+
+			// Draw the row labels
+			int offsetY = rowYMarginHalf - mLogScrollOffsetY;
+			for (int ii = mStartLogRow; ii <= mEndLogRow; ++ii) {
+				LogRowData rd = mLogRows[ii];
+				int y1 = rd.mRank * rowYSpace + offsetY;
+				Point extent = gcImage.stringExtent(rd.mName);
+				int x1 = dim.x - extent.x - labelMarginX;
+				gcImage.drawString(rd.mName, x1, y1, true);
+			}
+
+			// Draw a highlight box on the row where the mouse is.
+			if (mMouseLogRow >= mStartLogRow && mMouseLogRow <= mEndLogRow) {
+				gcImage.setForeground(mColorGray);
+				int y1 = mMouseLogRow * rowYSpace - mLogScrollOffsetY;
+				gcImage.drawRectangle(0, y1, dim.x, rowYSpace);
+			}
+
+			// Draw the off-screen buffer to the screen
+			gc.drawImage(image, 0, 0);
+
+			// Clean up
+			image.dispose();
+			gcImage.dispose();
+		}
+	}
 
     private class BlankCorner extends Canvas {
         public BlankCorner(Composite parent) {
@@ -2043,6 +2282,26 @@ public class TimeLineView extends Composite implements Observer {
         return offsetY;
     }
 
+	private int computeVisibleLogRows(int ydim) {
+		// If we resize, then move the bottom row down. Don't allow the scroll
+		// to waste space at the bottom.
+		int offsetY = mLogScrollOffsetY;
+		int spaceNeeded = mNumLogRows * rowYSpace;
+		if (offsetY + ydim > spaceNeeded) {
+			offsetY = spaceNeeded - ydim;
+			if (offsetY < 0) {
+				offsetY = 0;
+			}
+		}
+		mStartLogRow = offsetY / rowYSpace;
+		mEndLogRow = (offsetY + ydim) / rowYSpace;
+		if (mEndLogRow >= mNumLogRows) {
+			mEndLogRow = mNumLogRows - 1;
+		}
+
+		return offsetY;
+	}
+
     private void startHighlighting() {
         // System.out.printf("startHighlighting()\n");
         mSurface.mHighlightStep = 0;
@@ -2051,6 +2310,18 @@ public class TimeLineView extends Composite implements Observer {
         mSurface.mCachedEndRow = -1;
         getDisplay().timerExec(0, mSurface.mHighlightAnimator);
     }
+
+	// <<<<<<<<<<<ADDED
+	private static class LogRowData {
+		LogRowData(LogRow row) {
+			mName = row.getName();
+		}
+
+		private final String mName;
+		private int mRank;
+	}
+
+	// >>>>>>>>>>>>Till here
 
     private static class RowData {
         RowData(Row row) {

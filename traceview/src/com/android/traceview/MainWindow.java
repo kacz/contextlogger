@@ -46,16 +46,19 @@ public class MainWindow extends ApplicationWindow {
 
     private final static String PING_NAME = "Traceview";
 
-    private TraceReader mReader;
-    private String mTraceName;
+    private final TraceReader mReader;
+	private final ContextLogReader mLogReader;
+    private final String mTraceName;
 
     // A global cache of string names.
     public static HashMap<String, String> sStringCache = new HashMap<String, String>();
 
-    public MainWindow(String traceName, TraceReader reader) {
+	public MainWindow(String traceName, TraceReader reader,
+			ContextLogReader logReader) {
         super(null);
         mReader = reader;
         mTraceName = traceName;
+		mLogReader = logReader;
 
         addMenuBar();
     }
@@ -103,7 +106,7 @@ public class MainWindow extends ApplicationWindow {
         sashForm1.setLayoutData(data);
 
         // Create the timeline view
-        new TimeLineView(sashForm1, mReader, selectionController);
+		new TimeLineView(sashForm1, mReader, mLogReader, selectionController);
 
         // Create the profile view
         new ProfileView(sashForm1, mReader, selectionController);
@@ -224,6 +227,7 @@ public class MainWindow extends ApplicationWindow {
 
     public static void main(String[] args) {
         TraceReader reader = null;
+		ContextLogReader logReader = null;
         boolean regression = false;
 
         // ping the usage server
@@ -290,11 +294,19 @@ public class MainWindow extends ApplicationWindow {
                 System.exit(1);
                 return;
             }
+			try {
+				logReader = new ContextLogReader(traceName);
+			} catch (IOException e) {
+				System.err.printf("Failed to read the trace file");
+				e.printStackTrace();
+				System.exit(1);
+				return;
+			}
         }
 
         reader.getTraceUnits().setTimeScale(TraceUnits.TimeScale.MilliSeconds);
 
         Display.setAppName("Traceview");
-        new MainWindow(traceName, reader).run();
+		new MainWindow(traceName, reader, logReader).run();
     }
 }
