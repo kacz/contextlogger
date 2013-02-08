@@ -1,6 +1,8 @@
 package com.android.traceview;
 
 import java.io.BufferedReader;
+import java.io.DataInputStream;
+import java.io.EOFException;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -14,13 +16,16 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import cz.cuni.kacz.contextlogger.LogType;
+
 public class ContextLogReader {
 	
 	private final String mTraceFileName;
 	private Map<Integer, ContextLogData> mLogMap = null;
 	ContextLogData[] mSortedLogs;
 	int mVersionNumber;
-	
+	long mStartTime;
+
 	// A regex for matching the thread "id name" lines in the .key file
     private static final Pattern mIdTypeNamePattern = Pattern.compile("(\\d+)\\s(\\d+)\\s(.*)");  //$NON-NLS-1$
 	
@@ -28,6 +33,8 @@ public class ContextLogReader {
     static final int PARSE_LOGTYPES = 1;
     static final int PARSE_METHODS = 2;
     static final int PARSE_OPTIONS = 4;
+
+	private static final int DATA_MAGIC = 0x574f4c53;
 
     private enum ClockSource {
         THREAD_CPU, WALL, DUAL,
@@ -43,10 +50,113 @@ public class ContextLogReader {
 	
 	void generateTrees() throws IOException {
         long offset = parseKeys();
-//        parseData(offset);
+		parseData(offset);
 		analyzeData();
     }
 	
+	void parseData(long offset) throws IOException {
+		DataInputStream in = null;
+		try {
+			in = new DataInputStream(new FileInputStream(mTraceFileName+".log"));
+			in.skip(offset);
+			int magic = in.readInt();
+			if (magic != DATA_MAGIC) {
+				// TODO
+			}
+			byte version = in.readByte();
+			mStartTime = in.readLong();
+
+			try {
+				while (true) {
+					int logId = in.readInt();
+					ContextLogData ld = mLogMap.get(logId);
+					if (ld == null) {
+						// TODO: return with error
+					}
+					long timeStamp = in.readLong();
+					switch (ld.getType()) {
+					case INT:{
+						int val = in.readInt();
+						ld.getIntDataMap().put(timeStamp, val);
+						break;
+					}
+					case LONG: {
+						long val = in.readLong();
+						ld.getLongDataMap().put(timeStamp, val);
+						break;
+					}
+					case FLOAT: {
+						float val = in.readFloat();
+						ld.getFloatDataMap().put(timeStamp, val);
+						break;
+					}
+					case DOUBLE: {
+						double val = in.readDouble();
+						ld.getDoubleDataMap().put(timeStamp, val);
+						break;
+					}
+					default: {// String
+						String val = in.readUTF();
+						ld.getStringDataMap().put(timeStamp, val);
+						break;
+					}
+
+					}
+
+				}
+			} catch (EOFException e) {
+				// TODO EOF reached
+			}
+		} finally {
+			if (in != null) {
+				in.close();
+			}
+		}
+
+		// dump
+/*
+		for (ContextLogData ld : mLogMap.values()) {
+			switch (ld.getType()) {
+			case INT: {
+				Map<Long, Integer> map = ld.getIntDataMap();
+				for (Long ts : map.keySet()) {
+					System.out.println(ld.getName() + ts + " " + map.get(ts));
+				}
+				break;
+			}
+			case LONG: {
+				Map<Long, Long> map = ld.getLongDataMap();
+				for (Long ts : map.keySet()) {
+					System.out.println(ld.getName() + ts + " " + map.get(ts));
+				}
+				break;
+			}
+			case FLOAT: {
+				Map<Long, Float> map = ld.getFloatDataMap();
+				for (Long ts : map.keySet()) {
+					System.out.println(ld.getName() + ts + " " + map.get(ts));
+				}
+				break;
+			}
+			case DOUBLE: {
+				Map<Long, Double> map = ld.getDoubleDataMap();
+				for (Long ts : map.keySet()) {
+					System.out.println(ld.getName() + ts + " " + map.get(ts));
+				}
+				break;
+			}
+			case STRING: {
+				Map<Long, String> map = ld.getStringDataMap();
+				for (Long ts : map.keySet()) {
+					System.out.println(ld.getName() + ts + " " + map.get(ts));
+				}
+				break;
+			}
+			}
+		}
+		*/
+	}
+
 	long parseKeys() throws IOException {
         long offset = 0;
         BufferedReader in = null;
@@ -107,6 +217,7 @@ public class ContextLogReader {
     }
 	
 	void parseOption(String line) {
+		// no options available in current version
 	}
 	
 	void parseLogTypes(String line) {
@@ -127,7 +238,8 @@ public class ContextLogReader {
 		}
 
         int id = Integer.decode(idStr);
-        int type = Integer.decode(typeStr);
+		int typeInt = Integer.decode(typeStr);
+		LogType type = LogType.byType(typeInt);
 		mLogMap.put(id, new ContextLogData(id, type, name));
 	}
 	
@@ -171,4 +283,7 @@ public class ContextLogReader {
 		return mLogMap;
 	}
 
+	public long getStartTime() {
+		return mStartTime;
+	}
 }

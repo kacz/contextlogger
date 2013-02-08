@@ -51,6 +51,7 @@ public class DmTraceReader extends TraceReader {
     };
 
     private int mVersionNumber;
+    private long mTraceStartTime;
     private boolean mRegression;
     private ProfileProvider mProfileProvider;
     private String mTraceFileName;
@@ -143,7 +144,7 @@ public class DmTraceReader extends TraceReader {
         int offsetToData = buffer.getShort() - 16;
 
         // read startWhen
-        buffer.getLong();
+        mTraceStartTime = buffer.getLong();
 
         // read record size
         if (version == 1) {
@@ -704,6 +705,11 @@ public class DmTraceReader extends TraceReader {
     @Override
     public ThreadData[] getThreads() {
         return mSortedThreads;
+    }
+    
+    @Override
+	public long getStartTime() {
+    	return mTraceStartTime;
     }
 
     @Override

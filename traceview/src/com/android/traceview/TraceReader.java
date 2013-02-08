@@ -24,8 +24,9 @@ public abstract class TraceReader {
     private TraceUnits mTraceUnits;
 
     public TraceUnits getTraceUnits() {
-        if (mTraceUnits == null)
-            mTraceUnits = new TraceUnits();
+        if (mTraceUnits == null) {
+			mTraceUnits = new TraceUnits();
+		}
         return mTraceUnits;
     }
 
@@ -72,6 +73,10 @@ public abstract class TraceReader {
     public TimeBase getPreferredTimeBase() {
         return TimeBase.CPU_TIME;
     }
+
+	public long getStartTime() {
+		return 0;
+	}
 
     public String getClockSource() {
         return null;
