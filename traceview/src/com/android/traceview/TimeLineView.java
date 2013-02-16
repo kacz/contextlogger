@@ -72,7 +72,7 @@ public class TimeLineView extends Composite implements Observer {
 	private LogRowData[] mLogRows;
 	final SashForm mLogSashForm;
 	private final LogRowLabels mLogLabels;
-	private final LogRowLabels mLogSurface;
+	private final LogSurface mLogSurface;
 	private int mLogScrollOffsetY;
 
 	private static final int logRowHeight = 30;
@@ -93,7 +93,9 @@ public class TimeLineView extends Composite implements Observer {
     private final Color mColorDarkGray;
     private final Color mColorForeground;
     private final Color mColorRowBack;
+	private final Color mColorLogRowBack;
     private final Color mColorZoomSelection;
+	private final Color mBigSashColor;
     private final FontRegistry mFontRegistry;
 
     /** vertical height of drawn blocks in each row */
@@ -202,7 +204,9 @@ public class TimeLineView extends Composite implements Observer {
         // mColorBackground = display.getSystemColor(SWT.COLOR_WHITE);
         mColorForeground = display.getSystemColor(SWT.COLOR_BLACK);
         mColorRowBack = new Color(display, 240, 240, 255);
+		mColorLogRowBack = new Color(display, 215, 215, 255);
         mColorZoomSelection = new Color(display, 230, 230, 230);
+		mBigSashColor = display.getSystemColor(SWT.COLOR_DARK_GRAY);
 
         mFontRegistry = new FontRegistry(display);
         mFontRegistry.put("small",  //$NON-NLS-1$
@@ -308,12 +312,14 @@ public class TimeLineView extends Composite implements Observer {
 		layout.verticalSpacing = 1;
 		logDataComposite.setLayout(layout);
         logDataComposite.setBackground(display.getSystemColor(SWT.COLOR_RED));
-		mLogSurface = new LogRowLabels(logDataComposite);
+		mLogSurface = new LogSurface(logDataComposite);// LogRowLabels(logDataComposite);
         gridData = new GridData(GridData.FILL_BOTH);
         mLogSurface.setLayoutData(gridData);
         mLogSashForm.setWeights(new int[] {1,5});
         
         mBigSashForm.setWeights(new int[] {5,2});
+		mBigSashForm.setSashWidth(3);
+		mBigSashForm.setBackground(mBigSashColor);
         
 		// logLabelsComposite.addControlListener(new ControlListener() {
 		//
@@ -387,6 +393,73 @@ public class TimeLineView extends Composite implements Observer {
 			}
 		});
 
+		mLogSurface.addMouseMoveListener(new MouseMoveListener() {
+			@Override
+			public void mouseMove(MouseEvent me) {
+				mLogSurface.mouseMove(me);
+			}
+		});
+
+		mLogSurface.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseUp(MouseEvent me) {
+				mLogSurface.mouseUp(me);
+			}
+
+			@Override
+			public void mouseDown(MouseEvent me) {
+				mLogSurface.mouseDown(me);
+			}
+
+			@Override
+			public void mouseDoubleClick(MouseEvent me) {
+				// mLogSurface.mouseDoubleClick(me);
+			}
+		});
+
+		mLogSurface.addListener(SWT.Resize, new Listener() {
+			@Override
+			public void handleEvent(Event e) {
+				Point dim = mLogSurface.getSize();
+
+				// If we don't need the scroll bar then don't display it.
+				if (dim.y >= mNumLogRows * logRowYSpace) {
+					vLogBar.setVisible(false);
+				} else {
+					vLogBar.setVisible(true);
+				}
+				int newScrollOffsetY = computeVisibleLogRows(dim.y);
+				if (newScrollOffsetY != mLogScrollOffsetY) {
+					mLogScrollOffsetY = newScrollOffsetY;
+					vLogBar.setSelection(newScrollOffsetY);
+				}
+
+				int spaceNeeded = mNumLogRows * logRowYSpace;
+				vLogBar.setMaximum(spaceNeeded);
+				vLogBar.setThumb(dim.y);
+
+				mLogLabels.redraw();
+				mLogSurface.redraw();
+			}
+		});
+
+		mLogSurface.addMouseWheelListener(new MouseWheelListener() {
+			@Override
+			public void mouseScrolled(MouseEvent me) {
+				mSurface.mouseScrolled(me);
+			}
+		});
+
+		final ScrollBar hLogBar = mLogSurface.getHorizontalBar();
+		hLogBar.addListener(SWT.Selection, new Listener() {
+			@Override
+			public void handleEvent(Event e) {
+				mSurface.setScaleFromHorizontalScrollBar(hLogBar.getSelection());
+				mSurface.redraw();
+				mLogSurface.redraw();
+			}
+		});
+
 		// <<<<<<<<<Added
 
         final ScrollBar vBar = mSurface.getVerticalBar();
@@ -411,8 +484,14 @@ public class TimeLineView extends Composite implements Observer {
             public void handleEvent(Event e) {
                 mSurface.setScaleFromHorizontalScrollBar(hBar.getSelection());
                 mSurface.redraw();
+				mLogSurface.redraw();
             }
         });
+
+		// hBar on Surface is hidden, if LogSurface is present
+		if (mLogSurface != null) {
+			hBar.setVisible(false);
+		}
 
         mSurface.addListener(SWT.Resize, new Listener() {
             @Override
@@ -859,7 +938,7 @@ public class TimeLineView extends Composite implements Observer {
 		private static final int labelMarginX = 2;
 
 		public LogRowLabels(Composite parent) {
-			super(parent, SWT.NO_BACKGROUND | SWT.V_SCROLL);
+			super(parent, SWT.NO_BACKGROUND);
 			addPaintListener(new PaintListener() {
 				@Override
 				public void paintControl(PaintEvent pe) {
@@ -896,7 +975,7 @@ public class TimeLineView extends Composite implements Observer {
 
 			if (mNumLogRows > 2) {
 				// Draw the row background stripes
-				gcImage.setBackground(mColorRowBack);
+				gcImage.setBackground(mColorLogRowBack);
 				for (int ii = 1; ii < mNumLogRows; ii += 2) {
 					LogRowData rd = mLogRows[ii];
 					// test
@@ -912,11 +991,15 @@ public class TimeLineView extends Composite implements Observer {
 				LogRowData rd = mLogRows[ii];
 				// test
 				int y1 = ii * logRowYSpace + offsetY;
+				String label = "[" + rd.mId + "] " + rd.mName + " ("
+						+ rd.mType.name() + ")";
 				// int y1 = rd.mRank * rowYSpace + offsetY;
-				Point extent = gcImage.stringExtent(rd.mName);
+				Point extent = gcImage.stringExtent(label);
 				int x1 = dim.x - extent.x - labelMarginX;
-				gcImage.drawString(rd.mName, x1, y1, true);
+				gcImage.drawString(label, x1, y1, true);
+				System.out.println(label);
 			}
+			System.out.println("========");
 
 			// Draw a highlight box on the row where the mouse is.
 			if (mMouseLogRow >= mStartLogRow && mMouseLogRow <= mEndLogRow) {
@@ -1013,6 +1096,7 @@ public class TimeLineView extends Composite implements Observer {
         private void mouseMove(MouseEvent me) {
             me.y = -1;
             mSurface.mouseMove(me);
+			mLogSurface.mouseMove(me);
         }
 
         private void mouseDown(MouseEvent me) {
@@ -1203,6 +1287,486 @@ public class TimeLineView extends Composite implements Observer {
         Normal, Marking, Scaling, Animating, Scrolling
     };
 
+	private class LogSurface extends Canvas {
+
+		private final GraphicsState mGraphicsState;
+		private int mCachedStartRow;
+		private int mCachedEndRow;
+		private double mCachedMinVal;
+		private double mCachedMaxVal;
+		private double mLimitMinVal;
+		private double mLimitMaxVal;
+		private final Point mMouse = new Point(LeftMargin, 0);
+		private int mMouseMarkStartX;
+		private int mMouseMarkEndX;
+
+		private final Cursor mNormalCursor;
+		private final Cursor mIncreasingCursor;
+		private final Cursor mDecreasingCursor;
+
+		// The minimum margin on each side of the zoom window, in pixels.
+		private static final int MinZoomPixelMargin = 10;
+
+		public LogSurface(Composite parent) {
+			super(parent, SWT.NO_BACKGROUND | SWT.V_SCROLL | SWT.H_SCROLL);
+			mGraphicsState = GraphicsState.Normal;
+
+			Display display = getDisplay();
+
+			mNormalCursor = new Cursor(display, SWT.CURSOR_CROSS);
+			mIncreasingCursor = new Cursor(display, SWT.CURSOR_SIZEE);
+			mDecreasingCursor = new Cursor(display, SWT.CURSOR_SIZEW);
+
+			addPaintListener(new PaintListener() {
+				@Override
+				public void paintControl(PaintEvent pe) {
+					draw(pe.display, pe.gc);
+				}
+			});
+
+		}
+
+		private void updateHorizontalScrollBar() {
+			double minVal = mScaleInfo.getMinVal();
+			double maxVal = mScaleInfo.getMaxVal();
+			double visibleRange = maxVal - minVal;
+			double fullRange = mSurface.mLimitMaxVal - mSurface.mLimitMinVal;
+
+			ScrollBar hBar = getHorizontalBar();
+			if (fullRange > visibleRange) {
+				hBar.setVisible(true);
+				hBar.setMinimum(0);
+				hBar.setMaximum((int) Math.ceil(fullRange));
+				hBar.setThumb((int) Math.ceil(visibleRange));
+				hBar.setSelection((int) Math.floor(minVal
+						- mSurface.mLimitMinVal));
+			} else {
+				hBar.setVisible(false);
+			}
+		}
+
+		private boolean drawingSelection() {
+			return mSurface.mGraphicsState == GraphicsState.Marking
+					|| mSurface.mGraphicsState == GraphicsState.Animating;
+		}
+
+		private void drawSelection(Display display, GC gc) {
+			Point dim = getSize();
+			gc.setForeground(mColorGray);
+			gc.drawLine(mSurface.mMouseMarkStartX, 0,
+					mSurface.mMouseMarkStartX, dim.y);
+			gc.setBackground(mColorZoomSelection);
+			int width;
+			int mouseX = (mSurface.mGraphicsState == GraphicsState.Animating) ? mSurface.mMouseMarkEndX
+					: mMouse.x;
+			int x;
+			if (mSurface.mMouseMarkStartX < mouseX) {
+				x = mSurface.mMouseMarkStartX;
+				width = mouseX - mSurface.mMouseMarkStartX;
+			} else {
+				x = mouseX;
+				width = mSurface.mMouseMarkStartX - mouseX;
+			}
+			gc.fillRectangle(x, 0, width, dim.y);
+		}
+
+		private void draw(Display display, GC gc) {
+			// if (mSegments.length == 0) {
+			// // gc.setBackground(colorBackground);
+			// // gc.fillRectangle(getBounds());
+			// return;
+			// }
+
+			// Create an image for double-buffering
+			Image image = new Image(display, getBounds());
+
+			// Set up the off-screen gc
+			GC gcImage = new GC(image);
+			if (mSetFonts) {
+				gcImage.setFont(mFontRegistry.get("small")); //$NON-NLS-1$
+			}
+
+			// Draw the background
+			// gcImage.setBackground(colorBackground);
+			// gcImage.fillRectangle(image.getBounds());
+
+			/*
+			 * if (mGraphicsState == GraphicsState.Scaling) { double diff =
+			 * mMouse.x - mMouseMarkStartX;to if (diff > 0) { double newMinVal =
+			 * mScaleMinVal - diff / mScalePixelsPerRange; if (newMinVal <
+			 * mLimitMinVal) { newMinVal = mLimitMinVal; }
+			 * mScaleInfo.setMinVal(newMinVal); //
+			 * System.out.printf("diff %f scaleMin %f newMin %f\n", // diff,
+			 * scaleMinVal, newMinVal); } else if (diff < 0) { double newMaxVal
+			 * = mScaleMaxVal - diff / mScalePixelsPerRange; if (newMaxVal >
+			 * mLimitMaxVal) { newMaxVal = mLimitMaxVal; }
+			 * mScaleInfo.setMaxVal(newMaxVal); //
+			 * System.out.printf("diff %f scaleMax %f newMax %f\n", // diff,
+			 * scaleMaxVal, newMaxVal); } }
+			 */
+			// Recompute the ticks and strips only if the size has changed,
+			// or we scrolled so that a new row is visible.
+			Point dim = getSize();
+
+			if (mStartLogRow != mCachedStartRow || mEndLogRow != mCachedEndRow
+					|| mScaleInfo.getMinVal() != mCachedMinVal
+					|| mScaleInfo.getMaxVal() != mCachedMaxVal) {
+				mCachedStartRow = mStartLogRow;
+				mCachedEndRow = mEndLogRow;
+				int xdim = dim.x - Surface.TotalXMargin;
+				mScaleInfo.setNumPixels(xdim);
+				boolean forceEndPoints = (mSurface.mGraphicsState == GraphicsState.Scaling
+						|| mSurface.mGraphicsState == GraphicsState.Animating || mSurface.mGraphicsState == GraphicsState.Scrolling);
+				mScaleInfo.computeTicks(forceEndPoints);
+				mCachedMinVal = mScaleInfo.getMinVal();
+				mCachedMaxVal = mScaleInfo.getMaxVal();
+				if (mLimitMinVal > mScaleInfo.getMinVal()) {
+					mLimitMinVal = mScaleInfo.getMinVal();
+				}
+				if (mLimitMaxVal < mScaleInfo.getMaxVal()) {
+					mLimitMaxVal = mScaleInfo.getMaxVal();
+				}
+
+				// Compute the strips
+				// computeStrips();
+
+				// Update the horizontal scrollbar.
+				updateHorizontalScrollBar();
+			}
+
+			if (mNumLogRows > 2) {
+				// Draw the row background stripes
+				gcImage.setBackground(mColorLogRowBack);
+				for (int ii = 1; ii < mNumLogRows; ii += 2) {
+					LogRowData rd = mLogRows[ii];
+					int y1 = (ii - 1) * logRowYSpace - mLogScrollOffsetY;
+					gcImage.fillRectangle(0, y1, dim.x, logRowYSpace);
+				}
+			}
+
+			if (drawingSelection()) {
+				drawSelection(display, gcImage);
+			}
+			/*
+			 * String blockName = null; Color blockColor = null; String
+			 * blockDetails = null;
+			 */
+			/*
+			 * if (mDebug) { double pixelsPerRange =
+			 * mScaleInfo.getPixelsPerRange(); System.out
+			 * .printf("dim.x %d pixels %d minVal %f, maxVal %f ppr %f rpp %f\n"
+			 * , dim.x, dim.x - TotalXMargin, mScaleInfo.getMinVal(),
+			 * mScaleInfo.getMaxVal(), pixelsPerRange, 1.0 / pixelsPerRange); }
+			 */
+			/*
+			 * // Draw the strips Block selectBlock = null; for (Strip strip :
+			 * mStripList) { if (strip.mColor == null) { //
+			 * System.out.printf("strip.color is null\n"); continue; }
+			 * gcImage.setBackground(strip.mColor);
+			 * gcImage.fillRectangle(strip.mX, strip.mY - mScrollOffsetY,
+			 * strip.mWidth, strip.mHeight); if (mMouseRow ==
+			 * strip.mRowData.mRank) { if (mMouse.x >= strip.mX && mMouse.x <
+			 * strip.mX + strip.mWidth) { Block block = strip.mSegment.mBlock;
+			 * blockName = block.getName(); blockColor = strip.mColor; if
+			 * (mHaveCpuTime) { if (mHaveRealTime) { blockDetails =
+			 * String.format( "excl cpu %s, incl cpu %s, " +
+			 * "excl real %s, incl real %s", mUnits.labelledString(block
+			 * .getExclusiveCpuTime()), mUnits.labelledString(block
+			 * .getInclusiveCpuTime()), mUnits.labelledString(block
+			 * .getExclusiveRealTime()), mUnits.labelledString(block
+			 * .getInclusiveRealTime())); } else { blockDetails = String
+			 * .format("excl cpu %s, incl cpu %s", mUnits.labelledString(block
+			 * .getExclusiveCpuTime()), mUnits.labelledString(block
+			 * .getInclusiveCpuTime())); } } else { blockDetails =
+			 * String.format( "excl real %s, incl real %s", mUnits
+			 * .labelledString(block .getExclusiveRealTime()),
+			 * mUnits.labelledString(block .getInclusiveRealTime())); } } if
+			 * (mMouseSelect.x >= strip.mX && mMouseSelect.x < strip.mX +
+			 * strip.mWidth) { selectBlock = strip.mSegment.mBlock; } } }
+			 * mMouseSelect.x = 0; mMouseSelect.y = 0;
+			 */
+			/*
+			 * if (selectBlock != null) { ArrayList<Selection> selections = new
+			 * ArrayList<Selection>(); // Get the row label RowData rd =
+			 * mRows[mMouseRow]; selections.add(Selection.highlight("Thread",
+			 * rd.mName)); //$NON-NLS-1$
+			 * selections.add(Selection.highlight("Call", selectBlock));
+			 * //$NON-NLS-1$
+			 * 
+			 * int mouseX = mMouse.x - LeftMargin; double mouseXval =
+			 * mScaleInfo.pixelToValue(mouseX);
+			 * selections.add(Selection.highlight("Time", mouseXval));
+			 * //$NON-NLS-1$
+			 * 
+			 * mSelectionController.change(selections, "TimeLineView");
+			 * //$NON-NLS-1$ mHighlightMethodData = null; mHighlightCall =
+			 * (Call) selectBlock; startHighlighting(); }
+			 */
+			// Draw a vertical line where the mouse is.
+			gcImage.setForeground(mColorDarkGray);
+			int lineEnd = Math.min(dim.y, mNumLogRows * rowYSpace);
+			gcImage.drawLine(mMouse.x, 0, mMouse.x, lineEnd);
+
+			/*
+			 * if (blockName != null) { mTimescale.setMethodName(blockName);
+			 * mTimescale.setMethodColor(blockColor);
+			 * mTimescale.setDetails(blockDetails); mShowHighlightName = false;
+			 * } else if (mShowHighlightName) { // Draw the highlighted method
+			 * name MethodData md = mHighlightMethodData; if (md == null &&
+			 * mHighlightCall != null) { md = mHighlightCall.getMethodData(); }
+			 * if (md == null) { System.out.printf("null highlight?\n");
+			 * //$NON-NLS-1$ } if (md != null) {
+			 * mTimescale.setMethodName(md.getProfileName());
+			 * mTimescale.setMethodColor(md.getColor());
+			 * mTimescale.setDetails(null); } } else {
+			 * mTimescale.setMethodName(null); mTimescale.setMethodColor(null);
+			 * mTimescale.setDetails(null); } mTimescale.redraw();
+			 */
+			// Draw the off-screen buffer to the screen
+			gc.drawImage(image, 0, 0);
+
+			// Clean up
+			image.dispose();
+			gcImage.dispose();
+		}
+
+		private void mouseMove(MouseEvent me) {
+			if (false) {
+				if (mHighlightMethodData != null) {
+					mHighlightMethodData = null;
+					// Force a recomputation of the strip colors
+					mCachedEndRow = -1;
+				}
+			}
+			Point dim = mLogSurface.getSize();
+			int x = me.x;
+			if (x < LeftMargin) {
+				x = LeftMargin;
+			}
+			if (x > dim.x - RightMargin) {
+				x = dim.x - RightMargin;
+			}
+			mMouse.x = x;
+			mMouse.y = me.y;
+			mTimescale.setVbarPosition(x);
+			if (mSurface.mGraphicsState == GraphicsState.Marking) {
+				mTimescale.setMarkEnd(x);
+			}
+
+			/*
+			 * if (mGraphicsState == GraphicsState.Normal) { // Set the cursor
+			 * to the normal state. mLogSurface.setCursor(mNormalCursor); } else
+			 * if (mGraphicsState == GraphicsState.Marking) { // Make the cursor
+			 * point in the direction of the sweep if (mMouse.x >=
+			 * mMouseMarkStartX) { mLogSurface.setCursor(mIncreasingCursor); }
+			 * else { mLogSurface.setCursor(mDecreasingCursor); } }
+			 */int rownum = (mMouse.y + mLogScrollOffsetY) / logRowYSpace;
+			if (me.y < 0 || me.y >= dim.y) {
+				rownum = -1;
+			}
+			if (mMouseLogRow != rownum) {
+				mMouseLogRow = rownum;
+				mLogLabels.redraw();
+			}
+			if (me.y != -1) {
+				me.y = -1;
+				mSurface.mouseMove(me);
+			}
+			redraw();
+		}
+
+		private void mouseDown(MouseEvent me) {
+			mSurface.mouseDown(me);
+			// Point dim = mLogSurface.getSize();
+			// int x = me.x;
+			// if (x < LeftMargin) {
+			// x = LeftMargin;
+			// }
+			// if (x > dim.x - RightMargin) {
+			// x = dim.x - RightMargin;
+			// }
+			// mSurface.mMouseMarkStartX = x;
+			// mSurface.mGraphicsState = GraphicsState.Marking;
+			// // mLogSurface.setCursor(mIncreasingCursor);
+			// mTimescale.setMarkStart(mSurface.mMouseMarkStartX);
+			// mTimescale.setMarkEnd(mSurface.mMouseMarkStartX);
+			redraw();
+		}
+
+		private void mouseUp(MouseEvent me) {
+			mLogSurface.setCursor(mSurface.mNormalCursor);
+			mSurface.mouseUp(me);
+			// if (mSurface.mGraphicsState != GraphicsState.Marking) {
+			// mSurface.mGraphicsState = GraphicsState.Normal;
+			// return;
+			// }
+			// mSurface.mGraphicsState = GraphicsState.Animating;
+			// Point dim = mLogSurface.getSize();
+			//
+			// // If the user released the mouse outside the drawing area then
+			// // cancel the zoom.
+			// if (me.y <= 0 || me.y >= dim.y) {
+			// mSurface.mGraphicsState = GraphicsState.Normal;
+			// redraw();
+			// return;
+			// }
+			//
+			// int x = me.x;
+			// if (x < LeftMargin) {
+			// x = LeftMargin;
+			// }
+			// if (x > dim.x - RightMargin) {
+			// x = dim.x - RightMargin;
+			// }
+			// mSurface.mMouseMarkEndX = x;
+			//
+			// // If the user clicked and released the mouse at the same point
+			// // (+/- a pixel or two) then cancel the zoom (but select the
+			// // method).
+			// int dist = mSurface.mMouseMarkEndX - mSurface.mMouseMarkStartX;
+			// if (dist < 0) {
+			// dist = -dist;
+			// }
+			// // if (dist <= 2) {
+			// // mGraphicsState = GraphicsState.Normal;
+			// //
+			// // // Select the method underneath the mouse
+			// // mMouseSelect.x = mMouseMarkStartX;
+			// // mMouseSelect.y = me.y;
+			// // redraw();
+			// // return;
+			// // }
+			//
+			// // Make mouseEndX be the higher end point
+			// if (mSurface.mMouseMarkEndX < mSurface.mMouseMarkStartX) {
+			// int temp = mSurface.mMouseMarkEndX;
+			// mSurface.mMouseMarkEndX = mSurface.mMouseMarkStartX;
+			// mSurface.mMouseMarkStartX = temp;
+			// }
+			//
+			// // If the zoom area is the whole window (or nearly the whole
+			// // window) then cancel the zoom.
+			// if (mSurface.mMouseMarkStartX <= LeftMargin
+			// + mSurface.MinZoomPixelMargin
+			// && mSurface.mMouseMarkEndX >= dim.x - RightMargin
+			// - mSurface.MinZoomPixelMargin) {
+			// mSurface.mGraphicsState = GraphicsState.Normal;
+			// redraw();
+			// return;
+			// }
+			//
+			// // Compute some variables needed for zooming.
+			// // It's probably easiest to explain by an example. There
+			// // are two scales (or dimensions) involved: one for the pixels
+			// // and one for the values (microseconds). To keep the example
+			// // simple, suppose we have pixels in the range [0,16] and
+			// // values in the range [100, 260], and suppose the user
+			// // selects a zoom window from pixel 4 to pixel 8.
+			// //
+			// // usec: 100 140 180 260
+			// // |-------|ZZZZZZZ|---------------|
+			// // pixel: 0 4 8 16
+			// //
+			// // I've drawn the pixels starting at zero for simplicity, but
+			// // in fact the drawable area is offset from the left margin
+			// // by the value of "LeftMargin".
+			// //
+			// // The "pixels-per-range" (ppr) in this case is 0.1 (a tenth of
+			// // a pixel per usec). What we want is to redraw the screen in
+			// // several steps, each time increasing the zoom window until the
+			// // zoom window fills the screen. For simplicity, assume that
+			// // we want to zoom in four equal steps. Then the snapshots
+			// // of the screen at each step would look something like this:
+			// //
+			// // usec: 100 140 180 260
+			// // |-------|ZZZZZZZ|---------------|
+			// // pixel: 0 4 8 16
+			// //
+			// // usec: ? 140 180 ?
+			// // |-----|ZZZZZZZZZZZZZ|-----------|
+			// // pixel: 0 3 10 16
+			// //
+			// // usec: ? 140 180 ?
+			// // |---|ZZZZZZZZZZZZZZZZZZZ|-------|
+			// // pixel: 0 2 12 16
+			// //
+			// // usec: ?140 180 ?
+			// // |-|ZZZZZZZZZZZZZZZZZZZZZZZZZ|---|
+			// // pixel: 0 1 14 16
+			// //
+			// // usec: 140 180
+			// // |ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ|
+			// // pixel: 0 16
+			// //
+			// // The problem is how to compute the endpoints (denoted by ?)
+			// // for each step. This is a little tricky. We first need to
+			// // compute the "fixed point": this is the point in the selection
+			// // that doesn't move left or right. Then we can recompute the
+			// // "ppr" (pixels per range) at each step and then find the
+			// // endpoints. The computation of the end points is done
+			// // in animateZoom(). This method computes the fixed point
+			// // and some other variables needed in animateZoom().
+			//
+			// double minVal = mScaleInfo.getMinVal();
+			// double maxVal = mScaleInfo.getMaxVal();
+			// double ppr = mScaleInfo.getPixelsPerRange();
+			// mSurface.mZoomMin = minVal
+			// + ((mSurface.mMouseMarkStartX - LeftMargin) / ppr);
+			// mSurface.mZoomMax = minVal
+			// + ((mSurface.mMouseMarkEndX - LeftMargin) / ppr);
+			//
+			// // Clamp the min and max values to the actual data min and max
+			// if (mSurface.mZoomMin < mSurface.mMinDataVal) {
+			// mSurface.mZoomMin = mSurface.mMinDataVal;
+			// }
+			// if (mSurface.mZoomMax > mSurface.mMaxDataVal) {
+			// mSurface.mZoomMax = mSurface.mMaxDataVal;
+			// }
+			//
+			// // Snap the min and max points to the grid determined by the
+			// // TickScaler
+			// // before we zoom.
+			// int xdim = dim.x - TotalXMargin;
+			// TickScaler scaler = new TickScaler(mZoomMin, mZoomMax, xdim,
+			// PixelsPerTick);
+			// scaler.computeTicks(false);
+			// mZoomMin = scaler.getMinVal();
+			// mZoomMax = scaler.getMaxVal();
+			//
+			// // Also snap the mouse points (in pixel space) to be consistent
+			// with
+			// // zoomMin and zoomMax (in value space).
+			// mMouseMarkStartX = (int) ((mZoomMin - minVal) * ppr +
+			// LeftMargin);
+			// mMouseMarkEndX = (int) ((mZoomMax - minVal) * ppr + LeftMargin);
+			// mTimescale.setMarkStart(mMouseMarkStartX);
+			// mTimescale.setMarkEnd(mMouseMarkEndX);
+			//
+			// // Compute the mouse selection end point distances
+			// mMouseEndDistance = dim.x - RightMargin - mMouseMarkEndX;
+			// mMouseStartDistance = mMouseMarkStartX - LeftMargin;
+			// mZoomMouseStart = mMouseMarkStartX;
+			// mZoomMouseEnd = mMouseMarkEndX;
+			// mZoomStep = 0;
+			//
+			// // Compute the fixed point in both value space and pixel space.
+			// mMin2ZoomMin = mZoomMin - minVal;
+			// mZoomMax2Max = maxVal - mZoomMax;
+			// mZoomFixed = mZoomMin + (mZoomMax - mZoomMin) * mMin2ZoomMin
+			// / (mMin2ZoomMin + mZoomMax2Max);
+			// mZoomFixedPixel = (mZoomFixed - minVal) * ppr + LeftMargin;
+			// mFixedPixelStartDistance = mZoomFixedPixel - LeftMargin;
+			// mFixedPixelEndDistance = dim.x - RightMargin - mZoomFixedPixel;
+			//
+			// mZoomMin2Fixed = mZoomFixed - mZoomMin;
+			// mFixed2ZoomMax = mZoomMax - mZoomFixed;
+			//
+			// getDisplay().timerExec(ZOOM_TIMER_INTERVAL, mZoomAnimator);
+			redraw();
+			update();
+		}
+	}
+
     private class Surface extends Canvas {
 
         public Surface(Composite parent) {
@@ -1382,7 +1946,9 @@ public class TimeLineView extends Composite implements Observer {
                 computeStrips();
 
                 // Update the horizontal scrollbar.
-                updateHorizontalScrollBar();
+				if (mLogSurface == null) {
+					updateHorizontalScrollBar();
+				}
             }
 
             if (mNumRows > 2) {
@@ -1494,7 +2060,7 @@ public class TimeLineView extends Composite implements Observer {
 
             // Draw a vertical line where the mouse is.
             gcImage.setForeground(mColorDarkGray);
-            int lineEnd = Math.min(dim.y, mNumRows * rowYSpace);
+			int lineEnd = dim.y;// Math.min(dim.y, mNumRows * rowYSpace);
             gcImage.drawLine(mMouse.x, 0, mMouse.x, lineEnd);
 
             if (blockName != null) {
@@ -1982,6 +2548,10 @@ public class TimeLineView extends Composite implements Observer {
                 mMouseRow = rownum;
                 mLabels.redraw();
             }
+			if (me.y != -1) {
+				me.y = -1;
+				mLogSurface.mouseMove(me);
+			}
             redraw();
         }
 
@@ -2206,6 +2776,7 @@ public class TimeLineView extends Composite implements Observer {
             mScaleInfo.setMinVal(tMinNew);
             mScaleInfo.setMaxVal(tMaxNew);
             mSurface.redraw();
+			mLogSurface.redraw();
         }
 
         // No defined behavior yet for double-click.
@@ -2300,6 +2871,9 @@ public class TimeLineView extends Composite implements Observer {
                 getDisplay().timerExec(ZOOM_TIMER_INTERVAL, mZoomAnimator);
             }
             redraw();
+			if (mLogSurface != null) {
+				mLogSurface.redraw();
+			}
         }
 
         private static final int TotalXMargin = LeftMargin + RightMargin;
@@ -2413,10 +2987,13 @@ public class TimeLineView extends Composite implements Observer {
 	private static class LogRowData {
 		LogRowData(LogRow row) {
 			mName = row.getName();
+			mId = row.getId();
+			mType = row.getType();
 		}
 
 		private final String mName;
-		private int mRank;
+		private final int mId;
+		private final LogType mType;
 	}
 
 	// >>>>>>>>>>>>Till here

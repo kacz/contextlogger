@@ -25,6 +25,7 @@ public class ContextLogReader {
 	ContextLogData[] mSortedLogs;
 	int mVersionNumber;
 	long mStartTime;
+	long mEndTime;
 
 	// A regex for matching the thread "id name" lines in the .key file
     private static final Pattern mIdTypeNamePattern = Pattern.compile("(\\d+)\\s(\\d+)\\s(.*)");  //$NON-NLS-1$
