@@ -277,7 +277,8 @@ public class TimeLineView extends Composite implements Observer {
 		// >>>>>>>>>>>>>add
 
 		mLogSashForm = new SashForm(mBigSashForm, SWT.HORIZONTAL);
-        mLogSashForm.SASH_WIDTH = 3;
+		mLogSashForm.setBackground(mColorGray);
+		mLogSashForm.setSashWidth(3);
         
         Composite logLabelsComposite = new Composite(mLogSashForm, SWT.NONE);
 		layout = new GridLayout(1, true /* make columns equal width */);
@@ -349,6 +350,8 @@ public class TimeLineView extends Composite implements Observer {
 			@Override
 			public void controlResized(ControlEvent arg0) {
 				mSashForm.setWeights(mLogSashForm.getWeights());
+				mLogSashForm.setSashWidth(3);
+				mSashForm.setSashWidth(3);
 				// test
 				Point dim = mLogLabels.getSize();
 				computeVisibleLogRows(dim.y);
@@ -368,6 +371,8 @@ public class TimeLineView extends Composite implements Observer {
 			@Override
 			public void controlResized(ControlEvent arg0) {
 				mLogSashForm.setWeights(mSashForm.getWeights());
+				mLogSashForm.setSashWidth(3);
+				mSashForm.setSashWidth(3);
 			}
 			
 			@Override
@@ -952,7 +957,7 @@ public class TimeLineView extends Composite implements Observer {
 			if (mMouseLogRow != rownum) {
 				mMouseLogRow = rownum;
 				redraw();
-				// mSurface.redraw();
+				mLogSurface.redraw();
 			}
 		}
 
@@ -1485,6 +1490,19 @@ public class TimeLineView extends Composite implements Observer {
 			 * strip.mWidth) { selectBlock = strip.mSegment.mBlock; } } }
 			 * mMouseSelect.x = 0; mMouseSelect.y = 0;
 			 */
+
+			// Draw a highlight box on the row where the mouse is.
+			// Except don't draw the box if we are animating the
+			// highlighing of a call or method because the inclusive
+			// highlight bar passes through the highlight box and
+			// causes an annoying flashing artifact.
+			if (mMouseLogRow >= 0 && mMouseLogRow < mNumLogRows) {
+				gcImage.setForeground(mColorGray);
+				int y1 = mMouseLogRow * logRowYSpace - mLogScrollOffsetY;
+				gcImage.drawLine(0, y1, dim.x, y1);
+				gcImage.drawLine(0, y1 + logRowYSpace, dim.x, y1 + logRowYSpace);
+			}
+
 			/*
 			 * if (selectBlock != null) { ArrayList<Selection> selections = new
 			 * ArrayList<Selection>(); // Get the row label RowData rd =
