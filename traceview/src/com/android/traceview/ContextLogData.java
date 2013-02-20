@@ -1,7 +1,7 @@
 package com.android.traceview;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.NavigableMap;
+import java.util.TreeMap;
 
 import cz.cuni.kacz.contextlogger.LogType;
 
@@ -10,11 +10,11 @@ public class ContextLogData implements TimeLineView.LogRow {
 	private final int mId;
 	private final String mName;
 	private final LogType mType;
-	private Map<Long, Integer> mIntDataMap = null;
-	private Map<Long, Long> mLongDataMap = null;
-	private Map<Long, Float> mFloatDataMap = null;
-	private Map<Long, Double> mDoubleDataMap = null;
-	private Map<Long, String> mStringDataMap = null;
+	private NavigableMap<Long, Integer> mIntDataMap = null;
+	private NavigableMap<Long, Long> mLongDataMap = null;
+	private NavigableMap<Long, Float> mFloatDataMap = null;
+	private NavigableMap<Long, Double> mDoubleDataMap = null;
+	private NavigableMap<Long, String> mStringDataMap = null;
 
 	ContextLogData(int id, LogType type, String name) {
 		mId = id;
@@ -22,40 +22,40 @@ public class ContextLogData implements TimeLineView.LogRow {
 		mType = type;
 		switch (mType) {
 		case LONG:
-			mLongDataMap = new LinkedHashMap<Long, Long>();
+			mLongDataMap = new TreeMap<Long, Long>();
 			break;
 		case INT:
-			mIntDataMap = new LinkedHashMap<Long, Integer>();
+			mIntDataMap = new TreeMap<Long, Integer>();
 			break;
 		case DOUBLE:
-			mDoubleDataMap = new LinkedHashMap<Long, Double>();
+			mDoubleDataMap = new TreeMap<Long, Double>();
 			break;
 		case FLOAT:
-			mFloatDataMap = new LinkedHashMap<Long, Float>();
+			mFloatDataMap = new TreeMap<Long, Float>();
 			break;
 		default: // String
-			mStringDataMap = new LinkedHashMap<Long, String>();
+			mStringDataMap = new TreeMap<Long, String>();
 			break;
 		}
 	}
 
-	Map<Long, Integer> getIntDataMap() {
+	NavigableMap<Long, Integer> getIntDataMap() {
 		return mIntDataMap;
 	}
 
-	Map<Long, Long> getLongDataMap() {
+	NavigableMap<Long, Long> getLongDataMap() {
 		return mLongDataMap;
 	}
 
-	Map<Long, Float> getFloatDataMap() {
+	NavigableMap<Long, Float> getFloatDataMap() {
 		return mFloatDataMap;
 	}
 
-	Map<Long, Double> getDoubleDataMap() {
+	NavigableMap<Long, Double> getDoubleDataMap() {
 		return mDoubleDataMap;
 	}
 
-	Map<Long, String> getStringDataMap() {
+	NavigableMap<Long, String> getStringDataMap() {
 		return mStringDataMap;
 	}
 

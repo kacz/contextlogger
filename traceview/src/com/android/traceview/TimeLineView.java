@@ -22,6 +22,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Observable;
 import java.util.Observer;
 
@@ -81,6 +83,8 @@ public class TimeLineView extends Composite implements Observer {
 	private static final int logRowLabelYMargin = 22;
 	private static final int logRowLabelYMarginHalf = logRowLabelYMargin / 2;
 	private static final int logRowYSpace = logRowHeight + logRowYMargin;
+
+	private final long mStartDiff;
 	// <<<<<<added
 
     public static final int PixelsPerTick = 50;
@@ -176,9 +180,9 @@ public class TimeLineView extends Composite implements Observer {
     }
 
 	public static class LogRecord {
-		LogRow row;
+		ContextLogData row;
 
-		public LogRecord(LogRow row) {
+		public LogRecord(ContextLogData row) {
 			this.row = row;
 		}
 	}
@@ -586,6 +590,11 @@ public class TimeLineView extends Composite implements Observer {
             }
         });
 
+		// debug
+		System.out.println("trace start: " + reader.getStartTime());
+		System.out.println("log start: " + logReader.getStartTime());
+		mStartDiff = reader.getStartTime() - logReader.getStartTime();
+		System.out.println("diff: " + mStartDiff);
         setData(reader.getThreadTimeRecords());
 		setLogData(logReader.getLogRecords());
     }
@@ -633,7 +642,7 @@ public class TimeLineView extends Composite implements Observer {
 		}
 
 		for (LogRecord rec : logRecords) {
-			LogRow row = rec.row;
+			ContextLogData row = rec.row;
 
 			String rowName = row.getName();
 			LogRowData rd = mLogRowByName.get(rowName);
@@ -1002,9 +1011,7 @@ public class TimeLineView extends Composite implements Observer {
 				Point extent = gcImage.stringExtent(label);
 				int x1 = dim.x - extent.x - labelMarginX;
 				gcImage.drawString(label, x1, y1, true);
-				System.out.println(label);
 			}
-			System.out.println("========");
 
 			// Draw a highlight box on the row where the mouse is.
 			if (mMouseLogRow >= mStartLogRow && mMouseLogRow <= mEndLogRow) {
@@ -1501,6 +1508,164 @@ public class TimeLineView extends Composite implements Observer {
 				int y1 = mMouseLogRow * logRowYSpace - mLogScrollOffsetY;
 				gcImage.drawLine(0, y1, dim.x, y1);
 				gcImage.drawLine(0, y1 + logRowYSpace, dim.x, y1 + logRowYSpace);
+			}
+			// debug
+			for (int ii = mStartLogRow; ii <= mEndLogRow; ++ii) {
+				LogRowData rd = mLogRows[ii];
+
+				int y1 = ii * logRowYSpace - mLogScrollOffsetY;
+
+				long sizeAll = 0;
+				long size = 0;
+				long first = 0;
+				long last = 0;
+
+				try {
+				switch(rd.mType) {
+				case INT:
+					sizeAll = rd.mRow.getIntDataMap().size();
+					size = rd.mRow
+							.getIntDataMap()
+								.subMap(Math.round(mScaleInfo.getMinVal())
+										+ mStartDiff,
+										Math.round(mScaleInfo.getMaxVal())
+												+ mStartDiff).size();
+						first = rd.mRow.getIntDataMap().firstKey() - mStartDiff;
+						last = rd.mRow.getIntDataMap().lastKey() - mStartDiff;
+						for (Map.Entry<Long, Integer> e : rd.mRow
+								.getIntDataMap()
+								.subMap(Math.round(mScaleInfo.getMinVal())
+										+ mStartDiff,
+										Math.round(mScaleInfo.getMaxVal())
+												+ mStartDiff).entrySet()) {
+							int x = mScaleInfo.valueToPixel(e.getKey()
+									- mStartDiff);
+							// System.out.println("mSec: "
+							// + (e.getKey() - mStartDiff));
+							// System.out.println(x);
+							gcImage.drawLine(x, y1, x, y1 + logRowYSpace);
+						}
+					break;
+				case LONG:
+					sizeAll = rd.mRow.getLongDataMap().size();
+					size = rd.mRow
+							.getLongDataMap()
+								.subMap(Math.round(mScaleInfo.getMinVal())
+										+ mStartDiff,
+										Math.round(mScaleInfo.getMaxVal())
+												+ mStartDiff).size();
+						first = rd.mRow.getLongDataMap().firstKey()
+								- mStartDiff;
+						last = rd.mRow.getLongDataMap().lastKey() - mStartDiff;
+						for (Map.Entry<Long, Long> e : rd.mRow
+								.getLongDataMap()
+								.subMap(Math.round(mScaleInfo.getMinVal())
+										+ mStartDiff,
+										Math.round(mScaleInfo.getMaxVal())
+												+ mStartDiff).entrySet()) {
+							int x = mScaleInfo.valueToPixel(e.getKey()
+									- mStartDiff);
+							// System.out.println("mSec: "
+							// + (e.getKey() - mStartDiff));
+							// System.out.println(x);
+							gcImage.drawLine(x, y1, x, y1 + logRowYSpace);
+						}
+					break;
+				case FLOAT:
+					sizeAll = rd.mRow.getFloatDataMap().size();
+					size = rd.mRow
+							.getFloatDataMap()
+								.subMap(Math.round(mScaleInfo.getMinVal()
+										+ mStartDiff),
+										Math.round(mScaleInfo.getMaxVal())
+												+ mStartDiff).size();
+						first = rd.mRow.getFloatDataMap().firstKey()
+								- mStartDiff;
+						last = rd.mRow.getFloatDataMap().lastKey() - mStartDiff;
+						for (Map.Entry<Long, Float> e : rd.mRow
+								.getFloatDataMap()
+								.subMap(Math.round(mScaleInfo.getMinVal())
+										+ mStartDiff,
+										Math.round(mScaleInfo.getMaxVal())
+												+ mStartDiff).entrySet()) {
+							int x = mScaleInfo.valueToPixel(e.getKey()
+									- mStartDiff);
+							// System.out.println("mSec: "
+							// + (e.getKey() - mStartDiff));
+							// System.out.println(x);
+							gcImage.drawLine(x, y1, x, y1 + logRowYSpace);
+						}
+					break;
+				case DOUBLE:
+					sizeAll = rd.mRow.getDoubleDataMap().size();
+					size = rd.mRow
+							.getDoubleDataMap()
+								.subMap(Math.round(mScaleInfo.getMinVal())
+										+ mStartDiff,
+										Math.round(mScaleInfo.getMaxVal())
+												+ mStartDiff).size();
+						first = rd.mRow.getDoubleDataMap().firstKey()
+								- mStartDiff;
+						last = rd.mRow.getDoubleDataMap().lastKey()
+								- mStartDiff;
+						for (Map.Entry<Long, Double> e : rd.mRow
+								.getDoubleDataMap()
+								.subMap(Math.round(mScaleInfo.getMinVal())
+										+ mStartDiff,
+										Math.round(mScaleInfo.getMaxVal())
+												+ mStartDiff).entrySet()) {
+							int x = mScaleInfo.valueToPixel(e.getKey()
+									- mStartDiff);
+							// System.out.println("mSec: "
+							// + (e.getKey() - mStartDiff));
+							// System.out.println(x);
+							gcImage.drawLine(x, y1, x, y1 + logRowYSpace);
+						}
+					break;
+
+				case STRING:
+					sizeAll = rd.mRow.getStringDataMap().size();
+					size = rd.mRow
+							.getStringDataMap()
+								.subMap(Math.round(mScaleInfo.getMinVal())
+										+ mStartDiff,
+										Math.round(mScaleInfo.getMaxVal())
+												+ mStartDiff).size();
+						first = rd.mRow.getStringDataMap().firstKey()
+								- mStartDiff;
+						last = rd.mRow.getStringDataMap().lastKey()
+								- mStartDiff;
+						for (Map.Entry<Long, String> e : rd.mRow
+								.getStringDataMap()
+								.subMap(Math.round(mScaleInfo.getMinVal())
+										+ mStartDiff,
+										Math.round(mScaleInfo.getMaxVal())
+												+ mStartDiff).entrySet()) {
+							int x = mScaleInfo.valueToPixel(e.getKey()
+									- mStartDiff);
+							// System.out.println("mSec: "
+							// + (e.getKey() - mStartDiff));
+							// System.out.println(x);
+							gcImage.drawLine(x, y1, x, y1 + logRowYSpace);
+						}
+					break;
+				}
+				} catch (NoSuchElementException e) {
+
+				}
+				
+				String label = "[" + mScaleInfo.getMinVal() + " - "
+						+ mScaleInfo.getMaxVal() + "] " + size + " " + sizeAll
+						+ " " + first
+ + " " + last
+						+ " " + " ("
+						+ rd.mType.name() + ")";
+
+				// int y1 = rd.mRank * rowYSpace + offsetY;
+				Point extent = gcImage.stringExtent(label);
+				int x1 = dim.x - extent.x;// - labelMarginX;
+				gcImage.setForeground(mColorBlack);
+				gcImage.drawString(label, x1, y1, true);
 			}
 
 			/*
@@ -3003,15 +3168,17 @@ public class TimeLineView extends Composite implements Observer {
 
 	// <<<<<<<<<<<ADDED
 	private static class LogRowData {
-		LogRowData(LogRow row) {
+		LogRowData(ContextLogData row) {
 			mName = row.getName();
 			mId = row.getId();
 			mType = row.getType();
+			mRow = row;
 		}
 
 		private final String mName;
 		private final int mId;
 		private final LogType mType;
+		private final ContextLogData mRow;
 	}
 
 	// >>>>>>>>>>>>Till here
