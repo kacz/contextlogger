@@ -247,8 +247,123 @@ public class ContextLogReader {
 	private void analyzeData() {
 		// sort log by id
 		Collection<ContextLogData> lv = mLogMap.values();
-		mSortedLogs = lv.toArray(new ContextLogData[lv.size()]);
 
+		for (ContextLogData ld : lv) {
+			switch (ld.getType()) {
+			case INT: {
+				if(ld.getIntDataMap().isEmpty()) {
+					ld.setMinTime(0);
+					ld.setMaxTime(0);
+					ld.setMinValue(0);
+					ld.setMaxValue(0);
+				}else{
+					ld.setMinTime(ld.getIntDataMap().firstKey());
+					ld.setMaxTime(ld.getIntDataMap().lastKey());
+					int minVal = ld.getIntDataMap().firstEntry().getValue();
+					int maxVal = minVal;
+					for (Integer i : ld.getIntDataMap().values()) {
+						if (i < minVal) {
+							minVal = i;
+						}
+						if (i > maxVal) {
+							maxVal = i;
+						}
+					}
+					ld.setMinValue(minVal);
+					ld.setMaxValue(maxVal);
+				}
+				break;
+			}
+			case LONG: {
+				if (ld.getLongDataMap().isEmpty()) {
+					ld.setMinTime(0);
+					ld.setMaxTime(0);
+					ld.setMinValue(0);
+					ld.setMaxValue(0);
+				} else {
+					ld.setMinTime(ld.getLongDataMap().firstKey());
+					ld.setMaxTime(ld.getLongDataMap().lastKey());
+					long minVal = ld.getLongDataMap().firstEntry().getValue();
+					long maxVal = minVal;
+					for (Long i : ld.getLongDataMap().values()) {
+						if (i < minVal) {
+							minVal = i;
+						}
+						if (i > maxVal) {
+							maxVal = i;
+						}
+					}
+					ld.setMinValue(minVal);
+					ld.setMaxValue(maxVal);
+				}
+				break;
+			}
+			case FLOAT: {
+				if (ld.getFloatDataMap().isEmpty()) {
+					ld.setMinTime(0);
+					ld.setMaxTime(0);
+					ld.setMinValue(0);
+					ld.setMaxValue(0);
+				} else {
+					ld.setMinTime(ld.getFloatDataMap().firstKey());
+					ld.setMaxTime(ld.getFloatDataMap().lastKey());
+					float minVal = ld.getFloatDataMap().firstEntry().getValue();
+					float maxVal = minVal;
+					for (Float i : ld.getFloatDataMap().values()) {
+						if (i < minVal) {
+							minVal = i;
+						}
+						if (i > maxVal) {
+							maxVal = i;
+						}
+					}
+					ld.setMinValue(minVal);
+					ld.setMaxValue(maxVal);
+				}
+				break;
+			}
+			case DOUBLE: {
+				if (ld.getDoubleDataMap().isEmpty()) {
+					ld.setMinTime(0);
+					ld.setMaxTime(0);
+					ld.setMinValue(0);
+					ld.setMaxValue(0);
+				} else {
+					ld.setMinTime(ld.getDoubleDataMap().firstKey());
+					ld.setMaxTime(ld.getDoubleDataMap().lastKey());
+					double minVal = ld.getDoubleDataMap().firstEntry()
+							.getValue();
+					double maxVal = minVal;
+					for (Double i : ld.getDoubleDataMap().values()) {
+						if (i < minVal) {
+							minVal = i;
+						}
+						if (i > maxVal) {
+							maxVal = i;
+						}
+					}
+					ld.setMinValue(minVal);
+					ld.setMaxValue(maxVal);
+				}
+				break;
+			}
+			case STRING:
+				if (ld.getStringDataMap().isEmpty()) {
+					ld.setMinTime(0);
+					ld.setMaxTime(0);
+					ld.setMinValue(0);
+					ld.setMaxValue(0);
+				} else {
+					ld.setMinTime(ld.getStringDataMap().firstKey());
+					ld.setMaxTime(ld.getStringDataMap().lastKey());
+					ld.setMinValue(0);
+					ld.setMaxValue(0);
+				}
+			}
+
+		}
+
+		mSortedLogs = lv.toArray(new ContextLogData[lv.size()]);
 		Arrays.sort(mSortedLogs, new Comparator<ContextLogData>() {
 			@Override
 			public int compare(ContextLogData ld1, ContextLogData ld2) {

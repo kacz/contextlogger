@@ -16,6 +16,44 @@ public class ContextLogData implements TimeLineView.LogRow {
 	private NavigableMap<Long, Double> mDoubleDataMap = null;
 	private NavigableMap<Long, String> mStringDataMap = null;
 
+	private double minValue;
+	private double maxValue;
+
+	private double minTime;
+	private double maxTime;
+
+	public double getMinValue() {
+		return minValue;
+	}
+
+	public void setMinValue(double minValue) {
+		this.minValue = minValue;
+	}
+
+	public double getMaxValue() {
+		return maxValue;
+	}
+
+	public void setMaxValue(double maxValue) {
+		this.maxValue = maxValue;
+	}
+
+	public double getMinTime() {
+		return minTime;
+	}
+
+	public void setMinTime(double minTime) {
+		this.minTime = minTime;
+	}
+
+	public double getMaxTime() {
+		return maxTime;
+	}
+
+	public void setMaxTime(double maxTime) {
+		this.maxTime = maxTime;
+	}
+
 	ContextLogData(int id, LogType type, String name) {
 		mId = id;
 		mName = name;

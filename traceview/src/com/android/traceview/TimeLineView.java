@@ -1540,10 +1540,15 @@ public class TimeLineView extends Composite implements Observer {
 												+ mStartDiff).entrySet()) {
 							int x = mScaleInfo.valueToPixel(e.getKey()
 									- mStartDiff);
-							// System.out.println("mSec: "
-							// + (e.getKey() - mStartDiff));
-							// System.out.println(x);
-							gcImage.drawLine(x, y1, x, y1 + logRowYSpace);
+
+							int length = (int) Math
+									.round((e.getValue() - rd.mRow
+											.getMinValue())
+											/ (rd.mRow.getMaxValue() - rd.mRow
+													.getMinValue())
+											* logRowYSpace);
+							gcImage.drawLine(x, y1 + logRowYSpace, x, y1
+									+ logRowYSpace - length);
 						}
 					break;
 				case LONG:
@@ -1565,10 +1570,15 @@ public class TimeLineView extends Composite implements Observer {
 												+ mStartDiff).entrySet()) {
 							int x = mScaleInfo.valueToPixel(e.getKey()
 									- mStartDiff);
-							// System.out.println("mSec: "
-							// + (e.getKey() - mStartDiff));
-							// System.out.println(x);
-							gcImage.drawLine(x, y1, x, y1 + logRowYSpace);
+
+							int length = (int) Math
+									.round((e.getValue() - rd.mRow
+											.getMinValue())
+											/ (rd.mRow.getMaxValue() - rd.mRow
+													.getMinValue())
+											* logRowYSpace);
+							gcImage.drawLine(x, y1 + logRowYSpace, x, y1
+									+ logRowYSpace - length);
 						}
 					break;
 				case FLOAT:
@@ -1593,7 +1603,14 @@ public class TimeLineView extends Composite implements Observer {
 							// System.out.println("mSec: "
 							// + (e.getKey() - mStartDiff));
 							// System.out.println(x);
-							gcImage.drawLine(x, y1, x, y1 + logRowYSpace);
+							int length = (int) Math
+									.round((e.getValue() - rd.mRow
+											.getMinValue())
+											/ (rd.mRow.getMaxValue() - rd.mRow
+													.getMinValue())
+											* logRowYSpace);
+							gcImage.drawLine(x, y1 + logRowYSpace, x, y1
+									+ logRowYSpace - length);
 						}
 					break;
 				case DOUBLE:
@@ -1616,10 +1633,15 @@ public class TimeLineView extends Composite implements Observer {
 												+ mStartDiff).entrySet()) {
 							int x = mScaleInfo.valueToPixel(e.getKey()
 									- mStartDiff);
-							// System.out.println("mSec: "
-							// + (e.getKey() - mStartDiff));
-							// System.out.println(x);
-							gcImage.drawLine(x, y1, x, y1 + logRowYSpace);
+
+							int length = (int) Math
+									.round((e.getValue() - rd.mRow
+											.getMinValue())
+											/ (rd.mRow.getMaxValue() - rd.mRow
+													.getMinValue())
+											* logRowYSpace);
+							gcImage.drawLine(x, y1 + logRowYSpace, x, y1
+									+ logRowYSpace - length);
 						}
 					break;
 
@@ -1646,7 +1668,7 @@ public class TimeLineView extends Composite implements Observer {
 							// System.out.println("mSec: "
 							// + (e.getKey() - mStartDiff));
 							// System.out.println(x);
-							gcImage.drawLine(x, y1, x, y1 + logRowYSpace);
+							gcImage.drawLine(x, y1 + logRowYSpace, x, y1);
 						}
 					break;
 				}
