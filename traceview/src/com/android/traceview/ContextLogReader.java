@@ -256,6 +256,7 @@ public class ContextLogReader {
 					ld.setMaxTime(0);
 					ld.setMinValue(0);
 					ld.setMaxValue(0);
+					ld.setMaxDiff(0);
 				}else{
 					ld.setMinTime(ld.getIntDataMap().firstKey());
 					ld.setMaxTime(ld.getIntDataMap().lastKey());
@@ -271,6 +272,7 @@ public class ContextLogReader {
 					}
 					ld.setMinValue(minVal);
 					ld.setMaxValue(maxVal);
+					ld.setMaxDiff(maxVal - minVal);
 				}
 				break;
 			}
@@ -280,6 +282,7 @@ public class ContextLogReader {
 					ld.setMaxTime(0);
 					ld.setMinValue(0);
 					ld.setMaxValue(0);
+					ld.setMaxDiff(0);
 				} else {
 					ld.setMinTime(ld.getLongDataMap().firstKey());
 					ld.setMaxTime(ld.getLongDataMap().lastKey());
@@ -295,6 +298,7 @@ public class ContextLogReader {
 					}
 					ld.setMinValue(minVal);
 					ld.setMaxValue(maxVal);
+					ld.setMaxDiff(maxVal - minVal);
 				}
 				break;
 			}
@@ -304,6 +308,7 @@ public class ContextLogReader {
 					ld.setMaxTime(0);
 					ld.setMinValue(0);
 					ld.setMaxValue(0);
+					ld.setMaxDiff(0);
 				} else {
 					ld.setMinTime(ld.getFloatDataMap().firstKey());
 					ld.setMaxTime(ld.getFloatDataMap().lastKey());
@@ -319,6 +324,7 @@ public class ContextLogReader {
 					}
 					ld.setMinValue(minVal);
 					ld.setMaxValue(maxVal);
+					ld.setMaxDiff(maxVal - minVal);
 				}
 				break;
 			}
@@ -328,6 +334,7 @@ public class ContextLogReader {
 					ld.setMaxTime(0);
 					ld.setMinValue(0);
 					ld.setMaxValue(0);
+					ld.setMaxDiff(0);
 				} else {
 					ld.setMinTime(ld.getDoubleDataMap().firstKey());
 					ld.setMaxTime(ld.getDoubleDataMap().lastKey());
@@ -344,6 +351,7 @@ public class ContextLogReader {
 					}
 					ld.setMinValue(minVal);
 					ld.setMaxValue(maxVal);
+					ld.setMaxDiff(maxVal - minVal);
 				}
 				break;
 			}
@@ -353,11 +361,13 @@ public class ContextLogReader {
 					ld.setMaxTime(0);
 					ld.setMinValue(0);
 					ld.setMaxValue(0);
+					ld.setMaxDiff(0);
 				} else {
 					ld.setMinTime(ld.getStringDataMap().firstKey());
 					ld.setMaxTime(ld.getStringDataMap().lastKey());
 					ld.setMinValue(0);
 					ld.setMaxValue(0);
+					ld.setMaxDiff(0);
 				}
 			}
 

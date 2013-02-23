@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Observable;
 import java.util.Observer;
+import java.util.TreeMap;
 
 import org.eclipse.jface.resource.FontRegistry;
 import org.eclipse.swt.SWT;
@@ -43,6 +44,7 @@ import org.eclipse.swt.graphics.Cursor;
 import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.Pattern;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.FillLayout;
@@ -95,6 +97,8 @@ public class TimeLineView extends Composite implements Observer {
     private final Color mColorBlack;
     private final Color mColorGray;
     private final Color mColorDarkGray;
+	private final Color mColorRed;
+	private final Color mColorGreen;
     private final Color mColorForeground;
     private final Color mColorRowBack;
 	private final Color mColorLogRowBack;
@@ -205,6 +209,8 @@ public class TimeLineView extends Composite implements Observer {
         mColorGray = display.getSystemColor(SWT.COLOR_GRAY);
         mColorDarkGray = display.getSystemColor(SWT.COLOR_DARK_GRAY);
         mColorBlack = display.getSystemColor(SWT.COLOR_BLACK);
+		mColorGreen = display.getSystemColor(SWT.COLOR_GREEN);
+		mColorRed = display.getSystemColor(SWT.COLOR_RED);
         // mColorBackground = display.getSystemColor(SWT.COLOR_WHITE);
         mColorForeground = display.getSystemColor(SWT.COLOR_BLACK);
         mColorRowBack = new Color(display, 240, 240, 255);
@@ -1382,6 +1388,190 @@ public class TimeLineView extends Composite implements Observer {
 			gc.fillRectangle(x, 0, width, dim.y);
 		}
 
+		private void updateGraphs() {
+			for (int ii = mStartLogRow; ii <= mEndLogRow; ++ii) {
+				LogRowData rd = mLogRows[ii];
+
+				int y1 = ii * logRowYSpace - mLogScrollOffsetY;
+
+				try {
+					switch (rd.mType) {
+					case INT:
+					{
+						rd.mGraphData.clear();
+						Long startKey = rd.mRow.getIntDataMap().floorKey(
+										Math.round(mScaleInfo.getMinVal())
+												+ mStartDiff);
+						Long endKey = rd.mRow.getIntDataMap().ceilingKey(
+										Math.round(mScaleInfo.getMaxVal())
+												+ mStartDiff);
+						if (startKey == null) {
+							startKey = Math.round(mScaleInfo.getMinVal())
+									+ mStartDiff;
+						}
+						if (endKey == null) {
+							endKey = Math.round(mScaleInfo.getMaxVal())
+									+ mStartDiff;
+						}
+
+						for (Map.Entry<Long, Integer> e : rd.mRow
+								.getIntDataMap().subMap(startKey, endKey + 1)
+								.entrySet()) {
+							int x = mScaleInfo.valueToPixel(e.getKey()
+									- mStartDiff);
+
+							int length = (int) Math
+									.round((e.getValue() - rd.mRow
+											.getMinValue())
+											/ rd.mRow.getMaxDiff()
+											* logRowYSpace);
+							rd.mGraphData.put(x, length);
+						}
+						break;
+					}
+					case LONG:
+					{
+						rd.mGraphData.clear();
+						Long startKey = rd.mRow.getLongDataMap()
+								.floorKey(
+										Math.round(mScaleInfo.getMinVal())
+												+ mStartDiff);
+						Long endKey = rd.mRow.getLongDataMap()
+								.ceilingKey(
+										Math.round(mScaleInfo.getMaxVal())
+												+ mStartDiff);
+						if (startKey == null) {
+							startKey = Math.round(mScaleInfo.getMinVal())
+									+ mStartDiff;
+						}
+						if (endKey == null) {
+							endKey = Math.round(mScaleInfo.getMaxVal())
+									+ mStartDiff;
+						}
+
+						for (Map.Entry<Long, Long> e : rd.mRow.getLongDataMap()
+								.subMap(startKey, endKey + 1).entrySet()) {
+							int x = mScaleInfo.valueToPixel(e.getKey()
+									- mStartDiff);
+
+							int length = (int) Math
+									.round((e.getValue() - rd.mRow
+											.getMinValue())
+											/ (rd.mRow.getMaxValue() - rd.mRow
+													.getMinValue())
+											* logRowYSpace);
+							rd.mGraphData.put(x, length);
+						}
+						break;
+					}
+					case FLOAT:
+					{
+						rd.mGraphData.clear();
+						Long startKey = rd.mRow.getFloatDataMap().floorKey(Math.round(mScaleInfo.getMinVal())+ mStartDiff);
+						Long endKey = rd.mRow.getFloatDataMap()
+								.higherKey(
+										Math.round(mScaleInfo.getMaxVal())
+												+ mStartDiff);
+						if (startKey == null) {
+							startKey = Math.round(mScaleInfo.getMinVal())
+									+ mStartDiff;
+						}
+						if (endKey == null) {
+							endKey = Math.round(mScaleInfo.getMaxVal())
+									+ mStartDiff;
+						}
+						System.out.println("endKey: " + (endKey - mStartDiff));
+
+						for (Map.Entry<Long, Float> e : rd.mRow
+								.getFloatDataMap().subMap(startKey, endKey + 1)
+								.entrySet()) {
+							int x = mScaleInfo.valueToPixel(e.getKey()
+									- mStartDiff);
+
+							int length = (int) Math
+									.round((e.getValue() - rd.mRow
+											.getMinValue())
+											/ (rd.mRow.getMaxValue() - rd.mRow
+													.getMinValue())
+											* logRowYSpace);
+							System.out.println("key: "
+									+ (e.getKey() - mStartDiff) + " x: " + x
+									+ " length: " + length);
+							rd.mGraphData.put(x, length);
+						}
+						break;
+					}
+					case DOUBLE:
+					{
+						rd.mGraphData.clear();
+						Long startKey = rd.mRow.getDoubleDataMap().floorKey(Math.round(mScaleInfo.getMinVal())+ mStartDiff);
+						Long endKey = rd.mRow.getDoubleDataMap()
+								.higherKey(
+										Math.round(mScaleInfo.getMaxVal())
+												+ mStartDiff);
+						if (startKey == null) {
+							startKey = Math.round(mScaleInfo.getMinVal())
+									+ mStartDiff;
+						}
+						if (endKey == null) {
+							endKey = Math.round(mScaleInfo.getMaxVal())
+									+ mStartDiff;
+						}
+
+						for (Map.Entry<Long, Double> e : rd.mRow
+								.getDoubleDataMap()
+								.subMap(startKey, endKey + 1).entrySet()) {
+							int x = mScaleInfo.valueToPixel(e.getKey()
+									- mStartDiff);
+
+							int length = (int) Math
+									.round((e.getValue() - rd.mRow
+											.getMinValue())
+											/ (rd.mRow.getMaxValue() - rd.mRow
+													.getMinValue())
+											* logRowYSpace);
+							rd.mGraphData.put(x, length);
+						}
+						break;
+					}
+					case STRING:
+					{
+						rd.mGraphData.clear();
+						Long startKey = rd.mRow.getStringDataMap()
+								.floorKey(
+										Math.round(mScaleInfo.getMinVal())
+												+ mStartDiff);
+						Long endKey = rd.mRow.getStringDataMap()
+								.ceilingKey(
+										Math.round(mScaleInfo.getMaxVal())
+												+ mStartDiff);
+						if (startKey == null) {
+							startKey = Math.round(mScaleInfo.getMinVal())
+									+ mStartDiff;
+						}
+						if (endKey == null) {
+							endKey = Math.round(mScaleInfo.getMaxVal())
+									+ mStartDiff;
+						}
+
+						for (Map.Entry<Long, String> e : rd.mRow
+								.getStringDataMap()
+								.subMap(startKey, endKey + 1)
+								.entrySet()) {
+							int x = mScaleInfo.valueToPixel(e.getKey()
+									- mStartDiff);
+							rd.mGraphData.put(x, 0);
+						}
+						break;
+					}
+					}
+				} catch (NoSuchElementException e) {
+
+				}
+
+			}
+		}
+
 		private void draw(Display display, GC gc) {
 			// if (mSegments.length == 0) {
 			// // gc.setBackground(colorBackground);
@@ -1440,7 +1630,7 @@ public class TimeLineView extends Composite implements Observer {
 				}
 
 				// Compute the strips
-				// computeStrips();
+				updateGraphs();
 
 				// Update the horizontal scrollbar.
 				updateHorizontalScrollBar();
@@ -1523,6 +1713,7 @@ public class TimeLineView extends Composite implements Observer {
 				try {
 				switch(rd.mType) {
 				case INT:
+ {
 					sizeAll = rd.mRow.getIntDataMap().size();
 					size = rd.mRow
 							.getIntDataMap()
@@ -1532,26 +1723,32 @@ public class TimeLineView extends Composite implements Observer {
 												+ mStartDiff).size();
 						first = rd.mRow.getIntDataMap().firstKey() - mStartDiff;
 						last = rd.mRow.getIntDataMap().lastKey() - mStartDiff;
-						for (Map.Entry<Long, Integer> e : rd.mRow
-								.getIntDataMap()
-								.subMap(Math.round(mScaleInfo.getMinVal())
-										+ mStartDiff,
-										Math.round(mScaleInfo.getMaxVal())
-												+ mStartDiff).entrySet()) {
-							int x = mScaleInfo.valueToPixel(e.getKey()
-									- mStartDiff);
 
-							int length = (int) Math
-									.round((e.getValue() - rd.mRow
-											.getMinValue())
-											/ (rd.mRow.getMaxValue() - rd.mRow
-													.getMinValue())
-											* logRowYSpace);
-							gcImage.drawLine(x, y1 + logRowYSpace, x, y1
-									+ logRowYSpace - length);
+						int lastX = -1;
+						int lastY = -1;
+
+						for (Map.Entry<Integer, Integer> e : rd.mGraphData
+								.entrySet()) {
+							if (lastX != -1 || lastY != -1) {
+								gcImage.drawLine(lastX, y1 + logRowYSpace
+										- lastY, e.getKey(), y1 + logRowYSpace
+										- lastY);
+								gcImage.drawLine(e.getKey(), y1 + logRowYSpace
+										- lastY, e.getKey(), y1 + logRowYSpace
+										- e.getValue());
+							} else {
+								gcImage.drawLine(e.getKey(), y1 + logRowYSpace,
+										e.getKey(),
+										y1 + logRowYSpace - e.getValue());
+							}
+							lastX = e.getKey();
+							lastY = e.getValue();
 						}
-					break;
+
+						break;
+					}
 				case LONG:
+ {
 					sizeAll = rd.mRow.getLongDataMap().size();
 					size = rd.mRow
 							.getLongDataMap()
@@ -1562,58 +1759,68 @@ public class TimeLineView extends Composite implements Observer {
 						first = rd.mRow.getLongDataMap().firstKey()
 								- mStartDiff;
 						last = rd.mRow.getLongDataMap().lastKey() - mStartDiff;
-						for (Map.Entry<Long, Long> e : rd.mRow
-								.getLongDataMap()
-								.subMap(Math.round(mScaleInfo.getMinVal())
-										+ mStartDiff,
-										Math.round(mScaleInfo.getMaxVal())
-												+ mStartDiff).entrySet()) {
-							int x = mScaleInfo.valueToPixel(e.getKey()
-									- mStartDiff);
 
-							int length = (int) Math
-									.round((e.getValue() - rd.mRow
-											.getMinValue())
-											/ (rd.mRow.getMaxValue() - rd.mRow
-													.getMinValue())
-											* logRowYSpace);
-							gcImage.drawLine(x, y1 + logRowYSpace, x, y1
-									+ logRowYSpace - length);
+						int lastX = -1;
+						int lastY = -1;
+
+						for (Map.Entry<Integer, Integer> e : rd.mGraphData
+								.entrySet()) {
+							if (lastX != -1 || lastY != -1) {
+								gcImage.drawLine(lastX, y1 + logRowYSpace
+										- lastY, e.getKey(), y1 + logRowYSpace
+										- lastY);
+								gcImage.drawLine(e.getKey(), y1 + logRowYSpace
+										- lastY, e.getKey(), y1 + logRowYSpace
+										- e.getValue());
+							} else {
+								gcImage.drawLine(e.getKey(), y1 + logRowYSpace,
+										e.getKey(),
+										y1 + logRowYSpace - e.getValue());
+							}
+							lastX = e.getKey();
+							lastY = e.getValue();
 						}
-					break;
+
+						break;
+					}
 				case FLOAT:
+ {
 					sizeAll = rd.mRow.getFloatDataMap().size();
-					size = rd.mRow
-							.getFloatDataMap()
-								.subMap(Math.round(mScaleInfo.getMinVal()
-										+ mStartDiff),
-										Math.round(mScaleInfo.getMaxVal())
-												+ mStartDiff).size();
+						size = rd.mGraphData.size();
 						first = rd.mRow.getFloatDataMap().firstKey()
 								- mStartDiff;
 						last = rd.mRow.getFloatDataMap().lastKey() - mStartDiff;
-						for (Map.Entry<Long, Float> e : rd.mRow
-								.getFloatDataMap()
-								.subMap(Math.round(mScaleInfo.getMinVal())
-										+ mStartDiff,
-										Math.round(mScaleInfo.getMaxVal())
-												+ mStartDiff).entrySet()) {
-							int x = mScaleInfo.valueToPixel(e.getKey()
-									- mStartDiff);
-							// System.out.println("mSec: "
-							// + (e.getKey() - mStartDiff));
-							// System.out.println(x);
-							int length = (int) Math
-									.round((e.getValue() - rd.mRow
-											.getMinValue())
-											/ (rd.mRow.getMaxValue() - rd.mRow
-													.getMinValue())
-											* logRowYSpace);
-							gcImage.drawLine(x, y1 + logRowYSpace, x, y1
-									+ logRowYSpace - length);
+
+						int[] poly = { 0, y1 + logRowYSpace, 0,
+								y1 + logRowYSpace, 0, y1 + logRowYSpace, 0,
+								y1 + logRowYSpace };
+
+						Pattern p = new Pattern(display, 0f, y1, 0f, y1
+								+ logRowYSpace, mColorRed, mColorGreen);
+						gcImage.setBackgroundPattern(p);
+						// gcImage.setForegroundPattern(p);
+						for (Map.Entry<Integer, Integer> e : rd.mGraphData
+								.entrySet()) {
+							poly[0] = poly[6];
+							poly[1] = poly[7];
+							poly[2] = poly[4];
+							poly[3] = poly[5];
+							poly[4] = e.getKey();
+							poly[5] = y1 + logRowYSpace;
+							poly[6] = e.getKey();
+							poly[7] = y1 + logRowYSpace - e.getValue();
+							gcImage.fillPolygon(poly);
+							// gcImage.drawLine(poly[0], poly[1], poly[6],
+							// poly[7]);
+							// System.out.println("poly: " + poly[0] + " "
+							// + poly[1] + " " + poly[2] + " " + poly[3]
+							// + " " + poly[4] + " " + poly[5] + " "
+							// + poly[6] + " " + poly[7]);
 						}
 					break;
+					}
 				case DOUBLE:
+ {
 					sizeAll = rd.mRow.getDoubleDataMap().size();
 					size = rd.mRow
 							.getDoubleDataMap()
@@ -1625,26 +1832,31 @@ public class TimeLineView extends Composite implements Observer {
 								- mStartDiff;
 						last = rd.mRow.getDoubleDataMap().lastKey()
 								- mStartDiff;
-						for (Map.Entry<Long, Double> e : rd.mRow
-								.getDoubleDataMap()
-								.subMap(Math.round(mScaleInfo.getMinVal())
-										+ mStartDiff,
-										Math.round(mScaleInfo.getMaxVal())
-												+ mStartDiff).entrySet()) {
-							int x = mScaleInfo.valueToPixel(e.getKey()
-									- mStartDiff);
+						int[] poly = { 0, y1 + logRowYSpace, 0,
+								y1 + logRowYSpace, 0, y1 + logRowYSpace, 0,
+								y1 + logRowYSpace };
 
-							int length = (int) Math
-									.round((e.getValue() - rd.mRow
-											.getMinValue())
-											/ (rd.mRow.getMaxValue() - rd.mRow
-													.getMinValue())
-											* logRowYSpace);
-							gcImage.drawLine(x, y1 + logRowYSpace, x, y1
-									+ logRowYSpace - length);
+						Pattern p = new Pattern(display, 0f, y1, 0f, y1
+								+ logRowYSpace, mColorRed, mColorGreen);
+						gcImage.setBackgroundPattern(p);
+						for (Map.Entry<Integer, Integer> e : rd.mGraphData
+								.entrySet()) {
+							poly[0] = poly[6];
+							poly[1] = poly[7];
+							poly[2] = poly[4];
+							poly[3] = poly[5];
+							poly[4] = e.getKey();
+							poly[5] = y1 + logRowYSpace;
+							poly[6] = e.getKey();
+							poly[7] = y1 + logRowYSpace - e.getValue();
+							gcImage.fillPolygon(poly);
+							// System.out.println("poly: " + poly[0] + " "
+							// + poly[1] + " " + poly[2] + " " + poly[3]
+							// + " " + poly[4] + " " + poly[5] + " "
+							// + poly[6] + " " + poly[7]);
 						}
 					break;
-
+					}
 				case STRING:
 					sizeAll = rd.mRow.getStringDataMap().size();
 					size = rd.mRow
@@ -3195,12 +3407,14 @@ public class TimeLineView extends Composite implements Observer {
 			mId = row.getId();
 			mType = row.getType();
 			mRow = row;
+			mGraphData = new TreeMap<Integer, Integer>();
 		}
 
 		private final String mName;
 		private final int mId;
 		private final LogType mType;
 		private final ContextLogData mRow;
+		private final TreeMap<Integer, Integer> mGraphData;
 	}
 
 	// >>>>>>>>>>>>Till here

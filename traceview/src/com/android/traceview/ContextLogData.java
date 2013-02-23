@@ -18,10 +18,18 @@ public class ContextLogData implements TimeLineView.LogRow {
 
 	private double minValue;
 	private double maxValue;
+	private double maxDiff;
 
 	private double minTime;
 	private double maxTime;
 
+	public double getMaxDiff() {
+		return maxDiff;
+	}
+
+	public void setMaxDiff(double maxDiff) {
+		this.maxDiff = maxDiff;
+	}
 	public double getMinValue() {
 		return minValue;
 	}
