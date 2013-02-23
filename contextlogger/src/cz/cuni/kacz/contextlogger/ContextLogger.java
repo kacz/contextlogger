@@ -20,8 +20,9 @@
 
 package cz.cuni.kacz.contextlogger;
 
+import java.util.ArrayList;
+
 import android.app.Activity;
-import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -34,9 +35,7 @@ import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
 import android.util.Log;
-
-import java.util.ArrayList;
-
+import android.widget.Toast;
 import cz.cuni.kacz.contextlogger.listeners.ContextListener;
 
 /**
@@ -63,7 +62,7 @@ public class ContextLogger {
 	/** Flag indicating whether we have called bind on the service. */
 	boolean mBound;
 
-	private ArrayList<ContextListener> mListeners = new ArrayList<ContextListener>();
+	private final ArrayList<ContextListener> mListeners = new ArrayList<ContextListener>();
 
 	/**
 	 * Constructor. Sets up application context reference and starts the logger
@@ -74,10 +73,12 @@ public class ContextLogger {
 	public ContextLogger(Activity activity) {
 		mCallerActivity = activity;
 
-		if (this.mCallerActivity == null)
+		if (this.mCallerActivity == null) {
 			Log.d(TAG, "mappcontext");
-		if (ContextLogger.class == null)
+		}
+		if (ContextLogger.class == null) {
 			Log.d(TAG, "class");
+		}
 		Intent akarmi = new Intent(this.mCallerActivity,
 				ContextLoggerService.class);
 		Log.d(TAG, "hahaaa");
@@ -99,7 +100,8 @@ public class ContextLogger {
 	/**
 	 * Class for interacting with the main interface of the service.
 	 */
-	private ServiceConnection mConnection = new ServiceConnection() {
+	private final ServiceConnection mConnection = new ServiceConnection() {
+		@Override
 		public void onServiceConnected(ComponentName className, IBinder service) {
 			// This is called when the connection with the service has been
 			// established, giving us the object we can use to
@@ -111,6 +113,7 @@ public class ContextLogger {
 			Log.i(TAG, "messenger connected");
 		}
 
+		@Override
 		public void onServiceDisconnected(ComponentName className) {
 			// This is called when the connection with the service has been
 			// unexpectedly disconnected -- that is, its process crashed.
@@ -126,8 +129,9 @@ public class ContextLogger {
 	public void startLogging() {
 		Log.d(TAG, "startLogging");
 
-		if (!mBound)
+		if (!mBound) {
 			return;
+		}
 
 		if (mIsRunning == true) {
 			Log.e(TAG, "Logging already in progress.");
@@ -164,8 +168,9 @@ public class ContextLogger {
 
 	public void initListeners() {
 		Log.d(TAG, "initListeners");
-		if (!mBound)
+		if (!mBound) {
 			return;
+		}
 		// send the listeners to the service
 		Message msg = Message.obtain(null,
 				ContextLoggerService.MSG_INIT_LISTENERS, 0, 0);
@@ -198,8 +203,9 @@ public class ContextLogger {
 			Log.d(TAG, "stopmethod tracing stopped");
 		}
 
-		if (!mBound)
+		if (!mBound) {
 			return;
+		}
 		// Create and send a message to the service, using a supported 'what'
 		// value
 		Message msg = Message.obtain(null,
@@ -239,5 +245,10 @@ public class ContextLogger {
 		}
 		mDoTrace = enable;
 	};
+
+	public void brb() {
+		Log.e(TAG, "Big Red Button pushed.");
+		Toast.makeText(mCallerActivity, "BRB", Toast.LENGTH_SHORT).show();
+	}
 
 }

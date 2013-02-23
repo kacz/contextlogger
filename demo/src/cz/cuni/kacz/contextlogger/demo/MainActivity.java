@@ -34,6 +34,7 @@ import android.os.Bundle;
 import android.os.Process;
 import android.preference.PreferenceManager;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -42,9 +43,6 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-
-import cz.cuni.kacz.contextlogger.demo.R;
-
 import cz.cuni.kacz.contextlogger.ContextLogger;
 import cz.cuni.kacz.contextlogger.listeners.AcceleraionListener;
 import cz.cuni.kacz.contextlogger.listeners.ContextListener;
@@ -68,9 +66,24 @@ public class MainActivity extends Activity {
 	private boolean running = false;
 	private BroadcastReceiver mBCReceiver;
 
-	private Map<Integer, TextView> mValues = new HashMap<Integer, TextView>();
+	private final Map<Integer, TextView> mValues = new HashMap<Integer, TextView>();
 
 	Resources res;
+
+	@Override
+	public boolean dispatchKeyEvent(KeyEvent event) {
+		int action = event.getAction();
+		int keyCode = event.getKeyCode();
+		switch (keyCode) {
+		case KeyEvent.KEYCODE_VOLUME_UP:
+			if (action == KeyEvent.ACTION_DOWN) {
+				mCL.brb();
+			}
+			return true;
+		default:
+			return super.dispatchKeyEvent(event);
+		}
+	}
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
