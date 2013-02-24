@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 import java.util.Observable;
 import java.util.Observer;
@@ -1392,8 +1393,6 @@ public class TimeLineView extends Composite implements Observer {
 			for (int ii = mStartLogRow; ii <= mEndLogRow; ++ii) {
 				LogRowData rd = mLogRows[ii];
 
-				int y1 = ii * logRowYSpace - mLogScrollOffsetY;
-
 				try {
 					switch (rd.mType) {
 					case INT:
@@ -1424,7 +1423,7 @@ public class TimeLineView extends Composite implements Observer {
 									.round((e.getValue() - rd.mRow
 											.getMinValue())
 											/ rd.mRow.getMaxDiff()
-											* logRowYSpace);
+											* logRowHeight);
 							rd.mGraphData.put(x, length);
 						}
 						break;
@@ -1459,7 +1458,7 @@ public class TimeLineView extends Composite implements Observer {
 											.getMinValue())
 											/ (rd.mRow.getMaxValue() - rd.mRow
 													.getMinValue())
-											* logRowYSpace);
+											* logRowHeight);
 							rd.mGraphData.put(x, length);
 						}
 						break;
@@ -1493,7 +1492,7 @@ public class TimeLineView extends Composite implements Observer {
 											.getMinValue())
 											/ (rd.mRow.getMaxValue() - rd.mRow
 													.getMinValue())
-											* logRowYSpace);
+											* logRowHeight);
 							System.out.println("key: "
 									+ (e.getKey() - mStartDiff) + " x: " + x
 									+ " length: " + length);
@@ -1529,7 +1528,7 @@ public class TimeLineView extends Composite implements Observer {
 											.getMinValue())
 											/ (rd.mRow.getMaxValue() - rd.mRow
 													.getMinValue())
-											* logRowYSpace);
+											* logRowHeight);
 							rd.mGraphData.put(x, length);
 						}
 						break;
@@ -1699,7 +1698,7 @@ public class TimeLineView extends Composite implements Observer {
 				gcImage.drawLine(0, y1, dim.x, y1);
 				gcImage.drawLine(0, y1 + logRowYSpace, dim.x, y1 + logRowYSpace);
 			}
-			// debug
+
 			for (int ii = mStartLogRow; ii <= mEndLogRow; ++ii) {
 				LogRowData rd = mLogRows[ii];
 
@@ -1714,6 +1713,7 @@ public class TimeLineView extends Composite implements Observer {
 				switch(rd.mType) {
 				case INT:
  {
+						// debug
 					sizeAll = rd.mRow.getIntDataMap().size();
 					size = rd.mRow
 							.getIntDataMap()
@@ -1723,24 +1723,33 @@ public class TimeLineView extends Composite implements Observer {
 												+ mStartDiff).size();
 						first = rd.mRow.getIntDataMap().firstKey() - mStartDiff;
 						last = rd.mRow.getIntDataMap().lastKey() - mStartDiff;
+						// -- debug
 
 						int lastX = -1;
 						int lastY = -1;
 
+						gcImage.setBackground(mColorBlack);
+						gcImage.setForeground(mColorBlack);
 						for (Map.Entry<Integer, Integer> e : rd.mGraphData
 								.entrySet()) {
 							if (lastX != -1 || lastY != -1) {
-								gcImage.drawLine(lastX, y1 + logRowYSpace
-										- lastY, e.getKey(), y1 + logRowYSpace
+								gcImage.drawLine(lastX, y1 + logRowHeight
+										+ logRowYMarginHalf - lastY,
+										e.getKey(), y1 + logRowHeight
+												+ logRowYMarginHalf
 										- lastY);
-								gcImage.drawLine(e.getKey(), y1 + logRowYSpace
-										- lastY, e.getKey(), y1 + logRowYSpace
+								gcImage.drawLine(e.getKey(), y1 + logRowHeight
+										+ logRowYMarginHalf - lastY,
+										e.getKey(),
+										y1 + logRowHeight + logRowYMarginHalf
 										- e.getValue());
 							} else {
-								gcImage.drawLine(e.getKey(), y1 + logRowYSpace,
+								gcImage.drawLine(e.getKey(), y1 + logRowHeight
+										+ logRowYMarginHalf,
 										e.getKey(),
-										y1 + logRowYSpace - e.getValue());
-							}
+										y1 + logRowHeight + logRowYMarginHalf
+												- e.getValue());
+						}
 							lastX = e.getKey();
 							lastY = e.getValue();
 						}
@@ -1749,6 +1758,7 @@ public class TimeLineView extends Composite implements Observer {
 					}
 				case LONG:
  {
+						// debug
 					sizeAll = rd.mRow.getLongDataMap().size();
 					size = rd.mRow
 							.getLongDataMap()
@@ -1759,6 +1769,7 @@ public class TimeLineView extends Composite implements Observer {
 						first = rd.mRow.getLongDataMap().firstKey()
 								- mStartDiff;
 						last = rd.mRow.getLongDataMap().lastKey() - mStartDiff;
+						// -- debug
 
 						int lastX = -1;
 						int lastY = -1;
@@ -1766,16 +1777,22 @@ public class TimeLineView extends Composite implements Observer {
 						for (Map.Entry<Integer, Integer> e : rd.mGraphData
 								.entrySet()) {
 							if (lastX != -1 || lastY != -1) {
-								gcImage.drawLine(lastX, y1 + logRowYSpace
-										- lastY, e.getKey(), y1 + logRowYSpace
+								gcImage.drawLine(lastX, y1 + logRowHeight
+										+ logRowYMarginHalf - lastY,
+										e.getKey(), y1 + logRowHeight
+												+ logRowYMarginHalf
 										- lastY);
-								gcImage.drawLine(e.getKey(), y1 + logRowYSpace
-										- lastY, e.getKey(), y1 + logRowYSpace
+								gcImage.drawLine(e.getKey(), y1 + logRowHeight
+										+ logRowYMarginHalf - lastY,
+										e.getKey(),
+										y1 + logRowHeight + logRowYMarginHalf
 										- e.getValue());
 							} else {
-								gcImage.drawLine(e.getKey(), y1 + logRowYSpace,
+								gcImage.drawLine(e.getKey(), y1 + logRowHeight
+										+ logRowYMarginHalf,
 										e.getKey(),
-										y1 + logRowYSpace - e.getValue());
+										y1 + logRowHeight + logRowYMarginHalf
+												- e.getValue());
 							}
 							lastX = e.getKey();
 							lastY = e.getValue();
@@ -1785,15 +1802,18 @@ public class TimeLineView extends Composite implements Observer {
 					}
 				case FLOAT:
  {
+						// debug
 					sizeAll = rd.mRow.getFloatDataMap().size();
 						size = rd.mGraphData.size();
 						first = rd.mRow.getFloatDataMap().firstKey()
 								- mStartDiff;
 						last = rd.mRow.getFloatDataMap().lastKey() - mStartDiff;
+						// -- debug
 
-						int[] poly = { 0, y1 + logRowYSpace, 0,
-								y1 + logRowYSpace, 0, y1 + logRowYSpace, 0,
-								y1 + logRowYSpace };
+						int[] poly = { 0,
+								y1 + logRowHeight + logRowYMarginHalf, 0,
+								y1 + logRowHeight + logRowYMarginHalf, -1, -1,
+								-1, -1 };
 
 						Pattern p = new Pattern(display, 0f, y1, 0f, y1
 								+ logRowYSpace, mColorRed, mColorGreen);
@@ -1806,21 +1826,22 @@ public class TimeLineView extends Composite implements Observer {
 							poly[2] = poly[4];
 							poly[3] = poly[5];
 							poly[4] = e.getKey();
-							poly[5] = y1 + logRowYSpace;
+							poly[5] = y1 + logRowHeight + logRowYMarginHalf;
 							poly[6] = e.getKey();
-							poly[7] = y1 + logRowYSpace - e.getValue();
-							gcImage.fillPolygon(poly);
-							// gcImage.drawLine(poly[0], poly[1], poly[6],
-							// poly[7]);
-							// System.out.println("poly: " + poly[0] + " "
-							// + poly[1] + " " + poly[2] + " " + poly[3]
-							// + " " + poly[4] + " " + poly[5] + " "
-							// + poly[6] + " " + poly[7]);
+							poly[7] = y1 + logRowHeight + logRowYMarginHalf
+									- e.getValue();
+							if (poly[1] != -1)
+							 {
+								gcImage.fillPolygon(poly);
+								// gcImage.drawLine(poly[0], poly[1], poly[6],
+								// poly[7]);
+							}
 						}
 					break;
 					}
 				case DOUBLE:
  {
+						// debug
 					sizeAll = rd.mRow.getDoubleDataMap().size();
 					size = rd.mRow
 							.getDoubleDataMap()
@@ -1832,12 +1853,16 @@ public class TimeLineView extends Composite implements Observer {
 								- mStartDiff;
 						last = rd.mRow.getDoubleDataMap().lastKey()
 								- mStartDiff;
-						int[] poly = { 0, y1 + logRowYSpace, 0,
-								y1 + logRowYSpace, 0, y1 + logRowYSpace, 0,
-								y1 + logRowYSpace };
+						// -- debug
 
-						Pattern p = new Pattern(display, 0f, y1, 0f, y1
-								+ logRowYSpace, mColorRed, mColorGreen);
+						int[] poly = { 0,
+								y1 + logRowHeight + logRowYMarginHalf, 0,
+								y1 + logRowHeight + logRowYMarginHalf, -1, -1,
+								-1, -1 };
+
+						Pattern p = new Pattern(display, 0f, y1
+								+ logRowYMarginHalf, 0f, y1 + logRowHeight
+								+ logRowYMarginHalf, mColorRed, mColorGreen);
 						gcImage.setBackgroundPattern(p);
 						for (Map.Entry<Integer, Integer> e : rd.mGraphData
 								.entrySet()) {
@@ -1846,18 +1871,19 @@ public class TimeLineView extends Composite implements Observer {
 							poly[2] = poly[4];
 							poly[3] = poly[5];
 							poly[4] = e.getKey();
-							poly[5] = y1 + logRowYSpace;
+							poly[5] = y1 + logRowHeight + logRowYMarginHalf;
 							poly[6] = e.getKey();
-							poly[7] = y1 + logRowYSpace - e.getValue();
-							gcImage.fillPolygon(poly);
-							// System.out.println("poly: " + poly[0] + " "
-							// + poly[1] + " " + poly[2] + " " + poly[3]
-							// + " " + poly[4] + " " + poly[5] + " "
-							// + poly[6] + " " + poly[7]);
+							poly[7] = y1 + logRowHeight + logRowYMarginHalf
+									- e.getValue();
+							if (poly[7] != -1)
+							 {
+								gcImage.fillPolygon(poly);
+							}
 						}
 					break;
 					}
 				case STRING:
+						// debug
 					sizeAll = rd.mRow.getStringDataMap().size();
 					size = rd.mRow
 							.getStringDataMap()
@@ -1869,6 +1895,8 @@ public class TimeLineView extends Composite implements Observer {
 								- mStartDiff;
 						last = rd.mRow.getStringDataMap().lastKey()
 								- mStartDiff;
+						// -- debug
+
 						for (Map.Entry<Long, String> e : rd.mRow
 								.getStringDataMap()
 								.subMap(Math.round(mScaleInfo.getMinVal())
@@ -1880,7 +1908,9 @@ public class TimeLineView extends Composite implements Observer {
 							// System.out.println("mSec: "
 							// + (e.getKey() - mStartDiff));
 							// System.out.println(x);
-							gcImage.drawLine(x, y1 + logRowYSpace, x, y1);
+							gcImage.drawLine(x, y1 + logRowHeight
+									+ logRowYMarginHalf, x, y1
+									+ logRowYMarginHalf);
 						}
 					break;
 				}
@@ -1890,9 +1920,7 @@ public class TimeLineView extends Composite implements Observer {
 				
 				String label = "[" + mScaleInfo.getMinVal() + " - "
 						+ mScaleInfo.getMaxVal() + "] " + size + " " + sizeAll
-						+ " " + first
- + " " + last
-						+ " " + " ("
+						+ " " + first + " " + last + " " + " ("
 						+ rd.mType.name() + ")";
 
 				// int y1 = rd.mRank * rowYSpace + offsetY;
@@ -1924,21 +1952,87 @@ public class TimeLineView extends Composite implements Observer {
 			int lineEnd = Math.min(dim.y, mNumLogRows * rowYSpace);
 			gcImage.drawLine(mMouse.x, 0, mMouse.x, lineEnd);
 
-			/*
-			 * if (blockName != null) { mTimescale.setMethodName(blockName);
-			 * mTimescale.setMethodColor(blockColor);
-			 * mTimescale.setDetails(blockDetails); mShowHighlightName = false;
-			 * } else if (mShowHighlightName) { // Draw the highlighted method
-			 * name MethodData md = mHighlightMethodData; if (md == null &&
-			 * mHighlightCall != null) { md = mHighlightCall.getMethodData(); }
-			 * if (md == null) { System.out.printf("null highlight?\n");
-			 * //$NON-NLS-1$ } if (md != null) {
-			 * mTimescale.setMethodName(md.getProfileName());
-			 * mTimescale.setMethodColor(md.getColor());
-			 * mTimescale.setDetails(null); } } else {
-			 * mTimescale.setMethodName(null); mTimescale.setMethodColor(null);
-			 * mTimescale.setDetails(null); } mTimescale.redraw();
-			 */
+			if (mMouseLogRow != -1) {
+				LogRowData ld = mLogRows[mMouseLogRow];
+				String logDetails = null;
+				long timeStamp = (long) mScaleInfo.pixelToValue(mMouse.x)
+						+ mStartDiff;
+				switch (ld.mType) {
+				case INT:
+					Entry<Long, Integer> intEntry = ld.mRow.getIntDataMap()
+							.floorEntry(timeStamp);
+					if (intEntry != null) {
+						logDetails = intEntry.getValue().toString();
+					}
+					break;
+				case LONG:
+					Entry<Long, Long> longEntry = ld.mRow.getLongDataMap()
+							.floorEntry(timeStamp);
+					if (longEntry != null) {
+						logDetails = longEntry.getValue().toString();
+					}
+					break;
+				case FLOAT:
+					Entry<Long, Float> ceilingFloatEntry = ld.mRow
+							.getFloatDataMap()
+							.ceilingEntry(timeStamp);
+					Entry<Long, Float> floorFloatEntry = ld.mRow
+							.getFloatDataMap()
+							.floorEntry(timeStamp);
+					if (ceilingFloatEntry != null && floorFloatEntry != null) {
+						float floatValue = floorFloatEntry.getValue()
+								+ (float) (timeStamp - floorFloatEntry
+										.getKey())
+								/ (float) (ceilingFloatEntry.getKey() - floorFloatEntry
+										.getKey())
+								* (ceilingFloatEntry.getValue() - floorFloatEntry
+										.getValue());
+						logDetails = String.valueOf(floatValue);
+						// debug
+						System.out.println("q "
+								+ (timeStamp - floorFloatEntry.getKey())
+								+ " / "
+								+ (ceilingFloatEntry.getKey() - floorFloatEntry
+										.getKey()));
+					}
+
+
+					break;
+				case DOUBLE:
+					Entry<Long, Double> ceilingDoubleEntry = ld.mRow
+							.getDoubleDataMap().ceilingEntry(timeStamp);
+					Entry<Long, Double> floorDoubleEntry = ld.mRow
+							.getDoubleDataMap()
+							.floorEntry(timeStamp);
+					if (ceilingDoubleEntry != null && floorDoubleEntry != null) {
+						double doubleValue = floorDoubleEntry.getValue()
+								+ (timeStamp - floorDoubleEntry.getKey())
+								/ (ceilingDoubleEntry.getKey() - floorDoubleEntry
+										.getKey())
+								* ceilingDoubleEntry.getValue();
+						logDetails = String.valueOf(doubleValue);
+					}
+
+					break;
+				case STRING:
+					Entry<Long, String> stringEntry = ld.mRow
+							.getStringDataMap().floorEntry(timeStamp);
+					if (stringEntry != null) {
+						logDetails = stringEntry.getValue();
+					}
+					break;
+				}
+
+				mTimescale.setMethodName(ld.mName);
+				mTimescale.setMethodColor(mColorBlack);
+				mTimescale.setDetails(logDetails);
+			} else {
+				// mTimescale.setMethodName(null);
+				// mTimescale.setMethodColor(null);
+				// mTimescale.setDetails(null);
+			}
+			mTimescale.redraw();
+
 			// Draw the off-screen buffer to the screen
 			gc.drawImage(image, 0, 0);
 
