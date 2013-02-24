@@ -117,6 +117,9 @@ public class MainActivity extends Activity {
 					if (intent.hasExtra("longValue")) {
 						value = String.valueOf(intent.getLongExtra("longValue",
 								-1));
+					} else if (intent.hasExtra("intValue")) {
+						value = String.valueOf(intent.getIntExtra("intValue",
+								-1));
 					} else if (intent.hasExtra("floatValue")) {
 						value = String.valueOf(intent.getFloatExtra(
 								"floatValue", -1));
