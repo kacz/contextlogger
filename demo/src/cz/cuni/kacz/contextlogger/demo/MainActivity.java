@@ -80,6 +80,15 @@ public class MainActivity extends Activity {
 				mCL.brb();
 			}
 			return true;
+		case KeyEvent.KEYCODE_VOLUME_DOWN:
+			if (action == KeyEvent.ACTION_DOWN) {
+				if (running) {
+					stopLogging();
+				} else {
+					startLogging();
+				}
+			}
+			return true;
 		default:
 			return super.dispatchKeyEvent(event);
 		}
@@ -210,10 +219,10 @@ public class MainActivity extends Activity {
 	}
 
 	public void startButtonClicked(View view) {
-		startLogging(view);
+		startLogging();
 	}
 
-	public void startLogging(View view) {
+	public void startLogging() {
 		if (!running) {
 			Log.d(TAG, "startLogging");
 			Log.d(TAG, "activitys UID: " + Process.myUid());
@@ -335,7 +344,7 @@ public class MainActivity extends Activity {
 		}
 	}
 
-	public void stopLogging(View view) {
+	public void stopLogging() {
 		if (running) {
 			Log.d(TAG, "stopLogging");
 
