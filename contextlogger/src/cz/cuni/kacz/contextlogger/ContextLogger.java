@@ -62,6 +62,8 @@ public class ContextLogger {
 	/** Flag indicating whether we have called bind on the service. */
 	boolean mBound;
 
+	private final int TRACE_BUFF_SUZE = 128 * 1024 * 1024;// 128M
+
 	private final ArrayList<ContextListener> mListeners = new ArrayList<ContextListener>();
 
 	/**
@@ -146,7 +148,7 @@ public class ContextLogger {
 			Debug.startMethodTracing(Environment
 					.getExternalStoragePublicDirectory(
 							Environment.DIRECTORY_DOWNLOADS).getAbsolutePath()
-					+ "/" + traceName);
+							+ "/" + traceName, TRACE_BUFF_SUZE);
 			Log.d(TAG, "method tracing started");
 		}
 
