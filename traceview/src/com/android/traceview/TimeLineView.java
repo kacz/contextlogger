@@ -660,9 +660,16 @@ public class TimeLineView extends Composite implements Observer {
 			
 		}
 
-		// Sort the rows into decreasing elapsed time
+		// Sort the log rows into increasing id value
 		Collection<LogRowData> rv = mLogRowByName.values();
 		mLogRows = rv.toArray(new LogRowData[rv.size()]);
+
+		Arrays.sort(mLogRows, new Comparator<LogRowData>() {
+			@Override
+			public int compare(LogRowData rd1, LogRowData rd2) {
+				return rd1.mId - rd2.mId;
+			}
+		});
 
 		mNumLogRows = mLogRows.length;
 
