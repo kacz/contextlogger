@@ -1424,7 +1424,7 @@ public class TimeLineView extends Composite implements Observer {
 											.getMinValue())
 											/ rd.mRow.getMaxDiff()
 											* logRowHeight);
-							rd.mGraphData.put(x, length);
+							rd.mGraphData.put(x + LeftMargin, length);
 						}
 						break;
 					}
@@ -1459,7 +1459,7 @@ public class TimeLineView extends Composite implements Observer {
 											/ (rd.mRow.getMaxValue() - rd.mRow
 													.getMinValue())
 											* logRowHeight);
-							rd.mGraphData.put(x, length);
+							rd.mGraphData.put(x + LeftMargin, length);
 						}
 						break;
 					}
@@ -1479,7 +1479,8 @@ public class TimeLineView extends Composite implements Observer {
 							endKey = Math.round(mScaleInfo.getMaxVal())
 									+ mStartDiff;
 						}
-						System.out.println("endKey: " + (endKey - mStartDiff));
+						// System.out.println("endKey: " + (endKey -
+						// mStartDiff));
 
 						for (Map.Entry<Long, Float> e : rd.mRow
 								.getFloatDataMap().subMap(startKey, endKey + 1)
@@ -1493,11 +1494,63 @@ public class TimeLineView extends Composite implements Observer {
 											/ (rd.mRow.getMaxValue() - rd.mRow
 													.getMinValue())
 											* logRowHeight);
-							System.out.println("key: "
-									+ (e.getKey() - mStartDiff) + " x: " + x
-									+ " length: " + length);
-							rd.mGraphData.put(x, length);
+							// System.out.println("key: "
+							// + (e.getKey() - mStartDiff) + " x: " + x
+							// + " length: " + length);
+							rd.mGraphData.put(x + LeftMargin, length);
+							// System.out.println("x " + (x + LeftMargin)
+							// + " len " + length);
 						}
+						if (rd.mGraphData.size() > 1) {
+							int firstKey = rd.mGraphData.firstKey();
+							int secKey = rd.mGraphData.higherKey(firstKey);
+							int firstPix = mScaleInfo.valueToPixel(mScaleInfo
+									.getMinVal()) + LeftMargin;
+							int firstVal = rd.mGraphData.get(firstKey);
+							int secVal = rd.mGraphData.get(secKey);
+							if (firstKey < firstPix) {
+								Entry<Integer, Integer> firstEntry = rd.mGraphData
+										.firstEntry();
+								Entry<Integer, Integer> secEntry = rd.mGraphData
+										.higherEntry(firstEntry.getKey());
+								int newVal = firstVal
+										+ ((firstPix - firstKey)
+												/ (secKey - firstKey) * (secVal - firstVal));
+								rd.mGraphData.remove(firstKey);
+								rd.mGraphData.put(firstPix, newVal);
+							}
+
+							int lastKey = rd.mGraphData.lastKey();
+							int prevKey = rd.mGraphData.lowerKey(lastKey);
+							int lastPix = mScaleInfo.valueToPixel(mScaleInfo
+									.getMaxVal()) + LeftMargin;
+							int lastVal = rd.mGraphData.get(lastKey);
+							int prevVal = rd.mGraphData.get(prevKey);
+							if (lastKey > lastPix) {
+								Entry<Integer, Integer> lastEntry = rd.mGraphData
+										.lastEntry();
+								Entry<Integer, Integer> prevEntry = rd.mGraphData
+										.lowerEntry(lastEntry.getKey());
+								int newVal = lastVal
+										+ ((lastPix - lastKey)
+												/ (prevKey - lastKey) * (prevVal - lastVal));
+								rd.mGraphData.remove(lastKey);
+								rd.mGraphData.put(lastPix, newVal);
+							}
+							// System.out.println("firstKey:" + firstKey);
+							// System.out.println("secKey:" + secKey);
+							// System.out.println("firstpix:" + firstPix);
+							//
+							// System.out.println("lastKey:" + lastKey);
+							// System.out.println("prevKey:" + prevKey);
+							// System.out.println("lastpix:" + lastPix);
+						}
+						// for (Entry<Integer, Integer> e : rd.mGraphData
+						// .entrySet()) {
+						// System.out.println("x " + e.getKey() + " len "
+						// + e.getValue());
+						// }
+						// System.out.println("=========");
 						break;
 					}
 					case DOUBLE:
@@ -1529,7 +1582,45 @@ public class TimeLineView extends Composite implements Observer {
 											/ (rd.mRow.getMaxValue() - rd.mRow
 													.getMinValue())
 											* logRowHeight);
-							rd.mGraphData.put(x, length);
+							rd.mGraphData.put(x + LeftMargin, length);
+						}
+						if (rd.mGraphData.size() > 1) {
+							int firstKey = rd.mGraphData.firstKey();
+							int secKey = rd.mGraphData.higherKey(firstKey);
+							int firstPix = mScaleInfo.valueToPixel(mScaleInfo
+									.getMinVal()) + LeftMargin;
+							int firstVal = rd.mGraphData.get(firstKey);
+							int secVal = rd.mGraphData.get(secKey);
+							if (firstKey < firstPix) {
+								Entry<Integer, Integer> firstEntry = rd.mGraphData
+										.firstEntry();
+								Entry<Integer, Integer> secEntry = rd.mGraphData
+										.higherEntry(firstEntry.getKey());
+								int newVal = firstVal
+										+ ((firstPix - firstKey)
+												/ (secKey - firstKey) * (secVal - firstVal));
+								rd.mGraphData.remove(firstKey);
+								rd.mGraphData.put(firstPix, newVal);
+							}
+
+							int lastKey = rd.mGraphData.lastKey();
+							int prevKey = rd.mGraphData.lowerKey(lastKey);
+							int lastPix = mScaleInfo.valueToPixel(mScaleInfo
+									.getMaxVal()) + LeftMargin;
+							int lastVal = rd.mGraphData.get(lastKey);
+							int prevVal = rd.mGraphData.get(prevKey);
+							if (lastKey > lastPix) {
+								Entry<Integer, Integer> lastEntry = rd.mGraphData
+										.lastEntry();
+								Entry<Integer, Integer> prevEntry = rd.mGraphData
+										.lowerEntry(lastEntry.getKey());
+								int newVal = lastVal
+										+ ((lastPix - lastKey)
+												/ (prevKey - lastKey) * (prevVal - lastVal));
+								rd.mGraphData.remove(lastKey);
+								rd.mGraphData.put(lastPix, newVal);
+							}
+
 						}
 						break;
 					}
@@ -1559,7 +1650,35 @@ public class TimeLineView extends Composite implements Observer {
 								.entrySet()) {
 							int x = mScaleInfo.valueToPixel(e.getKey()
 									- mStartDiff);
-							rd.mGraphData.put(x, 0);
+							rd.mGraphData.put(x + LeftMargin, 0);
+						}
+
+						int firstKey = rd.mGraphData.firstKey();
+						int firstPix = mScaleInfo.valueToPixel(mScaleInfo
+								.getMinVal()) + LeftMargin;
+
+						if (firstKey < firstPix) {
+							rd.mGraphData.remove(firstKey);
+							rd.mGraphData.put(firstPix, 0);
+						}
+						int lastKey = rd.mGraphData.lastKey();
+						int lastPix = mScaleInfo.valueToPixel(mScaleInfo
+								.getMaxVal()) + LeftMargin;
+
+						if (lastKey > lastPix) {
+							rd.mGraphData.remove(lastKey);
+							rd.mGraphData.put(lastPix, 0);
+						}
+
+						System.out.println("firstKey:" + firstKey);
+						System.out.println("firstpix:" + firstPix);
+
+						System.out.println("lastKey:" + lastKey);
+						System.out.println("lastpix:" + lastPix);
+						for (Entry<Integer, Integer> e : rd.mGraphData
+								.entrySet()) {
+							System.out.println("x " + e.getKey() + " len "
+									+ e.getValue());
 						}
 						break;
 					}
@@ -1725,11 +1844,11 @@ public class TimeLineView extends Composite implements Observer {
 						last = rd.mRow.getIntDataMap().lastKey() - mStartDiff;
 						// -- debug
 
+						gcImage.setForeground(mColorBlack);
+
 						int lastX = -1;
 						int lastY = -1;
 
-						gcImage.setBackground(mColorBlack);
-						gcImage.setForeground(mColorBlack);
 						for (Map.Entry<Integer, Integer> e : rd.mGraphData
 								.entrySet()) {
 							if (lastX != -1 || lastY != -1) {
@@ -1770,6 +1889,8 @@ public class TimeLineView extends Composite implements Observer {
 								- mStartDiff;
 						last = rd.mRow.getLongDataMap().lastKey() - mStartDiff;
 						// -- debug
+
+						gcImage.setForeground(mColorBlack);
 
 						int lastX = -1;
 						int lastY = -1;
@@ -1897,22 +2018,32 @@ public class TimeLineView extends Composite implements Observer {
 								- mStartDiff;
 						// -- debug
 
-						for (Map.Entry<Long, String> e : rd.mRow
-								.getStringDataMap()
-								.subMap(Math.round(mScaleInfo.getMinVal())
-										+ mStartDiff,
-										Math.round(mScaleInfo.getMaxVal())
-												+ mStartDiff).entrySet()) {
-							int x = mScaleInfo.valueToPixel(e.getKey()
-									- mStartDiff);
-							// System.out.println("mSec: "
-							// + (e.getKey() - mStartDiff));
-							// System.out.println(x);
-							gcImage.drawLine(x, y1 + logRowHeight
-									+ logRowYMarginHalf, x, y1
-									+ logRowYMarginHalf);
+						int lastX = -1;
+						int lastY = -1;
+
+						gcImage.setBackground(mColorGray);
+						gcImage.setForeground(mColorDarkGray);
+						for (Map.Entry<Integer, Integer> e : rd.mGraphData
+								.entrySet()) {
+							int x = e.getKey();
+							if (lastY != -1) {
+								gcImage.fillGradientRectangle(lastX, y1
+										+ logRowYMarginHalf, x - lastX,
+										logRowHeight, false);
+							}
+							lastX = x;
+							lastY = e.getValue();
 						}
-					break;
+						if (lastY != -1) {
+							gcImage.fillGradientRectangle(
+									lastX,
+									y1 + logRowYMarginHalf,
+									mScaleInfo.valueToPixel(mScaleInfo
+											.getMaxVal()) + LeftMargin - lastX,
+									logRowHeight, false);
+						}
+
+						break;
 				}
 				} catch (NoSuchElementException e) {
 
@@ -1949,13 +2080,14 @@ public class TimeLineView extends Composite implements Observer {
 			 */
 			// Draw a vertical line where the mouse is.
 			gcImage.setForeground(mColorDarkGray);
-			int lineEnd = Math.min(dim.y, mNumLogRows * rowYSpace);
+			int lineEnd = Math.min(dim.y, mNumLogRows * logRowYSpace);
 			gcImage.drawLine(mMouse.x, 0, mMouse.x, lineEnd);
 
 			if (mMouseLogRow != -1) {
 				LogRowData ld = mLogRows[mMouseLogRow];
 				String logDetails = null;
-				long timeStamp = (long) mScaleInfo.pixelToValue(mMouse.x)
+				long timeStamp = (long) mScaleInfo.pixelToValue(mMouse.x
+						- LeftMargin)
 						+ mStartDiff;
 				switch (ld.mType) {
 				case INT:
@@ -1989,11 +2121,11 @@ public class TimeLineView extends Composite implements Observer {
 										.getValue());
 						logDetails = String.valueOf(floatValue);
 						// debug
-						System.out.println("q "
-								+ (timeStamp - floorFloatEntry.getKey())
-								+ " / "
-								+ (ceilingFloatEntry.getKey() - floorFloatEntry
-										.getKey()));
+						// System.out.println("q "
+						// + (timeStamp - floorFloatEntry.getKey())
+						// + " / "
+						// + (ceilingFloatEntry.getKey() - floorFloatEntry
+						// .getKey()));
 					}
 
 
