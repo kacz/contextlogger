@@ -110,6 +110,8 @@ public class MainWindow extends ApplicationWindow {
 
         // Create the profile view
         new ProfileView(sashForm1, mReader, selectionController);
+
+		sashForm1.setWeights(new int[] { 8, 2 });
         return sashForm1;
     }
 
