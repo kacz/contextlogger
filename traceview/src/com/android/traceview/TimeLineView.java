@@ -1468,6 +1468,7 @@ public class TimeLineView extends Composite implements Observer {
 											* logRowHeight);
 							rd.mGraphData.put(x + LeftMargin, length);
 						}
+
 						break;
 					}
 					case FLOAT:
@@ -1486,8 +1487,6 @@ public class TimeLineView extends Composite implements Observer {
 							endKey = Math.round(mScaleInfo.getMaxVal())
 									+ mStartDiff;
 						}
-						// System.out.println("endKey: " + (endKey -
-						// mStartDiff));
 
 						for (Map.Entry<Long, Float> e : rd.mRow
 								.getFloatDataMap().subMap(startKey, endKey + 1)
@@ -1501,13 +1500,9 @@ public class TimeLineView extends Composite implements Observer {
 											/ (rd.mRow.getMaxValue() - rd.mRow
 													.getMinValue())
 											* logRowHeight);
-							// System.out.println("key: "
-							// + (e.getKey() - mStartDiff) + " x: " + x
-							// + " length: " + length);
 							rd.mGraphData.put(x + LeftMargin, length);
-							// System.out.println("x " + (x + LeftMargin)
-							// + " len " + length);
 						}
+						// cropping
 						if (rd.mGraphData.size() > 1) {
 							int firstKey = rd.mGraphData.firstKey();
 							int secKey = rd.mGraphData.higherKey(firstKey);
@@ -1544,20 +1539,7 @@ public class TimeLineView extends Composite implements Observer {
 								rd.mGraphData.remove(lastKey);
 								rd.mGraphData.put(lastPix, newVal);
 							}
-							// System.out.println("firstKey:" + firstKey);
-							// System.out.println("secKey:" + secKey);
-							// System.out.println("firstpix:" + firstPix);
-							//
-							// System.out.println("lastKey:" + lastKey);
-							// System.out.println("prevKey:" + prevKey);
-							// System.out.println("lastpix:" + lastPix);
 						}
-						// for (Entry<Integer, Integer> e : rd.mGraphData
-						// .entrySet()) {
-						// System.out.println("x " + e.getKey() + " len "
-						// + e.getValue());
-						// }
-						// System.out.println("=========");
 						break;
 					}
 					case DOUBLE:
@@ -1591,6 +1573,7 @@ public class TimeLineView extends Composite implements Observer {
 											* logRowHeight);
 							rd.mGraphData.put(x + LeftMargin, length);
 						}
+						// cropping
 						if (rd.mGraphData.size() > 1) {
 							int firstKey = rd.mGraphData.firstKey();
 							int secKey = rd.mGraphData.higherKey(firstKey);
@@ -1660,6 +1643,7 @@ public class TimeLineView extends Composite implements Observer {
 							rd.mGraphData.put(x + LeftMargin, 0);
 						}
 
+						// cropping
 						int firstKey = rd.mGraphData.firstKey();
 						int firstPix = mScaleInfo.valueToPixel(mScaleInfo
 								.getMinVal()) + LeftMargin;
@@ -1856,25 +1840,47 @@ public class TimeLineView extends Composite implements Observer {
 						int lastX = -1;
 						int lastY = -1;
 
+						int firstPix = mScaleInfo
+								.valueToPixel(mScaleInfo.getMinVal())
+								+ LeftMargin;
+						int lastPix = mScaleInfo.valueToPixel(mScaleInfo
+								.getMaxVal()) + LeftMargin;
+						
 						for (Map.Entry<Integer, Integer> e : rd.mGraphData
 								.entrySet()) {
 							if (lastX != -1 || lastY != -1) {
+								// horizontal line from the prev log
+
+								if (lastX < firstPix) {
+									lastX = firstPix;
+								}
+
+								int x = e.getKey();
+								if (e.getKey() > lastPix) {
+									x = lastPix;
+								}
 								gcImage.drawLine(lastX, y1 + logRowHeight
-										+ logRowYMarginHalf - lastY,
-										e.getKey(), y1 + logRowHeight
+										+ logRowYMarginHalf - lastY, x, y1
+										+ logRowHeight
 												+ logRowYMarginHalf
 										- lastY);
-								gcImage.drawLine(e.getKey(), y1 + logRowHeight
-										+ logRowYMarginHalf - lastY,
-										e.getKey(),
-										y1 + logRowHeight + logRowYMarginHalf
-										- e.getValue());
+								// vertical line at the current log
+								if (e.getKey() <= lastPix) {
+									gcImage.drawLine(e.getKey(), y1 + logRowHeight
+											+ logRowYMarginHalf - lastY,
+											e.getKey(),
+											y1 + logRowHeight + logRowYMarginHalf
+											- e.getValue());
+								}
 							} else {
-								gcImage.drawLine(e.getKey(), y1 + logRowHeight
-										+ logRowYMarginHalf,
-										e.getKey(),
-										y1 + logRowHeight + logRowYMarginHalf
-												- e.getValue());
+								// vertical line at the first log
+								if (lastX >= firstPix) {
+									gcImage.drawLine(e.getKey(), y1 + logRowHeight
+											+ logRowYMarginHalf,
+											e.getKey(),
+											y1 + logRowHeight + logRowYMarginHalf
+													- e.getValue());
+								}
 						}
 							lastX = e.getKey();
 							lastY = e.getValue();
