@@ -105,6 +105,8 @@ public class TimeLineView extends Composite implements Observer {
 	private final Color mColorLogRowBack;
     private final Color mColorZoomSelection;
 	private final Color mBigSashColor;
+	private final Color[] mStringBackColors;
+	private final Color[] mStringForeColors;
     private final FontRegistry mFontRegistry;
 
     /** vertical height of drawn blocks in each row */
@@ -219,6 +221,17 @@ public class TimeLineView extends Composite implements Observer {
         mColorZoomSelection = new Color(display, 230, 230, 230);
 		mBigSashColor = display.getSystemColor(SWT.COLOR_DARK_GRAY);
 
+		mStringBackColors = new Color[] {
+				new Color(display, 0, 242, 0),
+				new Color(display, 150, 184, 255),
+				new Color(display, 255, 0, 0),
+				new Color(display, 255, 224, 150) };
+
+		mStringForeColors = new Color[] {
+				new Color(display, 0, 153, 0),
+				new Color(display, 0, 80, 255),
+				new Color(display, 130, 0, 0),
+				new Color(display, 255, 180, 0) };
         mFontRegistry = new FontRegistry(display);
         mFontRegistry.put("small",  //$NON-NLS-1$
                 new FontData[] { new FontData("Arial", 8, SWT.NORMAL) });  //$NON-NLS-1$
@@ -329,7 +342,7 @@ public class TimeLineView extends Composite implements Observer {
         mLogSurface.setLayoutData(gridData);
         mLogSashForm.setWeights(new int[] {1,5});
         
-        mBigSashForm.setWeights(new int[] {5,2});
+		mBigSashForm.setWeights(new int[] { 4, 6 });
 		mBigSashForm.setSashWidth(3);
 		mBigSashForm.setBackground(mBigSashColor);
         
@@ -1661,16 +1674,6 @@ public class TimeLineView extends Composite implements Observer {
 							rd.mGraphData.put(lastPix, 0);
 						}
 
-						System.out.println("firstKey:" + firstKey);
-						System.out.println("firstpix:" + firstPix);
-
-						System.out.println("lastKey:" + lastKey);
-						System.out.println("lastpix:" + lastPix);
-						for (Entry<Integer, Integer> e : rd.mGraphData
-								.entrySet()) {
-							System.out.println("x " + e.getKey() + " len "
-									+ e.getValue());
-						}
 						break;
 					}
 					}
@@ -1682,11 +1685,6 @@ public class TimeLineView extends Composite implements Observer {
 		}
 
 		private void draw(Display display, GC gc) {
-			// if (mSegments.length == 0) {
-			// // gc.setBackground(colorBackground);
-			// // gc.fillRectangle(getBounds());
-			// return;
-			// }
 
 			// Create an image for double-buffering
 			Image image = new Image(display, getBounds());
@@ -1697,24 +1695,6 @@ public class TimeLineView extends Composite implements Observer {
 				gcImage.setFont(mFontRegistry.get("small")); //$NON-NLS-1$
 			}
 
-			// Draw the background
-			// gcImage.setBackground(colorBackground);
-			// gcImage.fillRectangle(image.getBounds());
-
-			/*
-			 * if (mGraphicsState == GraphicsState.Scaling) { double diff =
-			 * mMouse.x - mMouseMarkStartX;to if (diff > 0) { double newMinVal =
-			 * mScaleMinVal - diff / mScalePixelsPerRange; if (newMinVal <
-			 * mLimitMinVal) { newMinVal = mLimitMinVal; }
-			 * mScaleInfo.setMinVal(newMinVal); //
-			 * System.out.printf("diff %f scaleMin %f newMin %f\n", // diff,
-			 * scaleMinVal, newMinVal); } else if (diff < 0) { double newMaxVal
-			 * = mScaleMaxVal - diff / mScalePixelsPerRange; if (newMaxVal >
-			 * mLimitMaxVal) { newMaxVal = mLimitMaxVal; }
-			 * mScaleInfo.setMaxVal(newMaxVal); //
-			 * System.out.printf("diff %f scaleMax %f newMax %f\n", // diff,
-			 * scaleMaxVal, newMaxVal); } }
-			 */
 			// Recompute the ticks and strips only if the size has changed,
 			// or we scrolled so that a new row is visible.
 			Point dim = getSize();
@@ -1758,44 +1738,6 @@ public class TimeLineView extends Composite implements Observer {
 			if (drawingSelection()) {
 				drawSelection(display, gcImage);
 			}
-			/*
-			 * String blockName = null; Color blockColor = null; String
-			 * blockDetails = null;
-			 */
-			/*
-			 * if (mDebug) { double pixelsPerRange =
-			 * mScaleInfo.getPixelsPerRange(); System.out
-			 * .printf("dim.x %d pixels %d minVal %f, maxVal %f ppr %f rpp %f\n"
-			 * , dim.x, dim.x - TotalXMargin, mScaleInfo.getMinVal(),
-			 * mScaleInfo.getMaxVal(), pixelsPerRange, 1.0 / pixelsPerRange); }
-			 */
-			/*
-			 * // Draw the strips Block selectBlock = null; for (Strip strip :
-			 * mStripList) { if (strip.mColor == null) { //
-			 * System.out.printf("strip.color is null\n"); continue; }
-			 * gcImage.setBackground(strip.mColor);
-			 * gcImage.fillRectangle(strip.mX, strip.mY - mScrollOffsetY,
-			 * strip.mWidth, strip.mHeight); if (mMouseRow ==
-			 * strip.mRowData.mRank) { if (mMouse.x >= strip.mX && mMouse.x <
-			 * strip.mX + strip.mWidth) { Block block = strip.mSegment.mBlock;
-			 * blockName = block.getName(); blockColor = strip.mColor; if
-			 * (mHaveCpuTime) { if (mHaveRealTime) { blockDetails =
-			 * String.format( "excl cpu %s, incl cpu %s, " +
-			 * "excl real %s, incl real %s", mUnits.labelledString(block
-			 * .getExclusiveCpuTime()), mUnits.labelledString(block
-			 * .getInclusiveCpuTime()), mUnits.labelledString(block
-			 * .getExclusiveRealTime()), mUnits.labelledString(block
-			 * .getInclusiveRealTime())); } else { blockDetails = String
-			 * .format("excl cpu %s, incl cpu %s", mUnits.labelledString(block
-			 * .getExclusiveCpuTime()), mUnits.labelledString(block
-			 * .getInclusiveCpuTime())); } } else { blockDetails =
-			 * String.format( "excl real %s, incl real %s", mUnits
-			 * .labelledString(block .getExclusiveRealTime()),
-			 * mUnits.labelledString(block .getInclusiveRealTime())); } } if
-			 * (mMouseSelect.x >= strip.mX && mMouseSelect.x < strip.mX +
-			 * strip.mWidth) { selectBlock = strip.mSegment.mBlock; } } }
-			 * mMouseSelect.x = 0; mMouseSelect.y = 0;
-			 */
 
 			// Draw a highlight box on the row where the mouse is.
 			// Except don't draw the box if we are animating the
@@ -1814,38 +1756,20 @@ public class TimeLineView extends Composite implements Observer {
 
 				int y1 = ii * logRowYSpace - mLogScrollOffsetY;
 
-				long sizeAll = 0;
-				long size = 0;
-				long first = 0;
-				long last = 0;
+				int firstPix = mScaleInfo.valueToPixel(mScaleInfo.getMinVal())
+						+ LeftMargin;
+				int lastPix = mScaleInfo.valueToPixel(mScaleInfo.getMaxVal())
+						+ LeftMargin;
 
 				try {
 				switch(rd.mType) {
 				case INT:
  {
-						// debug
-					sizeAll = rd.mRow.getIntDataMap().size();
-					size = rd.mRow
-							.getIntDataMap()
-								.subMap(Math.round(mScaleInfo.getMinVal())
-										+ mStartDiff,
-										Math.round(mScaleInfo.getMaxVal())
-												+ mStartDiff).size();
-						first = rd.mRow.getIntDataMap().firstKey() - mStartDiff;
-						last = rd.mRow.getIntDataMap().lastKey() - mStartDiff;
-						// -- debug
-
 						gcImage.setForeground(mColorBlack);
 
 						int lastX = -1;
 						int lastY = -1;
 
-						int firstPix = mScaleInfo
-								.valueToPixel(mScaleInfo.getMinVal())
-								+ LeftMargin;
-						int lastPix = mScaleInfo.valueToPixel(mScaleInfo
-								.getMaxVal()) + LeftMargin;
-						
 						for (Map.Entry<Integer, Integer> e : rd.mGraphData
 								.entrySet()) {
 							if (lastX != -1 || lastY != -1) {
@@ -1874,7 +1798,7 @@ public class TimeLineView extends Composite implements Observer {
 								}
 							} else {
 								// vertical line at the first log
-								if (lastX >= firstPix) {
+								if (e.getKey() >= firstPix) {
 									gcImage.drawLine(e.getKey(), y1 + logRowHeight
 											+ logRowYMarginHalf,
 											e.getKey(),
@@ -1890,19 +1814,6 @@ public class TimeLineView extends Composite implements Observer {
 					}
 				case LONG:
  {
-						// debug
-					sizeAll = rd.mRow.getLongDataMap().size();
-					size = rd.mRow
-							.getLongDataMap()
-								.subMap(Math.round(mScaleInfo.getMinVal())
-										+ mStartDiff,
-										Math.round(mScaleInfo.getMaxVal())
-												+ mStartDiff).size();
-						first = rd.mRow.getLongDataMap().firstKey()
-								- mStartDiff;
-						last = rd.mRow.getLongDataMap().lastKey() - mStartDiff;
-						// -- debug
-
 						gcImage.setForeground(mColorBlack);
 
 						int lastX = -1;
@@ -1911,22 +1822,40 @@ public class TimeLineView extends Composite implements Observer {
 						for (Map.Entry<Integer, Integer> e : rd.mGraphData
 								.entrySet()) {
 							if (lastX != -1 || lastY != -1) {
+								// horizontal line from the prev log
+
+								if (lastX < firstPix) {
+									lastX = firstPix;
+								}
+
+								int x = e.getKey();
+								if (e.getKey() > lastPix) {
+									x = lastPix;
+								}
 								gcImage.drawLine(lastX, y1 + logRowHeight
-										+ logRowYMarginHalf - lastY,
-										e.getKey(), y1 + logRowHeight
-												+ logRowYMarginHalf
+										+ logRowYMarginHalf - lastY, x, y1
+										+ logRowHeight + logRowYMarginHalf
 										- lastY);
+								// vertical line at the current log
+								if (e.getKey() <= lastPix) {
 								gcImage.drawLine(e.getKey(), y1 + logRowHeight
 										+ logRowYMarginHalf - lastY,
 										e.getKey(),
 										y1 + logRowHeight + logRowYMarginHalf
 										- e.getValue());
+								}
 							} else {
-								gcImage.drawLine(e.getKey(), y1 + logRowHeight
-										+ logRowYMarginHalf,
-										e.getKey(),
-										y1 + logRowHeight + logRowYMarginHalf
-												- e.getValue());
+								// vertical line at the first log
+								if (e.getKey() >= firstPix) {
+									gcImage.drawLine(
+											e.getKey(),
+											y1 + logRowHeight
+													+ logRowYMarginHalf,
+											e.getKey(),
+											y1 + logRowHeight
+													+ logRowYMarginHalf
+													- e.getValue());
+								}
 							}
 							lastX = e.getKey();
 							lastY = e.getValue();
@@ -1936,14 +1865,6 @@ public class TimeLineView extends Composite implements Observer {
 					}
 				case FLOAT:
  {
-						// debug
-					sizeAll = rd.mRow.getFloatDataMap().size();
-						size = rd.mGraphData.size();
-						first = rd.mRow.getFloatDataMap().firstKey()
-								- mStartDiff;
-						last = rd.mRow.getFloatDataMap().lastKey() - mStartDiff;
-						// -- debug
-
 						int[] poly = { 0,
 								y1 + logRowHeight + logRowYMarginHalf, 0,
 								y1 + logRowHeight + logRowYMarginHalf, -1, -1,
@@ -1975,20 +1896,6 @@ public class TimeLineView extends Composite implements Observer {
 					}
 				case DOUBLE:
  {
-						// debug
-					sizeAll = rd.mRow.getDoubleDataMap().size();
-					size = rd.mRow
-							.getDoubleDataMap()
-								.subMap(Math.round(mScaleInfo.getMinVal())
-										+ mStartDiff,
-										Math.round(mScaleInfo.getMaxVal())
-												+ mStartDiff).size();
-						first = rd.mRow.getDoubleDataMap().firstKey()
-								- mStartDiff;
-						last = rd.mRow.getDoubleDataMap().lastKey()
-								- mStartDiff;
-						// -- debug
-
 						int[] poly = { 0,
 								y1 + logRowHeight + logRowYMarginHalf, 0,
 								y1 + logRowHeight + logRowYMarginHalf, -1, -1,
@@ -2017,25 +1924,13 @@ public class TimeLineView extends Composite implements Observer {
 					break;
 					}
 				case STRING:
-						// debug
-					sizeAll = rd.mRow.getStringDataMap().size();
-					size = rd.mRow
-							.getStringDataMap()
-								.subMap(Math.round(mScaleInfo.getMinVal())
-										+ mStartDiff,
-										Math.round(mScaleInfo.getMaxVal())
-												+ mStartDiff).size();
-						first = rd.mRow.getStringDataMap().firstKey()
-								- mStartDiff;
-						last = rd.mRow.getStringDataMap().lastKey()
-								- mStartDiff;
-						// -- debug
-
 						int lastX = -1;
 						int lastY = -1;
 
-						gcImage.setBackground(mColorGray);
-						gcImage.setForeground(mColorDarkGray);
+						gcImage.setBackground(mStringBackColors[ii
+								% mStringBackColors.length]);
+						gcImage.setForeground(mStringForeColors[ii
+								% mStringForeColors.length]);
 						for (Map.Entry<Integer, Integer> e : rd.mGraphData
 								.entrySet()) {
 							int x = e.getKey();
@@ -2061,17 +1956,6 @@ public class TimeLineView extends Composite implements Observer {
 				} catch (NoSuchElementException e) {
 
 				}
-				
-				String label = "[" + mScaleInfo.getMinVal() + " - "
-						+ mScaleInfo.getMaxVal() + "] " + size + " " + sizeAll
-						+ " " + first + " " + last + " " + " ("
-						+ rd.mType.name() + ")";
-
-				// int y1 = rd.mRank * rowYSpace + offsetY;
-				Point extent = gcImage.stringExtent(label);
-				int x1 = dim.x - extent.x;// - labelMarginX;
-				gcImage.setForeground(mColorBlack);
-				gcImage.drawString(label, x1, y1, true);
 			}
 
 			/*
