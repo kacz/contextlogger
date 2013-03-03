@@ -2135,6 +2135,7 @@ public class TimeLineView extends Composite implements Observer {
 
 		private void mouseUp(MouseEvent me) {
 			mLogSurface.setCursor(mSurface.mNormalCursor);
+			me.y = 1;
 			mSurface.mouseUp(me);
 			// if (mSurface.mGraphicsState != GraphicsState.Marking) {
 			// mSurface.mGraphicsState = GraphicsState.Normal;
