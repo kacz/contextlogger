@@ -16,10 +16,6 @@
 
 package com.android.traceview;
 
-import java.util.ArrayList;
-import java.util.Observable;
-import java.util.Observer;
-
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -36,30 +32,30 @@ import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Point;
-import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
-import org.eclipse.swt.widgets.TabFolder;
-import org.eclipse.swt.widgets.TabItem;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeColumn;
 import org.eclipse.swt.widgets.TreeItem;
 
+import java.util.ArrayList;
+import java.util.Observable;
+import java.util.Observer;
+
 public class ProfileView extends Composite implements Observer {
 
-    private final TreeViewer mTreeViewer;
-    private final Text mSearchBox;
-    private final SelectionController mSelectionController;
-    private final ProfileProvider mProfileProvider;
-    private final Color mColorNoMatch;
-    private final Color mColorMatch;
+    private TreeViewer mTreeViewer;
+    private Text mSearchBox;
+    private SelectionController mSelectionController;
+    private ProfileProvider mProfileProvider;
+    private Color mColorNoMatch;
+    private Color mColorMatch;
     private MethodData mCurrentHighlightedMethod;
     private MethodHandler mMethodHandler;
 
@@ -70,22 +66,12 @@ public class ProfileView extends Composite implements Observer {
     public ProfileView(Composite parent, TraceReader reader,
             SelectionController selectController) {
         super(parent, SWT.NONE);
-		setLayout(new FillLayout());
-
-		final TabFolder tabFolder = new TabFolder(this, SWT.BORDER);
-
-		Composite profileViewContainer = new Composite(tabFolder, SWT.NONE);
-		profileViewContainer.setLayout(new GridLayout(1, true));
-
-		TabItem tabItem = new TabItem(tabFolder, SWT.NULL);
-		tabItem.setText("Problem definer");
-		tabItem.setControl(profileViewContainer);
-
+        setLayout(new GridLayout(1, false));
         this.mSelectionController = selectController;
         mSelectionController.addObserver(this);
 
         // Add a tree viewer at the top
-		mTreeViewer = new TreeViewer(profileViewContainer, SWT.MULTI | SWT.NONE);
+        mTreeViewer = new TreeViewer(this, SWT.MULTI | SWT.NONE);
         mTreeViewer.setUseHashlookup(true);
         mProfileProvider = reader.getProfileProvider();
         mProfileProvider.setTreeViewer(mTreeViewer);
@@ -122,7 +108,7 @@ public class ProfileView extends Composite implements Observer {
         mTreeViewer.setInput(mProfileProvider.getRoot());
 
         // Create another composite to hold the label and text box
-		Composite composite = new Composite(profileViewContainer, SWT.NONE);
+        Composite composite = new Composite(this, SWT.NONE);
         composite.setLayout(new GridLayout(2, false));
         composite.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 
@@ -138,70 +124,15 @@ public class ProfileView extends Composite implements Observer {
         mColorNoMatch = new Color(display, 255, 200, 200);
         mColorMatch = mSearchBox.getBackground();
 
-		// Add child to sash holding the problem definer components
-		final Composite problemTabComposite = new Composite(tabFolder,
-				SWT.NONE);
-		problemTabComposite.setLayout(new GridLayout(1, false));
-		problemTabComposite
-				.setLayoutData(new GridData(
-				GridData.FILL_HORIZONTAL));
-
-		// Composite holding the problem definer components, visible when
-		// expanded
-		Composite problemDefinerComposite = new Composite(problemTabComposite,
-				SWT.NONE);
-		problemDefinerComposite.setLayout(new GridLayout(1, true));
-		problemDefinerComposite.setLayoutData(new GridData(
-				GridData.FILL_HORIZONTAL));
-
-		tabItem = new TabItem(tabFolder, SWT.NULL);
-		tabItem.setText("Profile view");
-		tabItem.setControl(problemTabComposite);
-
-		// Add a label for the problem definer
-		Label problemLabel = new Label(problemDefinerComposite, SWT.NONE);
-		problemLabel.setText("Problem:");
-
-		// Add radio button for BRB option
-		Button BRBButton = new Button(problemDefinerComposite, SWT.RADIO);
-		BRBButton.setText("BigRedButton");
-
-		// Add radio button for own problem definition option
-		Button callButton = new Button(problemDefinerComposite, SWT.RADIO);
-		callButton.setText("Function call + constraint");
-
-		composite = new Composite(problemDefinerComposite, SWT.NONE);
-		composite.setLayout(new GridLayout(2, false));
-		composite.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-
-		// Add a text box for searching for method names
-		Label callLabel = new Label(composite, SWT.NONE);
-		callLabel.setText("Function:");
-
-		Text mProblemBox = new Text(composite, SWT.BORDER);
-		mProblemBox.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-
-		composite = new Composite(problemDefinerComposite, SWT.NONE);
-		composite.setLayout(new GridLayout(2, false));
-		composite.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-
-		// Add a text box for searching for method names
-		Label constraintLabel = new Label(composite, SWT.NONE);
-		constraintLabel.setText("Constraint:");
-
-		Text mConstraintBox = new Text(composite, SWT.BORDER);
-		mConstraintBox.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-
-		mSearchBox.addModifyListener(new ModifyListener() {
-			@Override
-			public void modifyText(ModifyEvent ev) {
-				String query = mSearchBox.getText();
-				if (query.length() == 0) {
-					return;
-				}
-				findName(query);
-			}
-		});
+        mSearchBox.addModifyListener(new ModifyListener() {
+            @Override
+            public void modifyText(ModifyEvent ev) {
+                String query = mSearchBox.getText();
+                if (query.length() == 0)
+                    return;
+                findName(query);
+            }
+        });
 
         // Add a key listener to the text box so that we can clear
         // the text box if the user presses <ESC>.
@@ -212,9 +143,8 @@ public class ProfileView extends Composite implements Observer {
                     mSearchBox.setText("");
                 } else if (event.keyCode == SWT.CR) {
                     String query = mSearchBox.getText();
-                    if (query.length() == 0) {
-						return;
-					}
+                    if (query.length() == 0)
+                        return;
                     findNextName(query);
                 }
             }
@@ -232,17 +162,15 @@ public class ProfileView extends Composite implements Observer {
                     String text = mSearchBox.getText();
                     int len = text.length();
                     String chopped;
-                    if (len <= 1) {
-						chopped = "";
-					} else {
-						chopped = text.substring(0, len - 1);
-					}
+                    if (len <= 1)
+                        chopped = "";
+                    else
+                        chopped = text.substring(0, len - 1);
                     mSearchBox.setText(chopped);
                 } else if (event.keyCode == SWT.CR) {
                     String query = mSearchBox.getText();
-                    if (query.length() == 0) {
-						return;
-					}
+                    if (query.length() == 0)
+                        return;
                     findNextName(query);
                 } else {
                     // Append the given character to the search box
@@ -260,15 +188,13 @@ public class ProfileView extends Composite implements Observer {
                     @Override
                     public void selectionChanged(SelectionChangedEvent ev) {
                         ISelection sel = ev.getSelection();
-                        if (sel.isEmpty()) {
-							return;
-						}
+                        if (sel.isEmpty())
+                            return;
                         if (sel instanceof IStructuredSelection) {
                             IStructuredSelection selection = (IStructuredSelection) sel;
                             Object element = selection.getFirstElement();
-                            if (element == null) {
-								return;
-							}
+                            if (element == null)
+                                return;
                             if (element instanceof MethodData) {
                                 MethodData md = (MethodData) element;
                                 highlightMethod(md, true);
@@ -304,9 +230,8 @@ public class ProfileView extends Composite implements Observer {
                 Point point = new Point(event.x, event.y);
                 TreeItem treeItem = tree.getItem(point);
                 MethodData md = mProfileProvider.findMatchingTreeItem(treeItem);
-                if (md == null) {
-					return;
-				}
+                if (md == null)
+                    return;
                 ArrayList<Selection> selections = new ArrayList<Selection>();
                 selections.add(Selection.highlight("MethodData", md));
                 mSelectionController.change(selections, "ProfileView");
@@ -344,17 +269,15 @@ public class ProfileView extends Composite implements Observer {
     @Override
     public void update(Observable objservable, Object arg) {
         // Ignore updates from myself
-        if (arg == "ProfileView") {
-			return;
-		}
+        if (arg == "ProfileView")
+            return;
         // System.out.printf("profileview update from %s\n", arg);
         ArrayList<Selection> selections;
         selections = mSelectionController.getSelections();
         for (Selection selection : selections) {
             Selection.Action action = selection.getAction();
-            if (action != Selection.Action.Highlight) {
-				continue;
-			}
+            if (action != Selection.Action.Highlight)
+                continue;
             String name = selection.getName();
             if (name == "MethodData") {
                 MethodData md = (MethodData) selection.getValue();
@@ -371,13 +294,11 @@ public class ProfileView extends Composite implements Observer {
     }
 
     private void highlightMethod(MethodData md, boolean clearSearch) {
-        if (md == null) {
-			return;
-		}
+        if (md == null)
+            return;
         // Avoid an infinite recursion
-        if (md == mCurrentHighlightedMethod) {
-			return;
-		}
+        if (md == mCurrentHighlightedMethod)
+            return;
         if (clearSearch) {
             mSearchBox.setText("");
             mSearchBox.setBackground(mColorMatch);
@@ -403,9 +324,8 @@ public class ProfileView extends Composite implements Observer {
         // Also expand the "Parents" and "Children" nodes.
         if (nodes != null) {
             for (ProfileNode node : nodes) {
-                if (node.isRecursive() == false) {
-					mTreeViewer.setExpandedState(node, true);
-				}
+                if (node.isRecursive() == false)
+                    mTreeViewer.setExpandedState(node, true);
             }
         }
     }

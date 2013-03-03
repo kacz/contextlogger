@@ -16,7 +16,15 @@
 
 package com.android.traceview;
 
-import com.android.sdkstats.SdkStatsService;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.channels.FileChannel;
+import java.util.HashMap;
+import java.util.Properties;
 
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.MenuManager;
@@ -31,16 +39,10 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.TabFolder;
+import org.eclipse.swt.widgets.TabItem;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.channels.FileChannel;
-import java.util.HashMap;
-import java.util.Properties;
+import com.android.sdkstats.SdkStatsService;
 
 public class MainWindow extends ApplicationWindow {
 
@@ -108,8 +110,24 @@ public class MainWindow extends ApplicationWindow {
         // Create the timeline view
 		new TimeLineView(sashForm1, mReader, mLogReader, selectionController);
 
+		final TabFolder tabFolder = new TabFolder(sashForm1, SWT.BORDER);
+
         // Create the profile view
-        new ProfileView(sashForm1, mReader, selectionController);
+		ProfileView profileView = new ProfileView(tabFolder, mReader,
+				selectionController);
+
+		TabItem tabItem = new TabItem(tabFolder, SWT.NULL);
+		tabItem.setText("Problem definer");
+		tabItem.setControl(profileView);
+
+		// Create the profile view
+		ProblemView problemView = new ProblemView(tabFolder, mReader,
+				mLogReader,
+				selectionController);
+
+		tabItem = new TabItem(tabFolder, SWT.NULL);
+		tabItem.setText("ProblemView");
+		tabItem.setControl(problemView);
 
 		sashForm1.setWeights(new int[] { 8, 2 });
         return sashForm1;
