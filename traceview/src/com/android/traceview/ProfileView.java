@@ -269,8 +269,9 @@ public class ProfileView extends Composite implements Observer {
     @Override
     public void update(Observable objservable, Object arg) {
         // Ignore updates from myself
-        if (arg == "ProfileView")
-            return;
+		if (arg == "ProfileView" || arg == "ProblemView") {
+			return;
+		}
         // System.out.printf("profileview update from %s\n", arg);
         ArrayList<Selection> selections;
         selections = mSelectionController.getSelections();

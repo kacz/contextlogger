@@ -58,6 +58,8 @@ import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.ScrollBar;
 
+import com.android.traceview.IntervalSelection.Action;
+
 import cz.cuni.kacz.contextlogger.LogType;
 
 public class TimeLineView extends Composite implements Observer {
@@ -104,10 +106,15 @@ public class TimeLineView extends Composite implements Observer {
     private final Color mColorRowBack;
 	private final Color mColorLogRowBack;
     private final Color mColorZoomSelection;
+	private final Color mColorProblemInterval;
+	private final Color mColorProblemCall;
 	private final Color mBigSashColor;
 	private final Color[] mStringBackColors;
 	private final Color[] mStringForeColors;
     private final FontRegistry mFontRegistry;
+
+	private ArrayList<Long> mLogTimestamps;
+	private ArrayList<IntervalSelection> mLogIntervalSelection;
 
     /** vertical height of drawn blocks in each row */
     private static final int rowHeight = 20;
@@ -219,6 +226,8 @@ public class TimeLineView extends Composite implements Observer {
         mColorRowBack = new Color(display, 240, 240, 255);
 		mColorLogRowBack = new Color(display, 215, 215, 255);
         mColorZoomSelection = new Color(display, 230, 230, 230);
+		mColorProblemInterval = new Color(display, 255, 235, 235);
+		mColorProblemCall = new Color(display, 255, 235, 0);
 		mBigSashColor = display.getSystemColor(SWT.COLOR_DARK_GRAY);
 
 		mStringBackColors = new Color[] {
@@ -247,6 +256,11 @@ public class TimeLineView extends Composite implements Observer {
         }
         mSmallFontWidth = gc.getFontMetrics().getAverageCharWidth();
         mSmallFontHeight = gc.getFontMetrics().getHeight();
+
+		mLogTimestamps = new ArrayList<Long>();
+		mLogIntervalSelection = new ArrayList<IntervalSelection>();
+		mLogIntervalSelection.add(new IntervalSelection(Action.Highlight, 50,
+				10000));
 
         image.dispose();
         gc.dispose();
@@ -623,6 +637,27 @@ public class TimeLineView extends Composite implements Observer {
     public void update(Observable objservable, Object arg) {
         // Ignore updates from myself
         if (arg == "TimeLineView") {
+			return;
+		}
+		if (arg == "ProblemView") {
+			ArrayList<Long> timeStamps;
+			ArrayList<IntervalSelection> intervals;
+
+			timeStamps = mSelectionController.getTimestamps();
+			if (timeStamps == null) {
+				timeStamps = new ArrayList<Long>();
+			}
+
+			intervals = mSelectionController.getIntervals();
+			if (intervals == null) {
+				intervals = new ArrayList<IntervalSelection>();
+			}
+
+
+			mLogTimestamps = timeStamps;
+			mLogIntervalSelection = intervals;
+			mSurface.redraw();
+			mLogSurface.redraw();
 			return;
 		}
         // System.out.printf("timeline update from %s\n", arg);
@@ -1735,6 +1770,30 @@ public class TimeLineView extends Composite implements Observer {
 				}
 			}
 
+			// draw problem intervals
+			if (mLogIntervalSelection != null) {
+				for (IntervalSelection i : mLogIntervalSelection) {
+					gcImage.setBackground(mColorProblemInterval);
+					int test = mScaleInfo.valueToPixel(1000d);
+					int x1 = mScaleInfo.valueToPixel(i.getmStart() * 1000)
+							+ LeftMargin;
+					int x2 = mScaleInfo.valueToPixel(i.getmEnd() * 1000)
+							+ LeftMargin;
+					gcImage.fillRectangle(x1, 0, x2 - x1, dim.y);
+
+				}
+			}
+
+			// draw problem calls
+			gcImage.setForeground(mColorProblemCall);
+			for (Long timestamp : mLogTimestamps) {
+				if ((timestamp <= mScaleInfo.getMaxVal())
+						&& (timestamp >= mScaleInfo.getMinVal())) {
+					int x = mScaleInfo.valueToPixel(timestamp);
+					gcImage.drawLine(x + LeftMargin, 0, x + LeftMargin, dim.y);
+				}
+			}
+
 			if (drawingSelection()) {
 				drawSelection(display, gcImage);
 			}
@@ -2502,6 +2561,30 @@ public class TimeLineView extends Composite implements Observer {
                 }
             }
 
+			// draw problem intervals
+			if (mLogIntervalSelection != null) {
+				for (IntervalSelection i : mLogIntervalSelection) {
+					gcImage.setBackground(mColorProblemInterval);
+					int test = mScaleInfo.valueToPixel(1000d);
+					int x1 = mScaleInfo.valueToPixel(i.getmStart() * 1000)
+							+ LeftMargin;
+					int x2 = mScaleInfo.valueToPixel(i.getmEnd() * 1000)
+							+ LeftMargin;
+					gcImage.fillRectangle(x1, 0, x2 - x1, dim.y);
+
+				}
+			}
+
+			// draw problem calls
+			gcImage.setForeground(mColorProblemCall);
+			for (Long timestamp : mLogTimestamps) {
+				if ((timestamp <= mScaleInfo.getMaxVal())
+						&& (timestamp >= mScaleInfo.getMinVal())) {
+				int x = mScaleInfo.valueToPixel(timestamp);
+				gcImage.drawLine(x + LeftMargin, 0, x + LeftMargin, dim.y);
+				}
+			}
+
             if (drawingSelection()) {
                 drawSelection(display, gcImage);
             }
@@ -2598,6 +2681,8 @@ public class TimeLineView extends Composite implements Observer {
 
             // Highlight a selected method, if any
             drawHighlights(gcImage, dim);
+
+
 
             // Draw a vertical line where the mouse is.
             gcImage.setForeground(mColorDarkGray);

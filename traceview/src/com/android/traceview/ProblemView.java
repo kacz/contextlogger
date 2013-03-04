@@ -46,6 +46,8 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 
+import com.android.traceview.TimeLineView.Record;
+
 public class ProblemView extends Composite implements Observer {
 
     private final SelectionController mSelectionController;
@@ -54,12 +56,20 @@ public class ProblemView extends Composite implements Observer {
 
 	private MethodHandler mMethodHandler;
 
-	private Map<Integer, ContextLogData> mLogMap;
+	private final Map<Integer, ContextLogData> mLogMap;
+	private final ArrayList<Record> mTraceRecords;
+
+	private ArrayList<Long> mTimestamps;
+	private ArrayList<Long> mInsideTimestamps;
+
+	private final ArrayList<IntervalSelection> mIntervals;
 
 	private final Color mColorNoMatch;
 	private final Color mColorMatch;
 
 	private final SimpleContentProposalProvider mScp;
+
+	private final MethodData BRBMethodData;
 
     public interface MethodHandler {
         void handleMethod(MethodData method);
@@ -79,6 +89,13 @@ public class ProblemView extends Composite implements Observer {
 
 		mLogMap = logReader.getLogMap();
 
+		mTraceRecords = reader.getThreadTimeRecords();
+
+		BRBMethodData = null;
+		mIntervals = new ArrayList<IntervalSelection>();
+		mTimestamps = new ArrayList<Long>();
+		mInsideTimestamps = new ArrayList<Long>();
+
 		// Add container holding the problem definition form
 		Composite formComposite = new Composite(this, SWT.NONE);
 		formComposite.setLayout(new FillLayout(SWT.VERTICAL));
@@ -89,7 +106,7 @@ public class ProblemView extends Composite implements Observer {
 		problemLabel.setText("Problem:");
 
 		// Add radio button for BRB option
-		Button BRBButton = new Button(formComposite, SWT.RADIO);
+		final Button BRBButton = new Button(formComposite, SWT.RADIO);
 		BRBButton.setText("BigRedButton");
 
 		// Add radio button for own problem definition option
@@ -263,7 +280,6 @@ public class ProblemView extends Composite implements Observer {
 
 			@Override
 			public void widgetSelected(SelectionEvent arg0) {
-				// TODO Auto-generated method stub
 				if (problemDefButton.getSelection()) {
 					mProblemBox.setEnabled(true);
 					logTypeCombo.setEnabled(true);
@@ -273,7 +289,23 @@ public class ProblemView extends Composite implements Observer {
 					intCombo.setEnabled(true);
 					floatCombo.setEnabled(true);
 					stringCombo.setEnabled(true);
-				} else {
+
+					mProblemBox.setText("");
+				}
+			}
+		});
+
+		BRBButton.addSelectionListener(new SelectionListener() {
+
+			@Override
+			public void widgetDefaultSelected(SelectionEvent arg0) {
+				// TODO Auto-generated method stub
+
+			}
+
+			@Override
+			public void widgetSelected(SelectionEvent arg0) {
+				if (BRBButton.getSelection()) {
 					mProblemBox.setText("");
 					mProblemBox.setEnabled(false);
 					logTypeCombo.setEnabled(false);
@@ -283,9 +315,12 @@ public class ProblemView extends Composite implements Observer {
 					intCombo.setEnabled(false);
 					floatCombo.setEnabled(false);
 					stringCombo.setEnabled(false);
+
+					mIntervals.clear();
+					updateTimeStamps(BRBMethodData);
+
 				}
 			}
-
 		});
 
 		mProblemBox.addModifyListener(new ModifyListener() {
@@ -314,11 +349,36 @@ public class ProblemView extends Composite implements Observer {
 				// TODO: get matching call names
 				mScp.setProposals(proposals.toArray(new String[0]));
 
+
+				if (matchingMD.length == 1) {
+					updateTimeStamps(matchingMD[0]);
+				}
 			}
 		});
 
     }
 
+	private void updateTimeStamps(MethodData md) {
+		ArrayList<Long> timeStamps = new ArrayList<Long>();
+		if (md != null) {
+			for (Record rec : mTraceRecords) {
+				if (rec.block.getMethodData() == md) {
+					timeStamps.add(rec.block.getStartTime());
+				}
+			}
+		}
+		mSelectionController.changeTimestamps(timeStamps, "ProblemView");
+		mTimestamps = timeStamps;
+	}
+
+
+	private void updateStatistics() {
+		if (!mIntervals.isEmpty()) {
+			// computeInsideTimestamps();
+		} else {
+			mInsideTimestamps = mTimestamps;
+		}
+	}
 
     public void setMethodHandler(MethodHandler handler) {
         mMethodHandler = handler;
@@ -359,7 +419,7 @@ public class ProblemView extends Composite implements Observer {
     @Override
     public void update(Observable objservable, Object arg) {
         // Ignore updates from myself
-        if (arg == "ProfileView") {
+		if (arg == "ProfileView" || arg == "ProblemView") {
 			return;
 		}
         // System.out.printf("profileview update from %s\n", arg);

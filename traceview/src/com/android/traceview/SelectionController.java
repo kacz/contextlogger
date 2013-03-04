@@ -22,6 +22,8 @@ import java.util.Observable;
 public class SelectionController extends Observable {
 
     private ArrayList<Selection> mSelections;
+	private ArrayList<IntervalSelection> mIntervals;
+	private ArrayList<Long> mTimestamps;
 
     public void change(ArrayList<Selection> selections, Object arg) {
         this.mSelections = selections;
@@ -29,7 +31,28 @@ public class SelectionController extends Observable {
         notifyObservers(arg);
     }
 
+	public void changeIntervals(ArrayList<IntervalSelection> intervals,
+			Object arg) {
+		this.mIntervals = intervals;
+		setChanged();
+		notifyObservers(arg);
+	}
+
+	public void changeTimestamps(ArrayList<Long> timestamps, Object arg) {
+		this.mTimestamps = timestamps;
+		setChanged();
+		notifyObservers(arg);
+	}
+
     public ArrayList<Selection> getSelections() {
         return mSelections;
     }
+
+	public ArrayList<IntervalSelection> getIntervals() {
+		return mIntervals;
+	}
+
+	public ArrayList<Long> getTimestamps() {
+		return mTimestamps;
+	}
 }
