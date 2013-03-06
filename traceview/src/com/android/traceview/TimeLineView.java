@@ -1774,11 +1774,19 @@ public class TimeLineView extends Composite implements Observer {
 			if (mLogIntervalSelection != null) {
 				for (IntervalSelection i : mLogIntervalSelection) {
 					gcImage.setBackground(mColorProblemInterval);
-					int test = mScaleInfo.valueToPixel(1000d);
-					int x1 = mScaleInfo.valueToPixel(i.getmStart() * 1000)
-							+ LeftMargin;
-					int x2 = mScaleInfo.valueToPixel(i.getmEnd() * 1000)
-							+ LeftMargin;
+					long start = i.getmStart() - mStartDiff;
+					long end = i.getmEnd() - mStartDiff;
+					if (start > mScaleInfo.getMaxVal()) {
+						continue;
+					}
+					if (end < mScaleInfo.getMinVal()) {
+						continue;
+					}
+					if (end > mScaleInfo.getMaxVal()) {
+						end = (long) mScaleInfo.getMaxVal();
+					}
+					int x1 = mScaleInfo.valueToPixel(start) + LeftMargin;
+					int x2 = mScaleInfo.valueToPixel(end) + LeftMargin;
 					gcImage.fillRectangle(x1, 0, x2 - x1, dim.y);
 
 				}
@@ -2565,10 +2573,20 @@ public class TimeLineView extends Composite implements Observer {
 			if (mLogIntervalSelection != null) {
 				for (IntervalSelection i : mLogIntervalSelection) {
 					gcImage.setBackground(mColorProblemInterval);
-					int test = mScaleInfo.valueToPixel(1000d);
-					int x1 = mScaleInfo.valueToPixel(i.getmStart() * 1000)
+					long start = i.getmStart() - mStartDiff;
+					long end = i.getmEnd() - mStartDiff;
+					if (start > mScaleInfo.getMaxVal()) {
+						continue;
+					}
+					if (end < mScaleInfo.getMinVal()) {
+						continue;
+					}
+					if (end > mScaleInfo.getMaxVal()) {
+						end = (long) mScaleInfo.getMaxVal();
+					}
+					int x1 = mScaleInfo.valueToPixel(start)
 							+ LeftMargin;
-					int x2 = mScaleInfo.valueToPixel(i.getmEnd() * 1000)
+					int x2 = mScaleInfo.valueToPixel(end)
 							+ LeftMargin;
 					gcImage.fillRectangle(x1, 0, x2 - x1, dim.y);
 

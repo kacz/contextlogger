@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.NavigableMap;
 import java.util.Observable;
 import java.util.Observer;
 
@@ -46,6 +47,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 
+import com.android.traceview.IntervalSelection.Action;
 import com.android.traceview.TimeLineView.Record;
 
 public class ProblemView extends Composite implements Observer {
@@ -62,7 +64,9 @@ public class ProblemView extends Composite implements Observer {
 	private ArrayList<Long> mTimestamps;
 	private ArrayList<Long> mInsideTimestamps;
 
-	private final ArrayList<IntervalSelection> mIntervals;
+	private ArrayList<IntervalSelection> mIntervals;
+
+	private ContextLogData mSelectedLog;
 
 	private final Color mColorNoMatch;
 	private final Color mColorMatch;
@@ -70,6 +74,25 @@ public class ProblemView extends Composite implements Observer {
 	private final SimpleContentProposalProvider mScp;
 
 	private final MethodData BRBMethodData;
+
+	// UI elements
+	Text mResultBox;
+
+	final Combo stringRelationCombo;
+	final Combo stringValueCombo;
+
+	final Button BRBButton;
+	final Button problemDefButton;
+
+	final Text mProblemBox;
+
+	final Combo logTypeCombo;
+
+	final Combo intRelationCombo;
+	final Text mIntValueBox;
+	
+	final Combo floatRelationCombo;
+	final Text mFloatValueBox;
 
     public interface MethodHandler {
         void handleMethod(MethodData method);
@@ -92,6 +115,7 @@ public class ProblemView extends Composite implements Observer {
 		mTraceRecords = reader.getThreadTimeRecords();
 
 		BRBMethodData = null;
+		mSelectedLog = null;
 		mIntervals = new ArrayList<IntervalSelection>();
 		mTimestamps = new ArrayList<Long>();
 		mInsideTimestamps = new ArrayList<Long>();
@@ -106,11 +130,11 @@ public class ProblemView extends Composite implements Observer {
 		problemLabel.setText("Problem:");
 
 		// Add radio button for BRB option
-		final Button BRBButton = new Button(formComposite, SWT.RADIO);
+		BRBButton = new Button(formComposite, SWT.RADIO);
 		BRBButton.setText("BigRedButton");
 
 		// Add radio button for own problem definition option
-		final Button problemDefButton = new Button(formComposite, SWT.RADIO);
+		problemDefButton = new Button(formComposite, SWT.RADIO);
 		problemDefButton.setText("Function call + constraint");
 
 		Composite composite = new Composite(formComposite, SWT.NONE);
@@ -122,7 +146,7 @@ public class ProblemView extends Composite implements Observer {
 		callLabel.setText("Function:");
 
 		// Add a text box for searching for method names
-		final Text mProblemBox = new Text(composite, SWT.BORDER);
+		mProblemBox = new Text(composite, SWT.BORDER);
 		mProblemBox.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		mProblemBox.setEnabled(false);
 
@@ -151,7 +175,7 @@ public class ProblemView extends Composite implements Observer {
 		Label constraintLabel = new Label(mConstraintComposite, SWT.NONE);
 		constraintLabel.setText("Constraint:");
 
-		final Combo logTypeCombo = new Combo(mConstraintComposite,
+		logTypeCombo = new Combo(mConstraintComposite,
 				SWT.DROP_DOWN
 				| SWT.BORDER
 				| SWT.READ_ONLY);
@@ -178,39 +202,39 @@ public class ProblemView extends Composite implements Observer {
 				constraintHolderComposite, SWT.NONE);
 		mIntComposite.setLayout(new FillLayout());
 
-		final Combo intCombo = new Combo(mIntComposite, SWT.DROP_DOWN
+		intRelationCombo = new Combo(mIntComposite, SWT.DROP_DOWN
 				| SWT.BORDER | SWT.READ_ONLY);
-		intCombo.add("<");
-		intCombo.add("<=");
-		intCombo.add("=");
-		intCombo.add(">=");
-		intCombo.add(">");
+		intRelationCombo.add("<");
+		intRelationCombo.add("<=");
+		intRelationCombo.add("=");
+		intRelationCombo.add(">=");
+		intRelationCombo.add(">");
 
-		final Text mIntValueBox = new Text(mIntComposite, SWT.BORDER);
+		mIntValueBox = new Text(mIntComposite, SWT.BORDER);
 
 		// Composite holding controls for float type logs
 		final Composite mFloatComposite = new Composite(
 				constraintHolderComposite, SWT.NONE);
 		mFloatComposite.setLayout(new FillLayout());
 
-		final Combo floatCombo = new Combo(mFloatComposite, SWT.DROP_DOWN
+		floatRelationCombo = new Combo(mFloatComposite, SWT.DROP_DOWN
 				| SWT.BORDER | SWT.READ_ONLY);
-		floatCombo.add("<");
-		floatCombo.add(">");
+		floatRelationCombo.add("<");
+		floatRelationCombo.add(">");
 
-		final Text mFloatValueBox = new Text(mFloatComposite, SWT.BORDER);
+		mFloatValueBox = new Text(mFloatComposite, SWT.BORDER);
 
 		// Composite holding controls for float type logs
 		final Composite mStringComposite = new Composite(
 				constraintHolderComposite, SWT.NONE);
 		mStringComposite.setLayout(new FillLayout());
 
-		final Combo stringCombo = new Combo(mStringComposite, SWT.DROP_DOWN
+		stringRelationCombo = new Combo(mStringComposite, SWT.DROP_DOWN
 				| SWT.BORDER | SWT.READ_ONLY);
-		stringCombo.add("=");
-		stringCombo.add("<>");
+		stringRelationCombo.add("=");
+		stringRelationCombo.add("<>");
 
-		final Combo stringValueCombo = new Combo(mStringComposite,
+		stringValueCombo = new Combo(mStringComposite,
 				SWT.DROP_DOWN | SWT.BORDER | SWT.READ_ONLY);
 
 		mIntComposite.setLayoutData(hide);
@@ -219,7 +243,7 @@ public class ProblemView extends Composite implements Observer {
 
 		// Add result text field to the right side
 
-		Text mResultBox = new Text(this, SWT.MULTI | SWT.BORDER);
+		mResultBox = new Text(this, SWT.MULTI | SWT.BORDER);
 		mResultBox.setLayoutData(new GridData(GridData.FILL_BOTH));
 		mResultBox.setEditable(false);
 
@@ -231,12 +255,12 @@ public class ProblemView extends Composite implements Observer {
 
 				int index = logTypeCombo.getSelectionIndex();
 				System.out.println(index);
-				ContextLogData cld = mLogMap.get(index);
-				if (cld == null) {
+				mSelectedLog = mLogMap.get(index);
+				if (mSelectedLog == null) {
 					System.out.println("null");
 					return;
 				}
-				switch (cld.getType()) {
+				switch (mSelectedLog.getType()) {
 				case INT:
 				case LONG:
 					System.out.println("i");
@@ -269,6 +293,52 @@ public class ProblemView extends Composite implements Observer {
 
 			}
 		});
+		
+		intRelationCombo.addSelectionListener(new SelectionListener() {
+
+			@Override
+			public void widgetDefaultSelected(SelectionEvent arg0) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void widgetSelected(SelectionEvent arg0) {
+				String relationStr = intRelationCombo.getText();
+				Relation rel = Relation.value(relationStr);
+				try {
+					updateIntervals(rel, Long.valueOf(mIntValueBox.getText()));
+
+				} catch (NumberFormatException e) {
+					// boo
+					System.out.println("boo");
+				}
+			}
+
+		});
+
+		floatRelationCombo.addSelectionListener(new SelectionListener() {
+
+			@Override
+			public void widgetDefaultSelected(SelectionEvent arg0) {
+				// TODO Auto-generated method stub
+
+			}
+
+			@Override
+			public void widgetSelected(SelectionEvent arg0) {
+				String relationStr = floatRelationCombo.getText();
+				Relation rel = Relation.value(relationStr);
+				try {
+					updateIntervals(rel,
+							Double.valueOf(mFloatValueBox.getText()));
+				} catch (NumberFormatException e) {
+					// boo
+					System.out.println("boo");
+				}
+			}
+			
+		});
 
 		problemDefButton.addSelectionListener(new SelectionListener() {
 
@@ -286,11 +356,14 @@ public class ProblemView extends Composite implements Observer {
 					mIntValueBox.setEnabled(true);
 					mFloatValueBox.setEnabled(true);
 					stringValueCombo.setEnabled(true);
-					intCombo.setEnabled(true);
-					floatCombo.setEnabled(true);
-					stringCombo.setEnabled(true);
+					intRelationCombo.setEnabled(true);
+					floatRelationCombo.setEnabled(true);
+					stringRelationCombo.setEnabled(true);
 
 					mProblemBox.setText("");
+
+					mIntervals.clear();
+					updateTimeStamps(null);
 				}
 			}
 		});
@@ -312,9 +385,9 @@ public class ProblemView extends Composite implements Observer {
 					mIntValueBox.setEnabled(false);
 					mFloatValueBox.setEnabled(false);
 					stringValueCombo.setEnabled(false);
-					intCombo.setEnabled(false);
-					floatCombo.setEnabled(false);
-					stringCombo.setEnabled(false);
+					intRelationCombo.setEnabled(false);
+					floatRelationCombo.setEnabled(false);
+					stringRelationCombo.setEnabled(false);
 
 					mIntervals.clear();
 					updateTimeStamps(BRBMethodData);
@@ -369,6 +442,146 @@ public class ProblemView extends Composite implements Observer {
 		}
 		mSelectionController.changeTimestamps(timeStamps, "ProblemView");
 		mTimestamps = timeStamps;
+	}
+
+	private void updateIntervals(Relation rel, long constraint) {
+		ArrayList<IntervalSelection> intervals = new ArrayList<IntervalSelection> (); 
+		if (mSelectedLog == null) {
+			mIntervals = intervals;
+		}
+		boolean inside = false;
+		long begining = -1;
+		long end;
+		NavigableMap<Long, ? extends Number> logMap;
+		switch (mSelectedLog.getType()) {
+		case INT:
+			logMap = mSelectedLog.getIntDataMap();
+			break;
+		case LONG:
+			logMap = mSelectedLog.getLongDataMap();
+			break;
+		default:
+			return;
+		}
+		for(Entry<Long,? extends Number> e : logMap.entrySet()) {
+			Long val = e.getValue().longValue();
+			// start of an interval
+			if (inside == false && eval(val, rel, constraint) == true) {
+				begining = e.getKey();
+				inside = true;
+				continue;
+			}
+			// we are inside of an interval
+			if (inside == true && eval(val, rel, constraint) == true) {
+				continue;
+			}
+			// we leave the interval
+			if (inside == true && eval(val, rel, constraint) == false) {
+				end = e.getKey();
+				inside = false;
+				intervals.add(new IntervalSelection(Action.Highlight,begining,end));
+				begining = -1;
+				continue;
+			}
+			if (inside == false && eval(val, rel, constraint) == false) {
+				continue;
+			}
+
+		}
+		
+		if (begining != -1) {
+			intervals.add(new IntervalSelection(Action.Highlight, begining,
+					Long.MAX_VALUE));
+		}
+
+		mIntervals = intervals;
+		// debug
+		for (IntervalSelection i : intervals) {
+			System.out.println(i.getmStart() + " - " + i.getmEnd());
+		}
+		mSelectionController.changeIntervals(intervals, "ProblemView");
+	}
+
+	private void updateIntervals(Relation rel, double constraint) {
+		ArrayList<IntervalSelection> intervals = new ArrayList<IntervalSelection>();
+		if (mSelectedLog == null) {
+			mIntervals = intervals;
+		}
+
+		boolean inside = false;
+		long begining = -1;
+		long end;
+		long lastKey = -1;
+		double lastValue = -1;
+
+		NavigableMap<Long, ? extends Number> logMap;
+		switch (mSelectedLog.getType()) {
+		case FLOAT:
+			logMap = mSelectedLog.getFloatDataMap();
+			break;
+		case DOUBLE:
+			logMap = mSelectedLog.getDoubleDataMap();
+			break;
+		default:
+			return;
+		}
+
+		for (Entry<Long, ? extends Number> e : logMap.entrySet()) {
+			double val = e.getValue().doubleValue();
+			// start of an interval
+			if (inside == false && eval(val, rel, constraint) == true) {
+				if (lastKey == -1) {
+					begining = e.getKey();
+				} else {
+					begining = (long) (Math.abs(constraint - lastValue)
+							/ Math.abs(val - lastValue)
+							* Math.abs(e.getKey() - lastKey) + lastKey);
+				}
+
+				inside = true;
+				lastKey = e.getKey();
+				lastValue = val;
+				continue;
+			}
+			// we are inside of an interval
+			if (inside == true && eval(val, rel, constraint) == true) {
+				lastKey = e.getKey();
+				lastValue = val;
+				continue;
+			}
+			// we leave the interval
+			if (inside == true && eval(val, rel, constraint) == false) {
+				end = (long) (Math.abs(constraint - lastValue)
+						/ Math.abs(val - lastValue)
+						* Math.abs(e.getKey() - lastKey) + lastKey);
+				inside = false;
+				intervals.add(new IntervalSelection(Action.Highlight, begining,
+						end));
+				begining = -1;
+
+				lastKey = e.getKey();
+				lastValue = val;
+				continue;
+			}
+			if (inside == false && eval(val, rel, constraint) == false) {
+				lastKey = e.getKey();
+				lastValue = val;
+				continue;
+			}
+
+		}
+
+		if (begining != -1) {
+			intervals.add(new IntervalSelection(Action.Highlight, begining,
+					Long.MAX_VALUE));
+		}
+
+		mIntervals = intervals;
+		// debug
+		for (IntervalSelection i : intervals) {
+			System.out.println(i.getmStart() + " - " + i.getmEnd());
+		}
+		mSelectionController.changeIntervals(intervals, "ProblemView");
 	}
 
 
@@ -484,4 +697,64 @@ public class ProblemView extends Composite implements Observer {
 		// }
 		// }
     }
+
+	enum Relation {
+		LT, LTE, EQ, GTE, GT, NE;
+		public static Relation value(String v) {
+			if (">".equals(v)) {
+				return GT;
+			}
+			if (">=".equals(v)) {
+				return GTE;
+			}
+			if ("<".equals(v)) {
+				return LT;
+			}
+			if ("<=".equals(v)) {
+				return LTE;
+			}
+			if ("<>".equals(v)) {
+				return NE;
+			}
+			return EQ;
+		}
+	}
+
+	private boolean eval(long a, Relation rel, long b) {
+		switch (rel) {
+		case EQ:
+			return a == b;
+		case GT:
+			return a > b;
+		case GTE:
+			return a >= b;
+		case LT:
+			return a < b;
+		case LTE:
+			return a <= b;
+		case NE:
+			return a != b;
+		default:
+			return false;
+		}
+	}
+
+	private boolean eval(double a, Relation rel, double b) {
+		switch (rel) {
+		case EQ:
+			return a == b;
+		case GT:
+			return a > b;
+		case GTE:
+			return a >= b;
+		case LT:
+			return a < b;
+		case LTE:
+			return a <= b;
+		case NE:
+			return a != b;
+		default:
+			return false;
+		}
+	}
 }

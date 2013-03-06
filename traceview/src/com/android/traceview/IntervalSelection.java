@@ -19,6 +19,8 @@ package com.android.traceview;
 public class IntervalSelection {
 
 	private final Action mAction;
+
+	// times relative to logging start time
 	private long mStart;
 	private long mEnd;
 
