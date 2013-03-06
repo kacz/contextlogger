@@ -536,6 +536,7 @@ public class ProblemView extends Composite {
 				if (query.length() < 4) {
 					mScp.setProposals(new String[0]);
 					mProblemBox.setBackground(mColorMatch);
+					updateTimeStamps(null);
 					return;
 				}
 				MethodData[] matchingMD = findAllName(query);
