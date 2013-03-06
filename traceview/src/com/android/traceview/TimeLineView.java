@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NoSuchElementException;
@@ -57,8 +58,6 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.ScrollBar;
-
-import com.android.traceview.IntervalSelection.Action;
 
 import cz.cuni.kacz.contextlogger.LogType;
 
@@ -108,13 +107,17 @@ public class TimeLineView extends Composite implements Observer {
     private final Color mColorZoomSelection;
 	private final Color mColorProblemInterval;
 	private final Color mColorProblemCall;
+	private final Color mColorProblemCallInside;
+	private final Color mColorProblemCallOutside;
 	private final Color mBigSashColor;
 	private final Color[] mStringBackColors;
 	private final Color[] mStringForeColors;
     private final FontRegistry mFontRegistry;
 
-	private ArrayList<Long> mLogTimestamps;
-	private ArrayList<IntervalSelection> mLogIntervalSelection;
+	private List<Long> mLogTimestamps;
+	private List<Long> mInsideTimestamps;
+	private List<Long> mOutsideTimestamps;
+	private List<IntervalSelection> mLogIntervalSelection;
 
     /** vertical height of drawn blocks in each row */
     private static final int rowHeight = 20;
@@ -228,6 +231,8 @@ public class TimeLineView extends Composite implements Observer {
         mColorZoomSelection = new Color(display, 230, 230, 230);
 		mColorProblemInterval = new Color(display, 255, 235, 235);
 		mColorProblemCall = new Color(display, 255, 235, 0);
+		mColorProblemCallInside = new Color(display, 255, 0, 0);
+		mColorProblemCallOutside = new Color(display, 255, 235, 0);
 		mBigSashColor = display.getSystemColor(SWT.COLOR_DARK_GRAY);
 
 		mStringBackColors = new Color[] {
@@ -258,9 +263,9 @@ public class TimeLineView extends Composite implements Observer {
         mSmallFontHeight = gc.getFontMetrics().getHeight();
 
 		mLogTimestamps = new ArrayList<Long>();
+		mInsideTimestamps = new ArrayList<Long>();
+		mOutsideTimestamps = new ArrayList<Long>();
 		mLogIntervalSelection = new ArrayList<IntervalSelection>();
-		mLogIntervalSelection.add(new IntervalSelection(Action.Highlight, 50,
-				10000));
 
         image.dispose();
         gc.dispose();
@@ -640,8 +645,8 @@ public class TimeLineView extends Composite implements Observer {
 			return;
 		}
 		if (arg == "ProblemView") {
-			ArrayList<Long> timeStamps;
-			ArrayList<IntervalSelection> intervals;
+			List<Long> timeStamps;
+			List<IntervalSelection> intervals;
 
 			timeStamps = mSelectionController.getTimestamps();
 			if (timeStamps == null) {
@@ -656,6 +661,11 @@ public class TimeLineView extends Composite implements Observer {
 
 			mLogTimestamps = timeStamps;
 			mLogIntervalSelection = intervals;
+
+			mInsideTimestamps = ProblemView.computeInsideTimestamps(
+					mLogTimestamps, mLogIntervalSelection);
+			mOutsideTimestamps = new ArrayList<Long>(mLogTimestamps);
+			mOutsideTimestamps.removeAll(mInsideTimestamps);
 			mSurface.redraw();
 			mLogSurface.redraw();
 			return;
@@ -1793,15 +1803,25 @@ public class TimeLineView extends Composite implements Observer {
 			}
 
 			// draw problem calls
-			gcImage.setForeground(mColorProblemCall);
-			for (Long timestamp : mLogTimestamps) {
+			gcImage.setForeground(mColorProblemCallInside);
+			// System.out.println("ITS:" + mInsideTimestamps.size());
+			for (Long timestamp : mInsideTimestamps) {
 				if ((timestamp <= mScaleInfo.getMaxVal())
 						&& (timestamp >= mScaleInfo.getMinVal())) {
 					int x = mScaleInfo.valueToPixel(timestamp);
 					gcImage.drawLine(x + LeftMargin, 0, x + LeftMargin, dim.y);
 				}
 			}
-
+			gcImage.setForeground(mColorProblemCallOutside);
+			// System.out.println("OTS:" + mOutsideTimestamps.size());
+			for (Long timestamp : mOutsideTimestamps) {
+				if ((timestamp <= mScaleInfo.getMaxVal())
+						&& (timestamp >= mScaleInfo.getMinVal())) {
+					int x = mScaleInfo.valueToPixel(timestamp);
+					gcImage.drawLine(x + LeftMargin, 0, x + LeftMargin, dim.y);
+				}
+			}
+			
 			if (drawingSelection()) {
 				drawSelection(display, gcImage);
 			}
@@ -2591,17 +2611,29 @@ public class TimeLineView extends Composite implements Observer {
 					gcImage.fillRectangle(x1, 0, x2 - x1, dim.y);
 
 				}
+
 			}
 
 			// draw problem calls
-			gcImage.setForeground(mColorProblemCall);
-			for (Long timestamp : mLogTimestamps) {
+			gcImage.setForeground(mColorProblemCallInside);
+			// System.out.println("ITS:" + mInsideTimestamps.size());
+			for (Long timestamp : mInsideTimestamps) {
 				if ((timestamp <= mScaleInfo.getMaxVal())
 						&& (timestamp >= mScaleInfo.getMinVal())) {
-				int x = mScaleInfo.valueToPixel(timestamp);
-				gcImage.drawLine(x + LeftMargin, 0, x + LeftMargin, dim.y);
+					int x = mScaleInfo.valueToPixel(timestamp);
+					gcImage.drawLine(x + LeftMargin, 0, x + LeftMargin, dim.y);
 				}
 			}
+			gcImage.setForeground(mColorProblemCallOutside);
+			// System.out.println("OTS:" + mOutsideTimestamps.size());
+			for (Long timestamp : mOutsideTimestamps) {
+				if ((timestamp <= mScaleInfo.getMaxVal())
+						&& (timestamp >= mScaleInfo.getMinVal())) {
+					int x = mScaleInfo.valueToPixel(timestamp);
+					gcImage.drawLine(x + LeftMargin, 0, x + LeftMargin, dim.y);
+				}
+			}
+
 
             if (drawingSelection()) {
                 drawSelection(display, gcImage);

@@ -17,13 +17,14 @@
 package com.android.traceview;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Observable;
 
 public class SelectionController extends Observable {
 
-    private ArrayList<Selection> mSelections;
-	private ArrayList<IntervalSelection> mIntervals;
-	private ArrayList<Long> mTimestamps;
+	private ArrayList<Selection> mSelections;
+	private List<IntervalSelection> mIntervals;
+	private List<Long> mTimestamps;
 
     public void change(ArrayList<Selection> selections, Object arg) {
         this.mSelections = selections;
@@ -31,7 +32,7 @@ public class SelectionController extends Observable {
         notifyObservers(arg);
     }
 
-	public void changeIntervals(ArrayList<IntervalSelection> intervals,
+	public void changeIntervals(List<IntervalSelection> intervals,
 			Object arg) {
 		this.mIntervals = intervals;
 		setChanged();
@@ -44,15 +45,15 @@ public class SelectionController extends Observable {
 		notifyObservers(arg);
 	}
 
-    public ArrayList<Selection> getSelections() {
+	public ArrayList<Selection> getSelections() {
         return mSelections;
     }
 
-	public ArrayList<IntervalSelection> getIntervals() {
+	public List<IntervalSelection> getIntervals() {
 		return mIntervals;
 	}
 
-	public ArrayList<Long> getTimestamps() {
+	public List<Long> getTimestamps() {
 		return mTimestamps;
 	}
 }

@@ -21,13 +21,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NavigableMap;
-import java.util.Observable;
-import java.util.Observer;
 
 import org.eclipse.jface.fieldassist.ContentProposalAdapter;
 import org.eclipse.jface.fieldassist.SimpleContentProposalProvider;
 import org.eclipse.jface.fieldassist.TextContentAdapter;
-import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
@@ -50,7 +47,7 @@ import org.eclipse.swt.widgets.Text;
 import com.android.traceview.IntervalSelection.Action;
 import com.android.traceview.TimeLineView.Record;
 
-public class ProblemView extends Composite implements Observer {
+public class ProblemView extends Composite {
 
     private final SelectionController mSelectionController;
     private final ProfileProvider mProfileProvider;
@@ -61,10 +58,10 @@ public class ProblemView extends Composite implements Observer {
 	private final Map<Integer, ContextLogData> mLogMap;
 	private final ArrayList<Record> mTraceRecords;
 
-	private ArrayList<Long> mTimestamps;
-	private ArrayList<Long> mInsideTimestamps;
+	private List<Long> mTimestamps;
+	private List<Long> mInsideTimestamps;
 
-	private ArrayList<IntervalSelection> mIntervals;
+	private List<IntervalSelection> mIntervals;
 
 	private ContextLogData mSelectedLog;
 
@@ -74,6 +71,8 @@ public class ProblemView extends Composite implements Observer {
 	private final SimpleContentProposalProvider mScp;
 
 	private final MethodData BRBMethodData;
+
+	private static long mStartDiff;
 
 	// UI elements
 	Text mResultBox;
@@ -104,7 +103,6 @@ public class ProblemView extends Composite implements Observer {
 		super(parent, SWT.NONE);
 		setLayout(new GridLayout(2, true));
         this.mSelectionController = selectController;
-        mSelectionController.addObserver(this);
 
 		Display display = getDisplay();
 
@@ -119,6 +117,8 @@ public class ProblemView extends Composite implements Observer {
 		mIntervals = new ArrayList<IntervalSelection>();
 		mTimestamps = new ArrayList<Long>();
 		mInsideTimestamps = new ArrayList<Long>();
+
+		mStartDiff = reader.getStartTime() - logReader.getStartTime();
 
 		// Add container holding the problem definition form
 		Composite formComposite = new Composite(this, SWT.NONE);
@@ -233,7 +233,6 @@ public class ProblemView extends Composite implements Observer {
 				| SWT.BORDER | SWT.READ_ONLY);
 		stringRelationCombo.add("=");
 		stringRelationCombo.add("<>");
-
 		stringValueCombo = new Combo(mStringComposite,
 				SWT.DROP_DOWN | SWT.BORDER | SWT.READ_ONLY);
 
@@ -279,6 +278,10 @@ public class ProblemView extends Composite implements Observer {
 					break;
 				case STRING:
 					System.out.println("s");
+					stringValueCombo.removeAll();
+					for (String s : mSelectedLog.getStringDataMap().values()) {
+						stringValueCombo.add(s);
+					}
 					mIntComposite.setLayoutData(hide);
 					mFloatComposite.setLayoutData(hide);
 					mStringComposite.setLayoutData(show);
@@ -304,17 +307,50 @@ public class ProblemView extends Composite implements Observer {
 
 			@Override
 			public void widgetSelected(SelectionEvent arg0) {
-				String relationStr = intRelationCombo.getText();
-				Relation rel = Relation.value(relationStr);
+
 				try {
+					String relationStr = intRelationCombo.getText();
+					Relation rel = Relation.value(relationStr);
 					updateIntervals(rel, Long.valueOf(mIntValueBox.getText()));
 
 				} catch (NumberFormatException e) {
 					// boo
 					System.out.println("boo");
+					mIntervals.clear();
+					mSelectionController.changeIntervals(mIntervals, "ProblemView");
+				} catch (IllegalArgumentException e) {
+					// foo
+					System.out.println("foo");
+					mIntervals.clear();
+					mSelectionController.changeIntervals(mIntervals,
+							"ProblemView");
 				}
 			}
 
+		});
+
+		mIntValueBox.addModifyListener(new ModifyListener() {
+
+			@Override
+			public void modifyText(ModifyEvent arg0) {
+				try {
+					String relationStr = intRelationCombo.getText();
+					Relation rel = Relation.value(relationStr);
+					updateIntervals(rel, Long.valueOf(mIntValueBox.getText()));
+				} catch (NumberFormatException e) {
+					// boo
+					System.out.println("boo");
+					mIntervals.clear();
+					mSelectionController.changeIntervals(mIntervals,
+							"ProblemView");
+				} catch (IllegalArgumentException e) {
+					// foo
+					System.out.println("foo");
+					mIntervals.clear();
+					mSelectionController.changeIntervals(mIntervals,
+							"ProblemView");
+				}
+			}
 		});
 
 		floatRelationCombo.addSelectionListener(new SelectionListener() {
@@ -327,17 +363,114 @@ public class ProblemView extends Composite implements Observer {
 
 			@Override
 			public void widgetSelected(SelectionEvent arg0) {
-				String relationStr = floatRelationCombo.getText();
-				Relation rel = Relation.value(relationStr);
+
 				try {
+					String relationStr = floatRelationCombo.getText();
+					Relation rel = Relation.value(relationStr);
 					updateIntervals(rel,
 							Double.valueOf(mFloatValueBox.getText()));
 				} catch (NumberFormatException e) {
 					// boo
 					System.out.println("boo");
+					mIntervals.clear();
+					mSelectionController.changeIntervals(mIntervals,
+							"ProblemView");
+				} catch (IllegalArgumentException e) {
+					// foo
+					System.out.println("foo");
+					mIntervals.clear();
+					mSelectionController.changeIntervals(mIntervals,
+							"ProblemView");
 				}
 			}
 			
+		});
+		
+		mFloatValueBox.addModifyListener(new ModifyListener() {
+			
+			@Override
+			public void modifyText(ModifyEvent arg0) {
+				try {
+					String relationStr = floatRelationCombo.getText();
+					Relation rel = Relation.value(relationStr);
+					updateIntervals(rel,
+							Double.valueOf(mFloatValueBox.getText()));
+				} catch (NumberFormatException e) {
+					// boo
+					System.out.println("boo");
+					mIntervals.clear();
+					mSelectionController.changeIntervals(mIntervals,
+							"ProblemView");
+				} catch (IllegalArgumentException e) {
+					// foo
+					System.out.println("foo");
+					mIntervals.clear();
+					mSelectionController.changeIntervals(mIntervals,
+							"ProblemView");
+				}
+			}
+		});
+
+		stringRelationCombo.addSelectionListener(new SelectionListener() {
+
+			@Override
+			public void widgetDefaultSelected(SelectionEvent arg0) {
+				// TODO Auto-generated method stub
+
+			}
+
+			@Override
+			public void widgetSelected(SelectionEvent arg0) {
+
+				try {
+					String relationStr = stringRelationCombo.getText();
+					Relation rel = Relation.value(relationStr);
+					updateIntervals(rel, stringValueCombo.getText());
+				} catch (NumberFormatException e) {
+					// boo
+					System.out.println("boo");
+					mIntervals.clear();
+					mSelectionController.changeIntervals(mIntervals,
+							"ProblemView");
+				} catch (IllegalArgumentException e) {
+					// foo
+					System.out.println("foo");
+					mIntervals.clear();
+					mSelectionController.changeIntervals(mIntervals,
+							"ProblemView");
+				}
+			}
+		});
+
+		stringValueCombo.addSelectionListener(new SelectionListener() {
+
+			@Override
+			public void widgetDefaultSelected(SelectionEvent arg0) {
+				// TODO Auto-generated method stub
+
+			}
+
+			@Override
+			public void widgetSelected(SelectionEvent arg0) {
+
+				try {
+					String relationStr = stringRelationCombo.getText();
+					Relation rel = Relation.value(relationStr);
+					updateIntervals(rel, stringValueCombo.getText());
+				} catch (NumberFormatException e) {
+					// boo
+					System.out.println("boo");
+					mIntervals.clear();
+					mSelectionController.changeIntervals(mIntervals,
+							"ProblemView");
+				} catch (IllegalArgumentException e) {
+					// foo
+					System.out.println("foo");
+					mIntervals.clear();
+					mSelectionController.changeIntervals(mIntervals,
+							"ProblemView");
+				}
+			}
 		});
 
 		problemDefButton.addSelectionListener(new SelectionListener() {
@@ -496,9 +629,9 @@ public class ProblemView extends Composite implements Observer {
 
 		mIntervals = intervals;
 		// debug
-		for (IntervalSelection i : intervals) {
-			System.out.println(i.getmStart() + " - " + i.getmEnd());
-		}
+		// for (IntervalSelection i : intervals) {
+		// System.out.println(i.getmStart() + " - " + i.getmEnd());
+		// }
 		mSelectionController.changeIntervals(intervals, "ProblemView");
 	}
 
@@ -578,21 +711,89 @@ public class ProblemView extends Composite implements Observer {
 
 		mIntervals = intervals;
 		// debug
-		for (IntervalSelection i : intervals) {
-			System.out.println(i.getmStart() + " - " + i.getmEnd());
+		// for (IntervalSelection i : intervals) {
+		// System.out.println(i.getmStart() + " - " + i.getmEnd());
+		// }
+		mSelectionController.changeIntervals(intervals, "ProblemView");
+	}
+
+	private void updateIntervals(Relation rel, String constraint) {
+		ArrayList<IntervalSelection> intervals = new ArrayList<IntervalSelection>();
+		if (mSelectedLog == null) {
+			mIntervals = intervals;
 		}
+
+		boolean inside = false;
+		long begining = -1;
+		long end;
+		boolean equals = (rel == Relation.EQ);
+
+		NavigableMap<Long, String> logMap = mSelectedLog.getStringDataMap();
+		for (Entry<Long, String> e : logMap.entrySet()) {
+			if (inside == false && e.getValue().equals(constraint) == equals) {
+				begining = e.getKey();
+				inside = true;
+				continue;
+			}
+			if (inside == true && e.getValue().equals(constraint) == equals) {
+				continue;
+			}
+			if (inside == true && e.getValue().equals(constraint) != equals) {
+				end = e.getKey();
+				inside = false;
+				intervals.add(new IntervalSelection(Action.Highlight, begining,
+						end));
+				begining = -1;
+				continue;
+			}
+		}
+		if (begining != -1) {
+			intervals.add(new IntervalSelection(Action.Highlight, begining,
+					Long.MAX_VALUE));
+		}
+
+		mIntervals = intervals;
+		// debug
+		// for (IntervalSelection i : intervals) {
+		// System.out.println(i.getmStart() + " - " + i.getmEnd());
+		// }
 		mSelectionController.changeIntervals(intervals, "ProblemView");
 	}
 
 
 	private void updateStatistics() {
 		if (!mIntervals.isEmpty()) {
-			// computeInsideTimestamps();
+			mInsideTimestamps = computeInsideTimestamps(mTimestamps, mIntervals);
 		} else {
 			mInsideTimestamps = mTimestamps;
 		}
 	}
 
+	public static List<Long> computeInsideTimestamps(List<Long> timestamps,
+			List<IntervalSelection> intervals) {
+		List<Long> insideTimestamps = new ArrayList<Long>();
+
+		int numTs = timestamps.size();
+		int numInt = intervals.size();
+		int iTs = 0;
+		int iInt = 0;
+		while (iTs < numTs && iInt < numInt) {
+			long intBegin = intervals.get(iInt).getmStart();
+			long intEnd = intervals.get(iInt).getmEnd();
+			long ts = timestamps.get(iTs) + mStartDiff;
+			if (ts >= intBegin && ts <= intEnd) {
+				insideTimestamps.add(timestamps.get(iTs));
+				iTs++;
+			}
+			if (ts < intBegin) {
+				iTs++;
+			}
+			if (ts > intEnd) {
+				iInt++;
+			}
+		}
+		return insideTimestamps;
+	}
     public void setMethodHandler(MethodHandler handler) {
         mMethodHandler = handler;
     }
@@ -612,95 +813,15 @@ public class ProblemView extends Composite implements Observer {
 
     private void findName(String query) {
         MethodData md = mProfileProvider.findMatchingName(query);
-        selectMethod(md);
     }
 
     private void findNextName(String query) {
         MethodData md = mProfileProvider.findNextMatchingName(query);
-        selectMethod(md);
-    }
-
-    private void selectMethod(MethodData md) {
-        if (md == null) {
-			// mSearchBox.setBackground(mColorNoMatch);
-            return;
-        }
-		// mSearchBox.setBackground(mColorMatch);
-        highlightMethod(md, false);
-    }
-
-    @Override
-    public void update(Observable objservable, Object arg) {
-        // Ignore updates from myself
-		if (arg == "ProfileView" || arg == "ProblemView") {
-			return;
-		}
-        // System.out.printf("profileview update from %s\n", arg);
-        ArrayList<Selection> selections;
-        selections = mSelectionController.getSelections();
-        for (Selection selection : selections) {
-            Selection.Action action = selection.getAction();
-            if (action != Selection.Action.Highlight) {
-				continue;
-			}
-            String name = selection.getName();
-            if (name == "MethodData") {
-                MethodData md = (MethodData) selection.getValue();
-                highlightMethod(md, true);
-                return;
-            }
-            if (name == "Call") {
-                Call call = (Call) selection.getValue();
-                MethodData md = call.getMethodData();
-                highlightMethod(md, true);
-                return;
-            }
-        }
-    }
-
-    private void highlightMethod(MethodData md, boolean clearSearch) {
-        if (md == null) {
-			return;
-		}
-        // Avoid an infinite recursion
-        if (md == mCurrentHighlightedMethod) {
-			return;
-		}
-        if (clearSearch) {
-			// mSearchBox.setText("");
-			// mSearchBox.setBackground(mColorMatch);
-        }
-        mCurrentHighlightedMethod = md;
-		// mTreeViewer.collapseAll();
-        // Expand this node and its children
-        expandNode(md);
-        StructuredSelection sel = new StructuredSelection(md);
-		// mTreeViewer.setSelection(sel, true);
-		// Tree tree = mTreeViewer.getTree();
-		// TreeItem[] items = tree.getSelection();
-		// if (items.length != 0) {
-		// tree.setTopItem(items[0]);
-		// // workaround a Mac bug by adding showItem().
-		// tree.showItem(items[0]);
-		// }
-    }
-
-    private void expandNode(MethodData md) {
-        ProfileNode[] nodes = md.getProfileNodes();
-		// mTreeViewer.setExpandedState(md, true);
-		// // Also expand the "Parents" and "Children" nodes.
-		// if (nodes != null) {
-		// for (ProfileNode node : nodes) {
-		// if (node.isRecursive() == false) {
-		// mTreeViewer.setExpandedState(node, true);
-		// }
-		// }
-		// }
     }
 
 	enum Relation {
 		LT, LTE, EQ, GTE, GT, NE;
-		public static Relation value(String v) {
+		public static Relation value(String v) throws IllegalArgumentException {
 			if (">".equals(v)) {
 				return GT;
 			}
@@ -716,7 +837,10 @@ public class ProblemView extends Composite implements Observer {
 			if ("<>".equals(v)) {
 				return NE;
 			}
-			return EQ;
+			if ("=".equals(v)) {
+				return EQ;
+			}
+			throw new IllegalArgumentException(v);
 		}
 	}
 
