@@ -70,6 +70,7 @@ public class ProblemView extends Composite {
 
 	private final SimpleContentProposalProvider mScp;
 
+	private final String BRBname = "cz/cuni/kacz/contextlogger/ContextLogger.brb ()V";
 	private final MethodData BRBMethodData;
 
 	private static long mStartDiff;
@@ -112,7 +113,13 @@ public class ProblemView extends Composite {
 
 		mTraceRecords = reader.getThreadTimeRecords();
 
-		BRBMethodData = null;
+		MethodData[] brbCandidates = findAllName(BRBname);
+		if (brbCandidates.length == 1) {
+			BRBMethodData = brbCandidates[0];
+		} else {
+			BRBMethodData = null;
+		}
+
 		mSelectedLog = null;
 		mIntervals = new ArrayList<IntervalSelection>();
 		mTimestamps = new ArrayList<Long>();
@@ -523,6 +530,8 @@ public class ProblemView extends Composite {
 					stringRelationCombo.setEnabled(false);
 
 					mIntervals.clear();
+					mSelectionController.changeIntervals(mIntervals,
+							"ProblemView");
 					updateTimeStamps(BRBMethodData);
 
 				}
