@@ -11,8 +11,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -43,7 +43,7 @@ public class ContextLogReader {
 	    
 	public ContextLogReader(String traceFileName) throws IOException {
         mTraceFileName = traceFileName;
-		mLogMap = new HashMap<Integer, ContextLogData>();
+		mLogMap = new TreeMap<Integer, ContextLogData>();
         
         
         generateTrees();
