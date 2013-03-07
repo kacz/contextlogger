@@ -39,11 +39,13 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import cz.cuni.kacz.contextlogger.ContextLogger;
+import cz.cuni.kacz.contextlogger.IntentDataTarget;
 import cz.cuni.kacz.contextlogger.listeners.AcceleraionListener;
 import cz.cuni.kacz.contextlogger.listeners.ContextListener;
 import cz.cuni.kacz.contextlogger.listeners.CpuListener;
@@ -64,6 +66,8 @@ public class MainActivity extends Activity {
 	private static final String TAG = "DisplayMessageActivity";
 
 	private boolean running = false;
+
+	boolean intentTargetRegistered = false;
 	private BroadcastReceiver mBCReceiver;
 
 	private final Map<Integer, TextView> mValues = new HashMap<Integer, TextView>();
@@ -162,6 +166,23 @@ public class MainActivity extends Activity {
 			stopButton.setVisibility(Button.GONE);
 		}
 
+		startButton.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				startLogging();
+
+			}
+		});
+		stopButton.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				stopLogging();
+
+			}
+		});
+
 	}
 
 	@Override
@@ -218,10 +239,6 @@ public class MainActivity extends Activity {
 		}
 	}
 
-	public void startButtonClicked(View view) {
-		startLogging();
-	}
-
 	public void startLogging() {
 		if (!running) {
 			Log.d(TAG, "startLogging");
@@ -238,6 +255,7 @@ public class MainActivity extends Activity {
 
 			ContextListener l;
 			mCL.clearListeners();
+			mCL.clearTargets();
 			if (sharedPref.getBoolean(
 					res.getString(R.string.pref_key_acceleration_listener),
 					false)) {
@@ -312,25 +330,11 @@ public class MainActivity extends Activity {
 			// create data targets...
 			// TODO
 
-			// create listeners
-			// ContextListener l = new TrafficListener();
-			// mCL.addListener(l);
-			// l = new WifiRSSIListener();
-			// mCL.addListener(l);
-			// l = new WifiStateListener();
-			// mCL.addListener(l);
-			// l = new WifiConnectionStateListener();
-			// mCL.addListener(l);
-			// l = new WifiBSSIDListener();
-			// mCL.addListener(l);
-			// l = new TestListener();
-			// mCL.addListener(l);
-			// l = new ScreenStateListener();
-			// mCL.addListener(l);
-			// l = new ScreenBrightnessListener();
-			// mCL.addListener(l);
-			// l = new AcceleraionListener();
-			// mCL.addListener(l);
+			 if (sharedPref.getBoolean(
+					res.getString(R.string.pref_target_intent), false)) {
+				mCL.addTarget(new IntentDataTarget());
+			 intentTargetRegistered = true;
+			 }
 			// start the logging process
 			mCL.startLogging();
 
@@ -352,6 +356,7 @@ public class MainActivity extends Activity {
 			mCL.stopLogging();
 
 			mCL.clearListeners();
+			mCL.clearTargets();
 
 			running = false;
 
@@ -386,6 +391,9 @@ public class MainActivity extends Activity {
 		mCL.stopService();
 
 		// unregister the BC receiver
+		if (intentTargetRegistered) {
 		getApplicationContext().unregisterReceiver(mBCReceiver);
+			intentTargetRegistered = false;
+		}
 	}
 }
