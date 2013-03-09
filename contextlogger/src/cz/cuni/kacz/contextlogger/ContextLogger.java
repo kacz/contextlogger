@@ -20,7 +20,9 @@
 
 package cz.cuni.kacz.contextlogger;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 
 import android.app.Activity;
 import android.content.ComponentName;
@@ -48,7 +50,9 @@ public class ContextLogger {
 
 	private static final String TAG = "ContextLogger";
 
-	private final String traceName = "programNeve";
+	private static final String DEFAULT_TRACE_NAME = "CLTrace";
+
+	private String mTraceName = null;
 
 	Activity mCallerActivity = null;
 
@@ -65,6 +69,8 @@ public class ContextLogger {
 	private final int TRACE_BUFF_SUZE = 128 * 1024 * 1024;// 128M
 
 	private final ArrayList<ContextListener> mListeners = new ArrayList<ContextListener>();
+
+	private ArrayList<DataTarget> mTargets = new ArrayList<DataTarget>();
 
 	/**
 	 * Constructor. Sets up application context reference and starts the logger
@@ -83,7 +89,7 @@ public class ContextLogger {
 		}
 		Intent akarmi = new Intent(this.mCallerActivity,
 				ContextLoggerService.class);
-		Log.d(TAG, "hahaaa");
+
 		boolean succ = mCallerActivity.bindService(new Intent(
 				this.mCallerActivity, ContextLoggerService.class), mConnection,
 				Context.BIND_AUTO_CREATE);
@@ -92,7 +98,6 @@ public class ContextLogger {
 		} else {
 			Log.i(TAG, "bind successful");
 		}
-
 	}
 
 	public void stopService() {
@@ -141,29 +146,31 @@ public class ContextLogger {
 		}
 		mIsRunning = true;
 
-		initListeners();
-
-		// start tracing if needed
-		if (mDoTrace) {
-			Debug.startMethodTracing(Environment
-					.getExternalStoragePublicDirectory(
-							Environment.DIRECTORY_DOWNLOADS).getAbsolutePath()
-							+ "/" + traceName, TRACE_BUFF_SUZE);
-			Log.d(TAG, "method tracing started");
-		}
+		// Set the filename for current run
+		String dateString = new SimpleDateFormat("-yyMMdd-hhmmss")
+				.format(new Date());
+		mTraceName = Environment.getExternalStoragePublicDirectory(
+				Environment.DIRECTORY_DOWNLOADS).getAbsolutePath()
+				+ "/" + DEFAULT_TRACE_NAME + dateString;
 
 		// send the listeners to the service
+		initListeners();
+
+		// start logging
 		Message msg = Message.obtain(null,
 				ContextLoggerService.MSG_START_LOGGING, 0, 0);
-		// Bundle data = new Bundle();
-		// data.putSerializable("listeners", mListeners);
-		// msg.setData(data);
-
 		try {
 			mService.send(msg);
 		} catch (RemoteException e) {
 			Log.d(TAG, "startLogging - START_MSG sending error");
 			e.printStackTrace();
+		}
+
+		// start tracing if needed
+		if (mDoTrace) {
+			Debug.startMethodTracing(mTraceName, TRACE_BUFF_SUZE);
+			// Debug.startMethodTracing(mTraceName);
+			Log.d(TAG, "method tracing started");
 		}
 		Log.d(TAG, "startLogging - START_MSG sent");
 	};
@@ -173,11 +180,17 @@ public class ContextLogger {
 		if (!mBound) {
 			return;
 		}
+
+		mTargets = new ArrayList<DataTarget>();
+		mTargets.add(new FileDataTarget(mTraceName));
+		mTargets.add(new IntentDataTarget());
+
 		// send the listeners to the service
 		Message msg = Message.obtain(null,
 				ContextLoggerService.MSG_INIT_LISTENERS, 0, 0);
 		Bundle data = new Bundle();
 		data.putSerializable("listeners", mListeners);
+		data.putSerializable("targets", mTargets);
 		msg.setData(data);
 
 		try {
@@ -199,15 +212,9 @@ public class ContextLogger {
 		}
 		mIsRunning = false;
 
-		// stop tracing
-		if (mDoTrace) {
-			Debug.stopMethodTracing();
-			Log.d(TAG, "stopmethod tracing stopped");
-		}
 
-		if (!mBound) {
-			return;
-		}
+
+		if (mBound) {
 		// Create and send a message to the service, using a supported 'what'
 		// value
 		Message msg = Message.obtain(null,
@@ -216,8 +223,16 @@ public class ContextLogger {
 			mService.send(msg);
 		} catch (RemoteException e) {
 			e.printStackTrace();
-			return;
+
 		}
+		}
+
+		// stop tracing
+		if (mDoTrace) {
+			Debug.stopMethodTracing();
+			Log.d(TAG, "stopmethod tracing stopped");
+		}
+
 		return;
 	};
 
@@ -236,6 +251,17 @@ public class ContextLogger {
 		mListeners.add(listener);
 	};
 
+	public void clearTargets() {
+		mTargets.clear();
+	}
+
+	public void addTarget(DataTarget target) {
+		if (mIsRunning == true) {
+			Log.e(TAG, "Logging already in progress.");
+			return;
+		}
+		mTargets.add(target);
+	}
 	/**
 	 * 
 	 * @param enable

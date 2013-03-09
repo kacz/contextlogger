@@ -20,6 +20,8 @@
 
 package cz.cuni.kacz.contextlogger;
 
+import android.content.Context;
+
 public interface DataTarget {
 	public void open();
 
@@ -38,4 +40,6 @@ public interface DataTarget {
 	public void registerListener(int listenerId, int type, String listenerName);
 
 	public boolean checkPermissions();
+
+	void initCtx(Context ctx);
 }

@@ -27,17 +27,14 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 
-import android.content.Context;
 import android.content.pm.PackageManager;
-import android.os.Environment;
 import android.util.Log;
 
-public class TextFileDataTarget implements DataTarget {
+public class TextFileDataTarget extends DefaultDataTarget {
 
 	private static final String TAG = "FileDataTarget";
 	public static final String ACTION_CONTEXT_CHANGED = "cz.cuni.kacz.contextLogger.ACTION_CONTEXT_CHANGED";
 	public static final String ACTION_LISTENER_ADDED = "cz.cuni.kacz.contextLogger.ACTION_LISTENER_ADDED";
-	private Context mContext = null;
 	private final String mFileName;
 	private long mStartTime;
 
@@ -48,8 +45,7 @@ public class TextFileDataTarget implements DataTarget {
 	private BufferedWriter mDataStream;
 	private BufferedWriter mHeaderWriter;
 
-	public TextFileDataTarget(Context context, String fileName) {
-		mContext = context;
+	public TextFileDataTarget(String fileName) {
 		mFileName = fileName;
 	}
 
@@ -139,14 +135,14 @@ public class TextFileDataTarget implements DataTarget {
 	public void open() {
 		try {
 			Log.d(TAG, "opening...");
-			File path = Environment
-					.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+			// File path = Environment
+			// .getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
 
 			mHeaderWriter = new BufferedWriter(new OutputStreamWriter(
-					new FileOutputStream(new File(path, mFileName
+					new FileOutputStream(new File(mFileName
 							+ ".text.clog"))));
 			mDataStream = new BufferedWriter(new OutputStreamWriter(
-					new FileOutputStream(new File(path, mFileName
+					new FileOutputStream(new File(mFileName
 							+ ".text.cdata"))));
 			Log.d(TAG, "streams open");
 			mStartTime = TimeSource.getTimeOfDay();

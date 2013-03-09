@@ -20,21 +20,21 @@
 
 package cz.cuni.kacz.contextlogger;
 
-import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
-public class IntentDataTarget implements DataTarget {
+public class IntentDataTarget extends DefaultDataTarget {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 
 	private static final String TAG = "IntentDataTarget";
 	public static final String ACTION_CONTEXT_CHANGED = "cz.cuni.kacz.contextLogger.ACTION_CONTEXT_CHANGED";
 	public static final String ACTION_LISTENER_ADDED = "cz.cuni.kacz.contextLogger.ACTION_LISTENER_ADDED";
-	private Context mContext = null;
 
-	public IntentDataTarget(Context context) {
-		mContext = context;
-	}
-
+	@Override
 	public void insertLog(int listenerId, long time, int value) {
 		Log.d(TAG, "id: " + listenerId + " value: " + value + " type: int");
 		Intent intent = new Intent(ACTION_CONTEXT_CHANGED);
@@ -44,6 +44,7 @@ public class IntentDataTarget implements DataTarget {
 		mContext.sendBroadcast(intent);
 	}
 
+	@Override
 	public void insertLog(int listenerId, long time, long value) {
 		Log.d(TAG, "id: " + listenerId + " value: " + value + " type: long");
 		Intent intent = new Intent(ACTION_CONTEXT_CHANGED);
@@ -53,6 +54,7 @@ public class IntentDataTarget implements DataTarget {
 		mContext.sendBroadcast(intent);
 	}
 
+	@Override
 	public void insertLog(int listenerId, long time, float value) {
 		Log.d(TAG, "id: " + listenerId + " value: " + value + " type: float");
 		Intent intent = new Intent(ACTION_CONTEXT_CHANGED);
@@ -62,6 +64,7 @@ public class IntentDataTarget implements DataTarget {
 		mContext.sendBroadcast(intent);
 	}
 
+	@Override
 	public void insertLog(int listenerId, long time, String value) {
 		Log.d(TAG, "id: " + listenerId + " value: " + value + " type: string");
 		Intent intent = new Intent(ACTION_CONTEXT_CHANGED);
@@ -71,6 +74,7 @@ public class IntentDataTarget implements DataTarget {
 		mContext.sendBroadcast(intent);
 	}
 
+	@Override
 	public void insertLog(int listenerId, long time, double value) {
 		Log.d(TAG, "id: " + listenerId + " value: " + value + " type: double");
 		Intent intent = new Intent(ACTION_CONTEXT_CHANGED);
@@ -80,6 +84,7 @@ public class IntentDataTarget implements DataTarget {
 		mContext.sendBroadcast(intent);
 	}
 
+	@Override
 	public void registerListener(int listenerId, int type, String listenerName) {
 		Log.d(TAG, "reg3");
 		Intent intent = new Intent(ACTION_LISTENER_ADDED);
@@ -89,14 +94,17 @@ public class IntentDataTarget implements DataTarget {
 		mContext.sendBroadcast(intent);
 	}
 
+	@Override
 	public void open() {
 		return;
 	}
 
+	@Override
 	public void close() {
 		return;
 	}
 
+	@Override
 	public boolean checkPermissions() {
 		return true;
 	}

@@ -49,9 +49,9 @@ import cz.cuni.kacz.contextlogger.IntentDataTarget;
 import cz.cuni.kacz.contextlogger.listeners.AcceleraionListener;
 import cz.cuni.kacz.contextlogger.listeners.ContextListener;
 import cz.cuni.kacz.contextlogger.listeners.CpuListener;
+import cz.cuni.kacz.contextlogger.listeners.DummyListener;
 import cz.cuni.kacz.contextlogger.listeners.GpsLocationListener;
 import cz.cuni.kacz.contextlogger.listeners.GpsStatusListener;
-import cz.cuni.kacz.contextlogger.listeners.PassiveLocationListener;
 import cz.cuni.kacz.contextlogger.listeners.ScreenBrightnessListener;
 import cz.cuni.kacz.contextlogger.listeners.ScreenStateListener;
 import cz.cuni.kacz.contextlogger.listeners.TrafficListener;
@@ -324,7 +324,7 @@ public class MainActivity extends Activity {
 			}
 			if (sharedPref.getBoolean(
 					res.getString(R.string.pref_key_new_test_listener), false)) {
-				l = new PassiveLocationListener();
+				l = new DummyListener(1000);
 				mCL.addListener(l);
 			}
 			// create data targets...

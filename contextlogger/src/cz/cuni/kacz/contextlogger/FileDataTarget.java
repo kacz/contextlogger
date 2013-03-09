@@ -29,19 +29,20 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 
-import android.content.Context;
-import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.os.Environment;
 import android.util.Log;
 
-public class FileDataTarget implements DataTarget {
+public class FileDataTarget extends DefaultDataTarget {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 
 	private static final String TAG = "FileDataTarget";
 	public static final String ACTION_CONTEXT_CHANGED = "cz.cuni.kacz.contextLogger.ACTION_CONTEXT_CHANGED";
 	public static final String ACTION_LISTENER_ADDED = "cz.cuni.kacz.contextLogger.ACTION_LISTENER_ADDED";
-	private Context mContext = null;
-	private String mFileName;
+	private final String mFileName;
 	private long mStartTime;
 
 	private static final int DATA_MAGIC = 0x574f4c53;
@@ -51,11 +52,11 @@ public class FileDataTarget implements DataTarget {
 	private DataOutputStream mDataStream;
 	private BufferedWriter mHeaderWriter;
 
-	public FileDataTarget(Context context, String fileName) {
-		mContext = context;
+	public FileDataTarget(String fileName) {
 		mFileName = fileName;
 	}
 
+	@Override
 	public void insertLog(int listenerId, long time, int value) {
 		Log.d(TAG, "id: " + listenerId + " value: " + value + " type: int");
 		try {
@@ -69,6 +70,7 @@ public class FileDataTarget implements DataTarget {
 		}
 	}
 
+	@Override
 	public void insertLog(int listenerId, long time, long value) {
 		Log.d(TAG, "id: " + listenerId + " value: " + value + " type: long");
 		try {
@@ -82,6 +84,7 @@ public class FileDataTarget implements DataTarget {
 		}
 	}
 
+	@Override
 	public void insertLog(int listenerId, long time, float value) {
 		Log.d(TAG, "id: " + listenerId + " value: " + value + " type: float");
 		try {
@@ -95,6 +98,7 @@ public class FileDataTarget implements DataTarget {
 		}
 	}
 
+	@Override
 	public void insertLog(int listenerId, long time, String value) {
 		Log.d(TAG, "id: " + listenerId + " value: " + value + " type: string");
 		try {
@@ -108,6 +112,7 @@ public class FileDataTarget implements DataTarget {
 		}
 	}
 
+	@Override
 	public void insertLog(int listenerId, long time, double value) {
 		Log.d(TAG, "id: " + listenerId + " value: " + value + " type: double");
 		try {
@@ -121,6 +126,7 @@ public class FileDataTarget implements DataTarget {
 		}
 	}
 
+	@Override
 	public void registerListener(int listenerId, int type, String listenerName) {
 		try {
 			mHeaderWriter.write(String.valueOf(listenerId) + " "
@@ -132,17 +138,20 @@ public class FileDataTarget implements DataTarget {
 		}
 	}
 
+	@Override
 	public void open() {
 		try {
 			Log.d(TAG, "opening...");
-			File path = Environment
-					.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+			// File path = Environment
+			// .getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
 
 			mHeaderWriter = new BufferedWriter(new OutputStreamWriter(
-					new FileOutputStream(new File(path, mFileName + ".clog"))));
+					new FileOutputStream(new File(mFileName + ".clog"))));
 			mDataStream = new DataOutputStream(new BufferedOutputStream(
-					new FileOutputStream(new File(path, mFileName + ".cdata"))));
+					new FileOutputStream(new File(mFileName + ".cdata"))));
 			Log.d(TAG, "streams open");
+			Log.d(TAG, "fileName: " + mFileName + ".clog");
+			Log.d(TAG, "fileName: " + mFileName + ".cdata");
 			mStartTime = TimeSource.getTimeOfDay();
 
 			// write the beggining of head and data files
@@ -175,6 +184,7 @@ public class FileDataTarget implements DataTarget {
 
 	}
 
+	@Override
 	public void close() {
 		try {
 			Log.d(TAG, "closing...");
@@ -186,16 +196,32 @@ public class FileDataTarget implements DataTarget {
 
 			mHeaderWriter.close();
 			mDataStream.close();
+
+			// concat files
+			// FileOutputStream out = new FileOutputStream(mFileName+ ".clog");
+			// FileOutputStream in = new FileOutputStream(mFileName+ ".cdata");
+			// byte[] fileBytes;
+			// int bytesRead = 0;
+			// fileBytes = new byte[(int) file.length()];
+			// bytesRead = fis.read(fileBytes, 0,(int) file.length());
+			// assert(bytesRead == fileBytes.length);
+			// assert(bytesRead == (int) file.length());
+			// fos.write(fileBytes);
+			// fos.flush();
+			// fileBytes = null;
+
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
 
+	@Override
 	public boolean checkPermissions() {
 		if (ContextLoggerService.mAppContext
-				.checkCallingOrSelfPermission("android.permission.WRITE_EXTERNAL_STORAGE") != PackageManager.PERMISSION_GRANTED)
+				.checkCallingOrSelfPermission("android.permission.WRITE_EXTERNAL_STORAGE") != PackageManager.PERMISSION_GRANTED) {
 			return false;
+		}
 		return true;
 	}
 

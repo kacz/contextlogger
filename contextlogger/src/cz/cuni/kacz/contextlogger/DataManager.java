@@ -25,7 +25,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import android.util.Log;
@@ -34,7 +33,7 @@ public class DataManager {
 
 	private final String TAG = "DataManager";
 
-	private List<DataTarget> mDataTargets;
+	private final List<DataTarget> mDataTargets;
 
 	private Map<String, Integer> mListenerIDs = null;
 	private List<Integer> mValueTypes = null;
@@ -56,6 +55,7 @@ public class DataManager {
 		mValueTypes = new ArrayList<Integer>();
 
 		mWorker = new Thread(new Runnable() {
+			@Override
 			public void run() {
 				try {
 					while (true) {
@@ -119,6 +119,7 @@ public class DataManager {
 		for (DataTarget dt : mDataTargets) {
 			dt.close();
 		}
+		mDataTargets.clear();
 	}
 
 	public void insertLog(String listenerName, long time, long value) {

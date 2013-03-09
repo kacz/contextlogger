@@ -23,8 +23,6 @@ package cz.cuni.kacz.contextlogger;
 import java.util.ArrayList;
 import java.util.List;
 
-import cz.cuni.kacz.contextlogger.listeners.ContextListener;
-
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -34,6 +32,7 @@ import android.os.Message;
 import android.os.Messenger;
 import android.util.Log;
 import android.widget.Toast;
+import cz.cuni.kacz.contextlogger.listeners.ContextListener;
 
 public class ContextLoggerService extends Service {
 
@@ -62,10 +61,13 @@ public class ContextLoggerService extends Service {
 		Log.i(TAG, "onCreate");
 		mAppContext = getApplicationContext();
 		mDataManager = new DataManager();
-		mDataManager
-				.addDataTarget(new IntentDataTarget(getApplicationContext()));
-		mDataManager.addDataTarget(new FileDataTarget(getApplicationContext(),
-				"probaxx"));
+		// mDataManager
+		// .addDataTarget(new IntentDataTarget(getApplicationContext()));
+		// mDataManager.addDataTarget(new
+		// FileDataTarget(getApplicationContext(),
+		// "probaxx"));
+		// mDataManager.addDataTarget(new TextFileDataTarget(
+		// getApplicationContext(), "probaxx"));
 		Log.i(TAG, "onCreate ready");
 	}
 
@@ -90,6 +92,8 @@ public class ContextLoggerService extends Service {
 			switch (msg.what) {
 			case MSG_INIT_LISTENERS:
 				Log.i(TAG, "initListeners MSG rcvd");
+				initTargets((ArrayList<DataTarget>) msg.getData()
+						.getSerializable("targets"));
 				initListeners((ArrayList<ContextListener>) msg.getData()
 						.getSerializable("listeners"));
 				break;
@@ -166,10 +170,12 @@ public class ContextLoggerService extends Service {
 			Log.d(TAG, String.valueOf(direct[i]));
 			if (i != 0) {
 				diff = direct[i] - direct[i - 1];
-				if (diff < min)
+				if (diff < min) {
 					min = diff;
-				if (diff > max)
+				}
+				if (diff > max) {
 					max = diff;
+				}
 				avg += diff;
 			}
 		}
@@ -184,10 +190,12 @@ public class ContextLoggerService extends Service {
 			Log.d(TAG, String.valueOf(indirect[i]));
 			if (i != 0) {
 				diff = indirect[i] - indirect[i - 1];
-				if (diff < min)
+				if (diff < min) {
 					min = diff;
-				if (diff > max)
+				}
+				if (diff > max) {
 					max = diff;
+				}
 				avg += diff;
 			}
 		}
@@ -202,10 +210,12 @@ public class ContextLoggerService extends Service {
 			Log.d(TAG, String.valueOf(nat[i]));
 			if (i != 0) {
 				diff = nat[i] - nat[i - 1];
-				if (diff < min)
+				if (diff < min) {
 					min = diff;
-				if (diff > max)
+				}
+				if (diff > max) {
 					max = diff;
+				}
 				avg += diff;
 			}
 		}
@@ -213,12 +223,26 @@ public class ContextLoggerService extends Service {
 		Log.d(TAG, "min:" + min + " max:" + max + " avg:" + avg);
 	}
 
+	private void initTargets(List<DataTarget> targets) {
+		Log.d(TAG, "initTargets");
+		for (DataTarget dt : targets) {
+			dt.initCtx(getApplicationContext());
+			mDataManager.addDataTarget(dt);
+		}
+		// DataTarget dt = new IntentDataTarget();
+		// dt.initCtx(getApplicationContext());
+		// mDataManager.addDataTarget(dt);
+		// dt = new FileDataTarget("/mnt/sdcard/Download/akarmi");
+		// dt.initCtx(getApplicationContext());
+		// mDataManager.addDataTarget(dt);
+	}
+
 	private void initListeners(List<ContextListener> listeners) {
 		Log.d(TAG, "initListeners");
 
 		// register the listeners
 		mListeners = new ArrayList<ContextListener>(listeners.size());
-		;
+
 		for (ContextListener l : listeners) {
 			if (l.checkPermissions()) {
 				l.init(mDataManager);
@@ -234,11 +258,12 @@ public class ContextLoggerService extends Service {
 	}
 
 	private void stopLogging() {
+		mDataManager.finish();
 		Log.d(TAG, "stoplogging");
 		for (ContextListener l : mListeners) {
 			l.stopListening();
 		}
-		mDataManager.finish();
+
 		// mListeners.clear();
 	}
 
