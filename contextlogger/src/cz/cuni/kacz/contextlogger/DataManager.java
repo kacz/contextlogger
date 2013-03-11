@@ -120,6 +120,7 @@ public class DataManager {
 			dt.close();
 		}
 		mDataTargets.clear();
+		mValueTypes.clear();
 	}
 
 	public void insertLog(String listenerName, long time, long value) {
