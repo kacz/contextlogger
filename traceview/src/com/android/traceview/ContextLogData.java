@@ -1,5 +1,6 @@
 package com.android.traceview;
 
+import java.util.Map.Entry;
 import java.util.NavigableMap;
 import java.util.TreeMap;
 
@@ -103,6 +104,77 @@ public class ContextLogData implements TimeLineView.LogRow {
 
 	NavigableMap<Long, String> getStringDataMap() {
 		return mStringDataMap;
+	}
+
+	Integer getIntValueAt(long timestamp) {
+		if (mIntDataMap == null) {
+			return null;
+		}
+		Entry<Long, Integer> intEntry = mIntDataMap.floorEntry(timestamp);
+		if (intEntry != null) {
+			return intEntry.getValue();
+		}
+		return null;
+	}
+
+	Long getLongValueAt(long timestamp) {
+		if (mLongDataMap == null) {
+			return null;
+		}
+		Entry<Long, Long> longEntry = mLongDataMap.floorEntry(timestamp);
+		if (longEntry != null) {
+			return longEntry.getValue();
+		}
+		return null;
+	}
+
+	Float getFloatValueAt(long timestamp) {
+		if (mFloatDataMap == null) {
+			return null;
+		}
+		Entry<Long, Float> ceilingFloatEntry = mFloatDataMap
+				.ceilingEntry(timestamp);
+		Entry<Long, Float> floorFloatEntry = mFloatDataMap
+				.floorEntry(timestamp);
+		if (ceilingFloatEntry != null && floorFloatEntry != null) {
+			float floatValue = floorFloatEntry.getValue()
+					+ (float) (timestamp - floorFloatEntry.getKey())
+					/ (float) (ceilingFloatEntry.getKey() - floorFloatEntry
+							.getKey())
+					* (ceilingFloatEntry.getValue() - floorFloatEntry
+							.getValue());
+			return floatValue;
+		}
+		return null;
+	}
+
+	Double getDoubleValueAt(long timestamp) {
+		if (mDoubleDataMap == null) {
+			return null;
+		}
+		Entry<Long, Double> ceilingDoubleEntry = mDoubleDataMap
+				.ceilingEntry(timestamp);
+		Entry<Long, Double> floorDoubleEntry = mDoubleDataMap
+				.floorEntry(timestamp);
+		if (ceilingDoubleEntry != null && floorDoubleEntry != null) {
+			double doubleValue = floorDoubleEntry.getValue()
+					+ (double) (timestamp - floorDoubleEntry.getKey())
+					/ (double) (ceilingDoubleEntry.getKey() - floorDoubleEntry
+							.getKey()) * ceilingDoubleEntry.getValue();
+			return doubleValue;
+		}
+		return null;
+	}
+
+	String getStringValueAt(long timestamp) {
+		if (mStringDataMap == null) {
+			return null;
+		}
+		Entry<Long, String> stringEntry = mStringDataMap.floorEntry(timestamp);
+		if (stringEntry != null) {
+			return stringEntry.getValue();
+		}
+		return null;
 	}
 
 	@Override

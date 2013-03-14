@@ -2067,7 +2067,7 @@ public class TimeLineView extends Composite implements Observer {
 			int lineEnd = Math.min(dim.y, mNumLogRows * logRowYSpace);
 			gcImage.drawLine(mMouse.x, 0, mMouse.x, lineEnd);
 
-			if (mMouseLogRow != -1) {
+			if (mMouseLogRow != -1 && mMouseLogRow < mLogRows.length) {
 				LogRowData ld = mLogRows[mMouseLogRow];
 				String logDetails = null;
 				long timeStamp = (long) mScaleInfo.pixelToValue(mMouse.x
@@ -2075,66 +2075,33 @@ public class TimeLineView extends Composite implements Observer {
 						+ mStartDiff;
 				switch (ld.mType) {
 				case INT:
-					Entry<Long, Integer> intEntry = ld.mRow.getIntDataMap()
-							.floorEntry(timeStamp);
-					if (intEntry != null) {
-						logDetails = intEntry.getValue().toString();
+					Integer intValue = ld.mRow.getIntValueAt(timeStamp);
+					if (intValue != null) {
+						logDetails = String.valueOf(intValue);
 					}
 					break;
 				case LONG:
-					Entry<Long, Long> longEntry = ld.mRow.getLongDataMap()
-							.floorEntry(timeStamp);
-					if (longEntry != null) {
-						logDetails = longEntry.getValue().toString();
+					Long longValue = ld.mRow.getLongValueAt(timeStamp);
+					if (longValue != null) {
+						logDetails = String.valueOf(longValue);
 					}
 					break;
 				case FLOAT:
-					Entry<Long, Float> ceilingFloatEntry = ld.mRow
-							.getFloatDataMap()
-							.ceilingEntry(timeStamp);
-					Entry<Long, Float> floorFloatEntry = ld.mRow
-							.getFloatDataMap()
-							.floorEntry(timeStamp);
-					if (ceilingFloatEntry != null && floorFloatEntry != null) {
-						float floatValue = floorFloatEntry.getValue()
-								+ (float) (timeStamp - floorFloatEntry
-										.getKey())
-								/ (float) (ceilingFloatEntry.getKey() - floorFloatEntry
-										.getKey())
-								* (ceilingFloatEntry.getValue() - floorFloatEntry
-										.getValue());
+					Float floatValue = ld.mRow.getFloatValueAt(timeStamp);
+					if (floatValue != null) {
 						logDetails = String.valueOf(floatValue);
-						// debug
-						// System.out.println("q "
-						// + (timeStamp - floorFloatEntry.getKey())
-						// + " / "
-						// + (ceilingFloatEntry.getKey() - floorFloatEntry
-						// .getKey()));
 					}
-
-
 					break;
 				case DOUBLE:
-					Entry<Long, Double> ceilingDoubleEntry = ld.mRow
-							.getDoubleDataMap().ceilingEntry(timeStamp);
-					Entry<Long, Double> floorDoubleEntry = ld.mRow
-							.getDoubleDataMap()
-							.floorEntry(timeStamp);
-					if (ceilingDoubleEntry != null && floorDoubleEntry != null) {
-						double doubleValue = floorDoubleEntry.getValue()
-								+ (timeStamp - floorDoubleEntry.getKey())
-								/ (ceilingDoubleEntry.getKey() - floorDoubleEntry
-										.getKey())
-								* ceilingDoubleEntry.getValue();
+					Double doubleValue = ld.mRow.getDoubleValueAt(timeStamp);
+					if (doubleValue != null) {
 						logDetails = String.valueOf(doubleValue);
 					}
-
 					break;
 				case STRING:
-					Entry<Long, String> stringEntry = ld.mRow
-							.getStringDataMap().floorEntry(timeStamp);
-					if (stringEntry != null) {
-						logDetails = stringEntry.getValue();
+					String stringValue = ld.mRow.getStringValueAt(timeStamp);
+					if (stringValue != null) {
+						logDetails = stringValue;
 					}
 					break;
 				}

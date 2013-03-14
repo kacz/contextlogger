@@ -17,6 +17,9 @@
 package com.android.traceview;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -46,6 +49,8 @@ import org.eclipse.swt.widgets.Text;
 
 import com.android.traceview.IntervalSelection.Action;
 import com.android.traceview.TimeLineView.Record;
+
+import cz.cuni.kacz.contextlogger.LogType;
 
 public class ProblemView extends Composite {
 
@@ -249,7 +254,7 @@ public class ProblemView extends Composite {
 
 		// Add result text field to the right side
 
-		mResultBox = new Text(this, SWT.MULTI | SWT.BORDER);
+		mResultBox = new Text(this, SWT.MULTI | SWT.BORDER | SWT.V_SCROLL);
 		mResultBox.setLayoutData(new GridData(GridData.FILL_BOTH));
 		mResultBox.setEditable(false);
 
@@ -295,6 +300,7 @@ public class ProblemView extends Composite {
 					break;
 				}
 				constraintHolderComposite.pack();
+				updateStatistics();
 			}
 
 			@Override
@@ -319,7 +325,7 @@ public class ProblemView extends Composite {
 					String relationStr = intRelationCombo.getText();
 					Relation rel = Relation.value(relationStr);
 					updateIntervals(rel, Long.valueOf(mIntValueBox.getText()));
-
+					updateStatistics();
 				} catch (NumberFormatException e) {
 					// boo
 					System.out.println("boo");
@@ -344,6 +350,7 @@ public class ProblemView extends Composite {
 					String relationStr = intRelationCombo.getText();
 					Relation rel = Relation.value(relationStr);
 					updateIntervals(rel, Long.valueOf(mIntValueBox.getText()));
+					updateStatistics();
 				} catch (NumberFormatException e) {
 					// boo
 					System.out.println("boo");
@@ -376,6 +383,7 @@ public class ProblemView extends Composite {
 					Relation rel = Relation.value(relationStr);
 					updateIntervals(rel,
 							Double.valueOf(mFloatValueBox.getText()));
+					updateStatistics();
 				} catch (NumberFormatException e) {
 					// boo
 					System.out.println("boo");
@@ -402,6 +410,7 @@ public class ProblemView extends Composite {
 					Relation rel = Relation.value(relationStr);
 					updateIntervals(rel,
 							Double.valueOf(mFloatValueBox.getText()));
+					updateStatistics();
 				} catch (NumberFormatException e) {
 					// boo
 					System.out.println("boo");
@@ -433,6 +442,7 @@ public class ProblemView extends Composite {
 					String relationStr = stringRelationCombo.getText();
 					Relation rel = Relation.value(relationStr);
 					updateIntervals(rel, stringValueCombo.getText());
+					updateStatistics();
 				} catch (NumberFormatException e) {
 					// boo
 					System.out.println("boo");
@@ -464,6 +474,7 @@ public class ProblemView extends Composite {
 					String relationStr = stringRelationCombo.getText();
 					Relation rel = Relation.value(relationStr);
 					updateIntervals(rel, stringValueCombo.getText());
+					updateStatistics();
 				} catch (NumberFormatException e) {
 					// boo
 					System.out.println("boo");
@@ -504,6 +515,7 @@ public class ProblemView extends Composite {
 
 					mIntervals.clear();
 					updateTimeStamps(null);
+					updateStatistics();
 				}
 			}
 		});
@@ -533,7 +545,7 @@ public class ProblemView extends Composite {
 					mSelectionController.changeIntervals(mIntervals,
 							"ProblemView");
 					updateTimeStamps(BRBMethodData);
-
+					updateStatistics();
 				}
 			}
 		});
@@ -568,6 +580,7 @@ public class ProblemView extends Composite {
 
 				if (matchingMD.length == 1) {
 					updateTimeStamps(matchingMD[0]);
+					updateStatistics();
 				}
 			}
 		});
@@ -772,10 +785,139 @@ public class ProblemView extends Composite {
 
 
 	private void updateStatistics() {
+		mResultBox.setText("");
 		if (!mIntervals.isEmpty()) {
 			mInsideTimestamps = computeInsideTimestamps(mTimestamps, mIntervals);
 		} else {
 			mInsideTimestamps = mTimestamps;
+		}
+		for (ContextLogData cl : mLogMap.values()) {
+			mResultBox.append(cl.getName() + ":\n");
+			switch (cl.getType()) {
+			case STRING:
+ {
+				Map<String, Integer> stringMap = new HashMap<String, Integer>();
+				for (Long ts : mInsideTimestamps) {
+					String val = cl.getStringValueAt(ts + mStartDiff);
+					if (stringMap.containsKey(val)) {
+						int count = stringMap.get(val);
+						stringMap.put(val, count + 1);
+					} else {
+						stringMap.put(val, 1);
+					}
+				}
+				List<Map.Entry<String, Integer>> sorted = new ArrayList<Map.Entry<String, Integer>>(stringMap.entrySet());
+				Collections.sort(sorted, new Comparator<Map.Entry<String, Integer>>() {
+
+					@Override
+					public int compare(Entry<String, Integer> e1,
+							Entry<String, Integer> e2) {
+						if(e1.getValue() < e2.getValue()) {
+									return 1;
+						}
+						if(e1.getValue() > e2.getValue()) {
+									return -1;
+						}
+								return 0;
+								// return e1.getKey().compareTo(e2.getKey());
+					}
+					
+				}
+					);
+
+				Collections.reverse(sorted);
+
+				for (Map.Entry<String, Integer> e : sorted) {
+					int percentage = 100 * e.getValue()
+							/ mInsideTimestamps.size();
+					mResultBox.append("\t" + percentage + "% " + e.getKey()
+							+ "\n");
+				}
+				break;
+			}
+			case INT:
+			case LONG:
+ {
+				Map<Long, Integer> intMap = new HashMap<Long, Integer>();
+				for (Long ts : mInsideTimestamps) {
+					Long val = null;
+					if (cl.getType() == LogType.INT) {
+						Integer intVal = cl.getIntValueAt(ts + mStartDiff);
+						if (intVal != null) {
+							val = new Long(cl.getIntValueAt(ts + mStartDiff));
+						}
+					} else {
+						val = cl.getLongValueAt(ts + mStartDiff);
+					}
+					if (intMap.containsKey(val)) {
+						int count = intMap.get(val);
+						intMap.put(val, count + 1);
+					} else {
+						intMap.put(val, 1);
+					}
+				}
+				List<Map.Entry<Long, Integer>> sorted = new ArrayList<Map.Entry<Long, Integer>>(
+						intMap.entrySet());
+				Collections.sort(sorted,
+						new Comparator<Map.Entry<Long, Integer>>() {
+
+							@Override
+							public int compare(Entry<Long, Integer> e1,
+									Entry<Long, Integer> e2) {
+								if (e1.getValue() < e2.getValue()) {
+									return 1;
+								}
+								if (e1.getValue() > e2.getValue()) {
+									return -1;
+								}
+								return 0;
+								// return e1.getKey().compareTo(e2.getKey());
+							}
+
+						});
+
+				// Collections.reverse(sorted);
+
+				for (Map.Entry<Long, Integer> e : sorted) {
+					int percentage = 100 * e.getValue()
+							/ mInsideTimestamps.size();
+					mResultBox.append("\t" + percentage + "% " + e.getKey()
+							+ "\n");
+				}
+				break;
+			}
+			case DOUBLE:
+			case FLOAT: {
+				List<Double> sorted = new ArrayList<Double>();
+				for (Long ts : mInsideTimestamps) {
+					Double val = null;
+					if (cl.getType() == LogType.FLOAT) {
+						Float floatVal = cl.getFloatValueAt(ts + mStartDiff);
+						if (floatVal != null) {
+							val = new Double(floatVal);
+						}
+					} else {
+						val = cl.getDoubleValueAt(ts + mStartDiff);
+					}
+
+					if (val != null) {
+						sorted.add(val);
+					}
+				}
+				Collections.sort(sorted);
+
+				// 90% interval (without top,bottom 5%)
+				if (sorted.size() != 0) {
+					int first = (int) (sorted.size() * 0.05);
+					int last = (int) (sorted.size() * 0.95);
+					System.out
+							.println(sorted.size() + " " + first + " " + last);
+					mResultBox.append("\t90% interval: (" + sorted.get(first)
+							+ "-" + sorted.get(last) + ")\n");
+				}
+				break;
+			}
+			}
 		}
 	}
 
