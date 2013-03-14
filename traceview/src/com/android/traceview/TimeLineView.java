@@ -74,6 +74,7 @@ public class TimeLineView extends Composite implements Observer {
     private int mScrollOffsetY;
 
 	// >>>>>added
+	boolean logsAvailable;
 	private final HashMap<String, LogRowData> mLogRowByName;
 	private LogRowData[] mLogRows;
 	final SashForm mLogSashForm;
@@ -267,6 +268,12 @@ public class TimeLineView extends Composite implements Observer {
 		mOutsideTimestamps = new ArrayList<Long>();
 		mLogIntervalSelection = new ArrayList<IntervalSelection>();
 
+		logsAvailable = (logReader != null);
+		if(logsAvailable) {
+			mStartDiff = reader.getStartTime() - logReader.getStartTime();
+		} else {
+			mStartDiff = 0;
+		}
         image.dispose();
         gc.dispose();
 
@@ -319,195 +326,203 @@ public class TimeLineView extends Composite implements Observer {
         
 		// >>>>>>>>>>>>>add
 
-		mLogSashForm = new SashForm(mBigSashForm, SWT.HORIZONTAL);
-		mLogSashForm.setBackground(mColorGray);
-		mLogSashForm.setSashWidth(3);
-        
-        Composite logLabelsComposite = new Composite(mLogSashForm, SWT.NONE);
-		layout = new GridLayout(1, true /* make columns equal width */);
-		layout.marginHeight = 0;
-		layout.marginWidth = 0;
-		layout.verticalSpacing = 1;
-		logLabelsComposite.setLayout(layout);
-		// logLabelsComposite.setBackground(display.getSystemColor(SWT.COLOR_CYAN));
-		mLogLabels = new LogRowLabels(logLabelsComposite);
-        gridData = new GridData(GridData.FILL_BOTH);
-        mLogLabels.setLayoutData(gridData);
-        
-		// final ScrollBar vLogBar = mLogLabels.getVerticalBar();
-		// vLogBar.addListener(SWT.Selection, new Listener() {
-		// @Override
-		// public void handleEvent(Event e) {
-		// mLogScrollOffsetY = vLogBar.getSelection();
-		// Point dim = mSurface.getSize();
-		// int newScrollOffsetY = computeVisibleLogRows(dim.y);
-		// if (newScrollOffsetY != mLogScrollOffsetY) {
-		// mLogScrollOffsetY = newScrollOffsetY;
-		// vLogBar.setSelection(newScrollOffsetY);
-		// }
-		// mLogLabels.redraw();
-		// }
-		// });
+		if (logsAvailable) {
+			mLogSashForm = new SashForm(mBigSashForm, SWT.HORIZONTAL);
+			mLogSashForm.setBackground(mColorGray);
+			mLogSashForm.setSashWidth(3);
 
-        Composite logDataComposite = new Composite(mLogSashForm, SWT.NONE);
-		layout = new GridLayout(1, true /* make columns equal width */);
-		layout.marginHeight = 0;
-		layout.marginWidth = 0;
-		layout.verticalSpacing = 1;
-		logDataComposite.setLayout(layout);
-        logDataComposite.setBackground(display.getSystemColor(SWT.COLOR_RED));
-		mLogSurface = new LogSurface(logDataComposite);// LogRowLabels(logDataComposite);
-        gridData = new GridData(GridData.FILL_BOTH);
-        mLogSurface.setLayoutData(gridData);
-        mLogSashForm.setWeights(new int[] {1,5});
-        
-		mBigSashForm.setWeights(new int[] { 4, 6 });
-		mBigSashForm.setSashWidth(3);
-		mBigSashForm.setBackground(mBigSashColor);
-        
-		// logLabelsComposite.addControlListener(new ControlListener() {
-		//
-		// @Override
-		// public void controlResized(ControlEvent arg0) {
-		// mSashForm.setWeights(mLogSashForm.getWeights());
-		//
-		// }
-		//
-		// @Override
-		// public void controlMoved(ControlEvent arg0) {
-		// // TODO Auto-generated method stub
-		//
-		// }
-		// });
+			Composite logLabelsComposite = new Composite(mLogSashForm, SWT.NONE);
+			layout = new GridLayout(1, true /* make columns equal width */);
+			layout.marginHeight = 0;
+			layout.marginWidth = 0;
+			layout.verticalSpacing = 1;
+			logLabelsComposite.setLayout(layout);
+			// logLabelsComposite.setBackground(display.getSystemColor(SWT.COLOR_CYAN));
+			mLogLabels = new LogRowLabels(logLabelsComposite);
+			gridData = new GridData(GridData.FILL_BOTH);
+			mLogLabels.setLayoutData(gridData);
 
-		mLogLabels.addMouseMoveListener(new MouseMoveListener() {
-			@Override
-			public void mouseMove(MouseEvent me) {
-				mLogLabels.mouseMove(me);
-			}
-		});
+			// final ScrollBar vLogBar = mLogLabels.getVerticalBar();
+			// vLogBar.addListener(SWT.Selection, new Listener() {
+			// @Override
+			// public void handleEvent(Event e) {
+			// mLogScrollOffsetY = vLogBar.getSelection();
+			// Point dim = mSurface.getSize();
+			// int newScrollOffsetY = computeVisibleLogRows(dim.y);
+			// if (newScrollOffsetY != mLogScrollOffsetY) {
+			// mLogScrollOffsetY = newScrollOffsetY;
+			// vLogBar.setSelection(newScrollOffsetY);
+			// }
+			// mLogLabels.redraw();
+			// }
+			// });
 
-		// listeners to synchronize the two horizontal slashes
-		mLogLabels.addControlListener(new ControlListener() {
+			Composite logDataComposite = new Composite(mLogSashForm, SWT.NONE);
+			layout = new GridLayout(1, true /* make columns equal width */);
+			layout.marginHeight = 0;
+			layout.marginWidth = 0;
+			layout.verticalSpacing = 1;
+			logDataComposite.setLayout(layout);
+			logDataComposite.setBackground(display
+					.getSystemColor(SWT.COLOR_RED));
+			mLogSurface = new LogSurface(logDataComposite);// LogRowLabels(logDataComposite);
+			gridData = new GridData(GridData.FILL_BOTH);
+			mLogSurface.setLayoutData(gridData);
+			mLogSashForm.setWeights(new int[] { 1, 5 });
 
-			@Override
-			public void controlResized(ControlEvent arg0) {
-				mSashForm.setWeights(mLogSashForm.getWeights());
-				mLogSashForm.setSashWidth(3);
-				mSashForm.setSashWidth(3);
-				// test
-				Point dim = mLogLabels.getSize();
-				computeVisibleLogRows(dim.y);
+			mBigSashForm.setWeights(new int[] { 4, 6 });
+			mBigSashForm.setSashWidth(3);
+			mBigSashForm.setBackground(mBigSashColor);
 
-			}
+			// logLabelsComposite.addControlListener(new ControlListener() {
+			//
+			// @Override
+			// public void controlResized(ControlEvent arg0) {
+			// mSashForm.setWeights(mLogSashForm.getWeights());
+			//
+			// }
+			//
+			// @Override
+			// public void controlMoved(ControlEvent arg0) {
+			// // TODO Auto-generated method stub
+			//
+			// }
+			// });
+		} else {
+			mLogSashForm = null;
+			mLogLabels = null;
+			mLogSurface = null;
+		}
 
-			@Override
-			public void controlMoved(ControlEvent arg0) {
-				// TODO Auto-generated method stub
+		if (logsAvailable) {
+			mLogLabels.addMouseMoveListener(new MouseMoveListener() {
+				@Override
+				public void mouseMove(MouseEvent me) {
+					mLogLabels.mouseMove(me);
+				}
+			});
 
-			}
-		});
-        
+			// listeners to synchronize the two horizontal slashes
+			mLogLabels.addControlListener(new ControlListener() {
 
-        corner.addControlListener(new ControlListener() {
-			
-			@Override
-			public void controlResized(ControlEvent arg0) {
-				mLogSashForm.setWeights(mSashForm.getWeights());
-				mLogSashForm.setSashWidth(3);
-				mSashForm.setSashWidth(3);
-			}
-			
-			@Override
-			public void controlMoved(ControlEvent arg0) {
-				// TODO Auto-generated method stub
+				@Override
+				public void controlResized(ControlEvent arg0) {
+					mSashForm.setWeights(mLogSashForm.getWeights());
+					mLogSashForm.setSashWidth(3);
+					mSashForm.setSashWidth(3);
+					// test
+					Point dim = mLogLabels.getSize();
+					computeVisibleLogRows(dim.y);
+
+				}
+
+				@Override
+				public void controlMoved(ControlEvent arg0) {
+					// TODO Auto-generated method stub
+
+				}
+			});
+
+			corner.addControlListener(new ControlListener() {
+
+				@Override
+				public void controlResized(ControlEvent arg0) {
+					mLogSashForm.setWeights(mSashForm.getWeights());
+					mLogSashForm.setSashWidth(3);
+					mSashForm.setSashWidth(3);
+				}
 				
-			}
-		});
+				@Override
+				public void controlMoved(ControlEvent arg0) {
+					// TODO Auto-generated method stub
 
-		final ScrollBar vLogBar = mLogSurface.getVerticalBar();
-		vLogBar.addListener(SWT.Selection, new Listener() {
-			@Override
-			public void handleEvent(Event e) {
-				mLogScrollOffsetY = vLogBar.getSelection();
-				Point dim = mLogSurface.getSize();
-				int newLogScrollOffsetY = computeVisibleLogRows(dim.y);
-				if (newLogScrollOffsetY != mLogScrollOffsetY) {
-					mLogScrollOffsetY = newLogScrollOffsetY;
-					vLogBar.setSelection(newLogScrollOffsetY);
 				}
-				mLogLabels.redraw();
-				mLogSurface.redraw();
-			}
-		});
+			});
 
-		mLogSurface.addMouseMoveListener(new MouseMoveListener() {
-			@Override
-			public void mouseMove(MouseEvent me) {
-				mLogSurface.mouseMove(me);
-			}
-		});
-
-		mLogSurface.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseUp(MouseEvent me) {
-				mLogSurface.mouseUp(me);
-			}
-
-			@Override
-			public void mouseDown(MouseEvent me) {
-				mLogSurface.mouseDown(me);
-			}
-
-			@Override
-			public void mouseDoubleClick(MouseEvent me) {
-				// mLogSurface.mouseDoubleClick(me);
-			}
-		});
-
-		mLogSurface.addListener(SWT.Resize, new Listener() {
-			@Override
-			public void handleEvent(Event e) {
-				Point dim = mLogSurface.getSize();
-
-				// If we don't need the scroll bar then don't display it.
-				if (dim.y >= mNumLogRows * logRowYSpace) {
-					vLogBar.setVisible(false);
-				} else {
-					vLogBar.setVisible(true);
+			final ScrollBar vLogBar = mLogSurface.getVerticalBar();
+			vLogBar.addListener(SWT.Selection, new Listener() {
+				@Override
+				public void handleEvent(Event e) {
+					mLogScrollOffsetY = vLogBar.getSelection();
+					Point dim = mLogSurface.getSize();
+					int newLogScrollOffsetY = computeVisibleLogRows(dim.y);
+					if (newLogScrollOffsetY != mLogScrollOffsetY) {
+						mLogScrollOffsetY = newLogScrollOffsetY;
+						vLogBar.setSelection(newLogScrollOffsetY);
+					}
+					mLogLabels.redraw();
+					mLogSurface.redraw();
 				}
-				int newScrollOffsetY = computeVisibleLogRows(dim.y);
-				if (newScrollOffsetY != mLogScrollOffsetY) {
-					mLogScrollOffsetY = newScrollOffsetY;
-					vLogBar.setSelection(newScrollOffsetY);
+			});
+
+			mLogSurface.addMouseMoveListener(new MouseMoveListener() {
+				@Override
+				public void mouseMove(MouseEvent me) {
+					mLogSurface.mouseMove(me);
+				}
+			});
+
+			mLogSurface.addMouseListener(new MouseAdapter() {
+				@Override
+				public void mouseUp(MouseEvent me) {
+					mLogSurface.mouseUp(me);
 				}
 
-				int spaceNeeded = mNumLogRows * logRowYSpace;
-				vLogBar.setMaximum(spaceNeeded);
-				vLogBar.setThumb(dim.y);
+				@Override
+				public void mouseDown(MouseEvent me) {
+					mLogSurface.mouseDown(me);
+				}
 
-				mLogLabels.redraw();
-				mLogSurface.redraw();
-			}
-		});
+				@Override
+				public void mouseDoubleClick(MouseEvent me) {
+					// mLogSurface.mouseDoubleClick(me);
+				}
+			});
 
-		mLogSurface.addMouseWheelListener(new MouseWheelListener() {
-			@Override
-			public void mouseScrolled(MouseEvent me) {
-				mSurface.mouseScrolled(me);
-			}
-		});
+			mLogSurface.addListener(SWT.Resize, new Listener() {
+				@Override
+				public void handleEvent(Event e) {
+					Point dim = mLogSurface.getSize();
 
-		final ScrollBar hLogBar = mLogSurface.getHorizontalBar();
-		hLogBar.addListener(SWT.Selection, new Listener() {
-			@Override
-			public void handleEvent(Event e) {
-				mSurface.setScaleFromHorizontalScrollBar(hLogBar.getSelection());
-				mSurface.redraw();
-				mLogSurface.redraw();
-			}
-		});
+					// If we don't need the scroll bar then don't display it.
+					if (dim.y >= mNumLogRows * logRowYSpace) {
+						vLogBar.setVisible(false);
+					} else {
+						vLogBar.setVisible(true);
+					}
+					int newScrollOffsetY = computeVisibleLogRows(dim.y);
+					if (newScrollOffsetY != mLogScrollOffsetY) {
+						mLogScrollOffsetY = newScrollOffsetY;
+						vLogBar.setSelection(newScrollOffsetY);
+					}
 
+					int spaceNeeded = mNumLogRows * logRowYSpace;
+					vLogBar.setMaximum(spaceNeeded);
+					vLogBar.setThumb(dim.y);
+
+					mLogLabels.redraw();
+					mLogSurface.redraw();
+				}
+			});
+
+			mLogSurface.addMouseWheelListener(new MouseWheelListener() {
+				@Override
+				public void mouseScrolled(MouseEvent me) {
+					mSurface.mouseScrolled(me);
+				}
+			});
+
+			final ScrollBar hLogBar = mLogSurface.getHorizontalBar();
+			hLogBar.addListener(SWT.Selection, new Listener() {
+				@Override
+				public void handleEvent(Event e) {
+					mSurface.setScaleFromHorizontalScrollBar(hLogBar
+							.getSelection());
+					mSurface.redraw();
+					mLogSurface.redraw();
+				}
+			});
+		}
 		// <<<<<<<<<Added
 
         final ScrollBar vBar = mSurface.getVerticalBar();
@@ -532,12 +547,14 @@ public class TimeLineView extends Composite implements Observer {
             public void handleEvent(Event e) {
                 mSurface.setScaleFromHorizontalScrollBar(hBar.getSelection());
                 mSurface.redraw();
-				mLogSurface.redraw();
+				if (logsAvailable) {
+					mLogSurface.redraw();
+				}
             }
         });
 
 		// hBar on Surface is hidden, if LogSurface is present
-		if (mLogSurface != null) {
+		if (logsAvailable) {
 			hBar.setVisible(false);
 		}
 
@@ -631,11 +648,14 @@ public class TimeLineView extends Composite implements Observer {
 
 		// debug
 		System.out.println("trace start: " + reader.getStartTime());
-		System.out.println("log start: " + logReader.getStartTime());
-		mStartDiff = reader.getStartTime() - logReader.getStartTime();
-		System.out.println("diff: " + mStartDiff);
+		if (logsAvailable) {
+			System.out.println("log start: " + logReader.getStartTime());
+			System.out.println("diff: " + mStartDiff);
+		} 
         setData(reader.getThreadTimeRecords());
-		setLogData(logReader.getLogRecords());
+		if (logsAvailable) {
+			setLogData(logReader.getLogRecords());
+		}
     }
 
     @Override
@@ -1180,7 +1200,9 @@ public class TimeLineView extends Composite implements Observer {
         private void mouseMove(MouseEvent me) {
             me.y = -1;
             mSurface.mouseMove(me);
-			mLogSurface.mouseMove(me);
+			if (logsAvailable) {
+				mLogSurface.mouseMove(me);
+			}
         }
 
         private void mouseDown(MouseEvent me) {
@@ -2556,51 +2578,56 @@ public class TimeLineView extends Composite implements Observer {
                 }
             }
 
-			// draw problem intervals
-			if (mLogIntervalSelection != null) {
-				for (IntervalSelection i : mLogIntervalSelection) {
-					gcImage.setBackground(mColorProblemInterval);
-					long start = i.getmStart() - mStartDiff;
-					long end = i.getmEnd() - mStartDiff;
-					if (start > mScaleInfo.getMaxVal()) {
-						continue;
-					}
-					if (end < mScaleInfo.getMinVal()) {
-						continue;
-					}
-					if (end > mScaleInfo.getMaxVal()) {
-						end = (long) mScaleInfo.getMaxVal();
-					}
-					int x1 = mScaleInfo.valueToPixel(start)
-							+ LeftMargin;
-					int x2 = mScaleInfo.valueToPixel(end)
-							+ LeftMargin;
-					gcImage.fillRectangle(x1, 0, x2 - x1, dim.y);
+			if (logsAvailable) {
+				// draw problem intervals
+				if (mLogIntervalSelection != null) {
+					for (IntervalSelection i : mLogIntervalSelection) {
+						gcImage.setBackground(mColorProblemInterval);
+						long start = i.getmStart() - mStartDiff;
+						long end = i.getmEnd() - mStartDiff;
+						if (start > mScaleInfo.getMaxVal()) {
+							continue;
+						}
+						if (end < mScaleInfo.getMinVal()) {
+							continue;
+						}
+						if (end > mScaleInfo.getMaxVal()) {
+							end = (long) mScaleInfo.getMaxVal();
+						}
+						int x1 = mScaleInfo.valueToPixel(start)
+								+ LeftMargin;
+						int x2 = mScaleInfo.valueToPixel(end)
+								+ LeftMargin;
+						gcImage.fillRectangle(x1, 0, x2 - x1, dim.y);
 
-				}
+					}
 
-			}
-
-			// draw problem calls
-			gcImage.setForeground(mColorProblemCallInside);
-			// System.out.println("ITS:" + mInsideTimestamps.size());
-			for (Long timestamp : mInsideTimestamps) {
-				if ((timestamp <= mScaleInfo.getMaxVal())
-						&& (timestamp >= mScaleInfo.getMinVal())) {
-					int x = mScaleInfo.valueToPixel(timestamp);
-					gcImage.drawLine(x + LeftMargin, 0, x + LeftMargin, dim.y);
-				}
-			}
-			gcImage.setForeground(mColorProblemCallOutside);
-			// System.out.println("OTS:" + mOutsideTimestamps.size());
-			for (Long timestamp : mOutsideTimestamps) {
-				if ((timestamp <= mScaleInfo.getMaxVal())
-						&& (timestamp >= mScaleInfo.getMinVal())) {
-					int x = mScaleInfo.valueToPixel(timestamp);
-					gcImage.drawLine(x + LeftMargin, 0, x + LeftMargin, dim.y);
 				}
 			}
 
+			if (logsAvailable) {
+				// draw problem calls
+				gcImage.setForeground(mColorProblemCallInside);
+				// System.out.println("ITS:" + mInsideTimestamps.size());
+				for (Long timestamp : mInsideTimestamps) {
+					if ((timestamp <= mScaleInfo.getMaxVal())
+							&& (timestamp >= mScaleInfo.getMinVal())) {
+						int x = mScaleInfo.valueToPixel(timestamp);
+						gcImage.drawLine(x + LeftMargin, 0, x + LeftMargin,
+								dim.y);
+					}
+				}
+				gcImage.setForeground(mColorProblemCallOutside);
+				// System.out.println("OTS:" + mOutsideTimestamps.size());
+				for (Long timestamp : mOutsideTimestamps) {
+					if ((timestamp <= mScaleInfo.getMaxVal())
+							&& (timestamp >= mScaleInfo.getMinVal())) {
+						int x = mScaleInfo.valueToPixel(timestamp);
+						gcImage.drawLine(x + LeftMargin, 0, x + LeftMargin,
+								dim.y);
+					}
+				}
+			}
 
             if (drawingSelection()) {
                 drawSelection(display, gcImage);
@@ -3191,9 +3218,11 @@ public class TimeLineView extends Composite implements Observer {
                 mMouseRow = rownum;
                 mLabels.redraw();
             }
-			if (me.y != -1) {
-				me.y = -1;
-				mLogSurface.mouseMove(me);
+			if (logsAvailable) {
+				if (me.y != -1) {
+					me.y = -1;
+					mLogSurface.mouseMove(me);
+				}
 			}
             redraw();
         }
@@ -3419,7 +3448,9 @@ public class TimeLineView extends Composite implements Observer {
             mScaleInfo.setMinVal(tMinNew);
             mScaleInfo.setMaxVal(tMaxNew);
             mSurface.redraw();
-			mLogSurface.redraw();
+			if (logsAvailable) {
+				mLogSurface.redraw();
+			}
         }
 
         // No defined behavior yet for double-click.
@@ -3514,7 +3545,7 @@ public class TimeLineView extends Composite implements Observer {
                 getDisplay().timerExec(ZOOM_TIMER_INTERVAL, mZoomAnimator);
             }
             redraw();
-			if (mLogSurface != null) {
+			if (logsAvailable) {
 				mLogSurface.redraw();
 			}
         }

@@ -110,25 +110,28 @@ public class MainWindow extends ApplicationWindow {
         // Create the timeline view
 		new TimeLineView(sashForm1, mReader, mLogReader, selectionController);
 
-		final TabFolder tabFolder = new TabFolder(sashForm1, SWT.BORDER);
+		if (mLogReader != null) {
+			final TabFolder tabFolder = new TabFolder(sashForm1, SWT.BORDER);
 
-        // Create the profile view
-		ProfileView profileView = new ProfileView(tabFolder, mReader,
-				selectionController);
+			// Create the profile view
+			ProfileView profileView = new ProfileView(tabFolder, mReader,
+					selectionController);
 
-		TabItem tabItem = new TabItem(tabFolder, SWT.NULL);
-		tabItem.setText("Problem definer");
-		tabItem.setControl(profileView);
+			TabItem tabItem = new TabItem(tabFolder, SWT.NULL);
+			tabItem.setText("ProfileView");
+			tabItem.setControl(profileView);
 
-		// Create the profile view
-		ProblemView problemView = new ProblemView(tabFolder, mReader,
-				mLogReader,
-				selectionController);
+			// Create the profile view
+			ProblemView problemView = new ProblemView(tabFolder, mReader,
+					mLogReader, selectionController);
 
-		tabItem = new TabItem(tabFolder, SWT.NULL);
-		tabItem.setText("ProblemView");
-		tabItem.setControl(problemView);
-
+			tabItem = new TabItem(tabFolder, SWT.NULL);
+			tabItem.setText("ProblemView");
+			tabItem.setControl(problemView);
+		} else {
+			// Create the profile view
+			new ProfileView(sashForm1, mReader, selectionController);
+		}
 		sashForm1.setWeights(new int[] { 8, 2 });
         return sashForm1;
     }
@@ -306,6 +309,7 @@ public class MainWindow extends ApplicationWindow {
                 }
             }
 
+			String contextLogName = traceName + ".clog";
             try {
                 reader = new DmTraceReader(traceName, regression);
             } catch (IOException e) {
@@ -314,13 +318,15 @@ public class MainWindow extends ApplicationWindow {
                 System.exit(1);
                 return;
             }
-			try {
-				logReader = new ContextLogReader(traceName);
-			} catch (IOException e) {
-				System.err.printf("Failed to read the trace file");
-				e.printStackTrace();
-				System.exit(1);
-				return;
+			if (new File(contextLogName).exists()) {
+				try {
+					logReader = new ContextLogReader(contextLogName);
+				} catch (IOException e) {
+					System.err.printf("Failed to read the log file");
+					e.printStackTrace();
+					System.exit(1);
+					return;
+				}
 			}
         }
 

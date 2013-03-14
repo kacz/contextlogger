@@ -58,7 +58,7 @@ public class ContextLogReader {
 	void parseData(long offset) throws IOException {
 		DataInputStream in = null;
 		try {
-			in = new DataInputStream(new FileInputStream(mTraceFileName+".log"));
+			in = new DataInputStream(new FileInputStream(mTraceFileName));
 			in.skip(offset);
 			int magic = in.readInt();
 			if (magic != DATA_MAGIC) {
@@ -163,7 +163,8 @@ public class ContextLogReader {
         BufferedReader in = null;
         try {
             in = new BufferedReader(new InputStreamReader(
-                    new FileInputStream(mTraceFileName+".log"), "US-ASCII"));
+new FileInputStream(
+					mTraceFileName), "US-ASCII"));
 
             int mode = PARSE_VERSION;
             String line = null;
