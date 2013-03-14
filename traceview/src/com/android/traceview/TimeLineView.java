@@ -1154,6 +1154,10 @@ public class TimeLineView extends Composite implements Observer {
         private int mMarkStartX;
         private int mMarkEndX;
 
+		private String mLogName;
+		private String mLogDetails;
+		private Color mLogColor;
+
         /** The space between the colored block and the method name */
         private static final int METHOD_BLOCK_MARGIN = 10;
 
@@ -1188,6 +1192,18 @@ public class TimeLineView extends Composite implements Observer {
         public void setMethodName(String name) {
             mMethodName = name;
         }
+
+		public void setLogName(String name) {
+			mLogName = name;
+		}
+
+		public void setLogDetails(String details) {
+			mLogDetails = details;
+		}
+
+		public void setLogColor(Color color) {
+			mLogColor = color;
+		}
 
         public void setMethodColor(Color color) {
             mMethodColor = color;
@@ -1299,27 +1315,39 @@ public class TimeLineView extends Composite implements Observer {
         }
 
         private void drawMethod(Display display, GC gc) {
-            if (mMethodName == null) {
+
+			String name = mMethodName;
+			Color color = mMethodColor;
+
+			if (name == null) {
+				name = mLogName;
+				color = mLogColor;
+			}
+			if (name == null) {
                 return;
             }
 
             int x1 = LeftMargin;
             int y1 = mMethodStartY;
-            gc.setBackground(mMethodColor);
+			gc.setBackground(color);
             int width = 2 * mSmallFontWidth;
             gc.fillRectangle(x1, y1, width, mSmallFontHeight);
             x1 += width + METHOD_BLOCK_MARGIN;
-            gc.drawString(mMethodName, x1, y1, true);
+			gc.drawString(name, x1, y1, true);
         }
 
         private void drawDetails(Display display, GC gc) {
-            if (mDetails == null) {
+			String details = mDetails;
+			if (details == null) {
+				details = mLogDetails;
+			}
+			if (details == null) {
                 return;
             }
 
             int x1 = LeftMargin + 2 * mSmallFontWidth + METHOD_BLOCK_MARGIN;
             int y1 = mDetailsStartY;
-            gc.drawString(mDetails, x1, y1, true);
+			gc.drawString(details, x1, y1, true);
         }
 
         private void drawTicks(Display display, GC gc) {
@@ -2128,13 +2156,13 @@ public class TimeLineView extends Composite implements Observer {
 					break;
 				}
 
-				mTimescale.setMethodName(ld.mName);
-				mTimescale.setMethodColor(mColorBlack);
-				mTimescale.setDetails(logDetails);
+				mTimescale.setLogName(ld.mName);
+				mTimescale.setLogColor(mColorBlack);
+				mTimescale.setLogDetails(logDetails);
 			} else {
-				// mTimescale.setMethodName(null);
-				// mTimescale.setMethodColor(null);
-				// mTimescale.setDetails(null);
+				mTimescale.setLogName(null);
+				mTimescale.setLogColor(null);
+				mTimescale.setLogDetails(null);
 			}
 			mTimescale.redraw();
 
