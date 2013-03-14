@@ -24,6 +24,7 @@ import java.io.BufferedOutputStream;
 import java.io.BufferedWriter;
 import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -198,18 +199,26 @@ public class FileDataTarget extends DefaultDataTarget {
 			mDataStream.close();
 
 			// concat files
-			// FileOutputStream out = new FileOutputStream(mFileName+ ".clog");
-			// FileOutputStream in = new FileOutputStream(mFileName+ ".cdata");
-			// byte[] fileBytes;
-			// int bytesRead = 0;
-			// fileBytes = new byte[(int) file.length()];
-			// bytesRead = fis.read(fileBytes, 0,(int) file.length());
-			// assert(bytesRead == fileBytes.length);
-			// assert(bytesRead == (int) file.length());
-			// fos.write(fileBytes);
-			// fos.flush();
-			// fileBytes = null;
+			FileOutputStream out = new FileOutputStream(mFileName + ".clog",
+					true /* append */);
+			FileInputStream in = new FileInputStream(mFileName + ".cdata");
+			byte[] fileBytes;
+			int bytesRead = 0;
+			int COPY_BUFFER_SIZE = 1000;
+			fileBytes = new byte[COPY_BUFFER_SIZE];
+			bytesRead = in.read(fileBytes, 0, COPY_BUFFER_SIZE);
+			while (bytesRead != -1) {
+				out.write(fileBytes, 0, bytesRead);
+				bytesRead = in.read(fileBytes, 0, COPY_BUFFER_SIZE);
+			}
+			out.flush();
+			fileBytes = null;
 
+			File file = new File(mFileName + ".cdata");
+			file.delete();
+
+			in.close();
+			out.close();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
