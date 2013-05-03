@@ -21,6 +21,7 @@
 package cz.cuni.kacz.contextlogger;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -48,11 +49,13 @@ public class DataManager {
 	public static final int STRING = 5;
 
 	DataManager() {
-		mDataTargets = new ArrayList<DataTarget>();
+		mDataTargets = Collections
+				.synchronizedList(new ArrayList<DataTarget>());
 		mLogs = new LinkedBlockingQueue<LogEntry>();
 
-		mListenerIDs = new HashMap<String, Integer>();
-		mValueTypes = new ArrayList<Integer>();
+		mListenerIDs = Collections
+				.synchronizedMap(new HashMap<String, Integer>());
+		mValueTypes = Collections.synchronizedList(new ArrayList<Integer>());
 
 		mWorker = new Thread(new Runnable() {
 			@Override
