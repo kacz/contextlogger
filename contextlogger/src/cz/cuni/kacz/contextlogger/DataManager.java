@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import android.util.Log;
@@ -34,7 +35,9 @@ public class DataManager {
 
 	private final String TAG = "DataManager";
 
-	private final List<DataTarget> mDataTargets;
+	boolean stop;
+
+	private final ConcurrentLinkedQueue<DataTarget> mDataTargets;
 
 	private Map<String, Integer> mListenerIDs = null;
 	private List<Integer> mValueTypes = null;
@@ -49,8 +52,8 @@ public class DataManager {
 	public static final int STRING = 5;
 
 	DataManager() {
-		mDataTargets = Collections
-				.synchronizedList(new ArrayList<DataTarget>());
+		mDataTargets = new ConcurrentLinkedQueue<DataTarget>();
+		
 		mLogs = new LinkedBlockingQueue<LogEntry>();
 
 		mListenerIDs = Collections
@@ -60,9 +63,13 @@ public class DataManager {
 		mWorker = new Thread(new Runnable() {
 			@Override
 			public void run() {
+				stop = false;
 				try {
 					while (true) {
 						LogEntry entry = mLogs.take();
+						if (stop) {
+							continue;
+						}
 						Log.d(TAG, entry.label);
 						int listenerId = mListenerIDs.get(entry.label);
 						int type = mValueTypes.get(listenerId);
@@ -106,6 +113,7 @@ public class DataManager {
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
+
 			}
 		});
 		mWorker.start();
@@ -115,10 +123,13 @@ public class DataManager {
 		if (t.checkPermissions()) {
 			t.open();
 			mDataTargets.add(t);
+			stop = false;
 		}
 	}
 
 	public void finish() {
+		stop = true;
+		Log.d(TAG, "stop true");
 		for (DataTarget dt : mDataTargets) {
 			dt.close();
 		}
