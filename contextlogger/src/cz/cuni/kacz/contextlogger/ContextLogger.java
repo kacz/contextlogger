@@ -48,6 +48,10 @@ import cz.cuni.kacz.contextlogger.listeners.ContextListener;
 
 public class ContextLogger {
 
+	private static final ContextLogger sInstance = new ContextLogger();;
+
+	private boolean mInitialized;
+
 	private static final String TAG = "ContextLogger";
 
 	private static final String DEFAULT_TRACE_NAME = "CLTrace";
@@ -72,13 +76,26 @@ public class ContextLogger {
 
 	private ArrayList<DataTarget> mTargets = new ArrayList<DataTarget>();
 
+	public static ContextLogger getInstance() {
+		return sInstance;
+	}
+
+	private ContextLogger() {
+		mInitialized = false;
+	};
+
 	/**
+	 * 
 	 * Constructor. Sets up application context reference and starts the logger
 	 * service process.
 	 * 
 	 * @param context
 	 */
-	public ContextLogger(Activity activity) {
+	public boolean init(Activity activity) {
+		if (mInitialized) {
+			return false;
+		}
+
 		mCallerActivity = activity;
 
 		if (this.mCallerActivity == null) {
@@ -95,8 +112,11 @@ public class ContextLogger {
 				Context.BIND_AUTO_CREATE);
 		if (!succ) {
 			Log.i(TAG, "bind unsuccessful");
+			return false;
 		} else {
 			Log.i(TAG, "bind successful");
+			mInitialized = true;
+			return true;
 		}
 	}
 

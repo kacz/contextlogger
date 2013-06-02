@@ -53,6 +53,7 @@ import cz.cuni.kacz.contextlogger.listeners.DummyListener;
 import cz.cuni.kacz.contextlogger.listeners.GpsLocationListener;
 import cz.cuni.kacz.contextlogger.listeners.GpsStatusListener;
 import cz.cuni.kacz.contextlogger.listeners.ScreenBrightnessListener;
+import cz.cuni.kacz.contextlogger.listeners.ScreenOrientationListener;
 import cz.cuni.kacz.contextlogger.listeners.ScreenStateListener;
 import cz.cuni.kacz.contextlogger.listeners.TrafficListener;
 import cz.cuni.kacz.contextlogger.listeners.WifiBSSIDListener;
@@ -105,7 +106,8 @@ public class MainActivity extends Activity {
 		setContentView(R.layout.activity_main);
 
 		// Create the ContextLogger class
-		mCL = new ContextLogger(this);
+		mCL = ContextLogger.getInstance();
+		mCL.init(this);
 
 		res = getResources();
 
@@ -324,7 +326,7 @@ public class MainActivity extends Activity {
 			}
 			if (sharedPref.getBoolean(
 					res.getString(R.string.pref_key_new_test_listener), false)) {
-				l = new DummyListener(1000);
+				l = new ScreenOrientationListener();
 				mCL.addListener(l);
 			}
 			// create data targets...
