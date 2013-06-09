@@ -26,7 +26,6 @@ import java.util.TimerTask;
 import android.content.Context;
 import android.view.Display;
 import android.view.WindowManager;
-import cz.cuni.kacz.contextlogger.ContextLoggerService;
 import cz.cuni.kacz.contextlogger.DataManager;
 import cz.cuni.kacz.contextlogger.TimeSource;
 
@@ -56,8 +55,8 @@ public class ScreenOrientationListener extends DefaultContextListener {
 
 	@Override
 	public void startListening() {
-		mWindowManager = (WindowManager) ContextLoggerService.mAppContext
-				.getSystemService(Context.WINDOW_SERVICE);
+		mWindowManager = (WindowManager) getAppContext().getSystemService(
+				Context.WINDOW_SERVICE);
 		mDisplay = mWindowManager.getDefaultDisplay();
 
 		timer = new Timer();

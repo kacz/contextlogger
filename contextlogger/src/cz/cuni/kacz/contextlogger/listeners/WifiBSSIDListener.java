@@ -33,7 +33,6 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
 import android.util.Log;
-import cz.cuni.kacz.contextlogger.ContextLoggerService;
 import cz.cuni.kacz.contextlogger.DataManager;
 import cz.cuni.kacz.contextlogger.TimeSource;
 
@@ -53,19 +52,19 @@ public class WifiBSSIDListener extends DefaultContextListener {
 	private String lastSSID = null;
 
 	// log names and types
-	private String labelBSSID = "BSSID";
-	private int typeBSSID = DataManager.STRING;
-	private String labelSSID = "SSID";
-	private int typeSSID = DataManager.STRING;
-	private String labelIP = "IP address";
-	private int typeIP = DataManager.STRING;
-	private String labelSpeed = "Link speed";
-	private int typeSpeed = DataManager.INT;
+	private final String labelBSSID = "BSSID";
+	private final int typeBSSID = DataManager.STRING;
+	private final String labelSSID = "SSID";
+	private final int typeSSID = DataManager.STRING;
+	private final String labelIP = "IP address";
+	private final int typeIP = DataManager.STRING;
+	private final String labelSpeed = "Link speed";
+	private final int typeSpeed = DataManager.INT;
 
 	@Override
 	public void startListening() {
-		mWifiManager = (WifiManager) ContextLoggerService.mAppContext
-				.getSystemService(Context.WIFI_SERVICE);
+		mWifiManager = (WifiManager) getAppContext().getSystemService(
+				Context.WIFI_SERVICE);
 		mWifiBCReceiver = new BroadcastReceiver() {
 			@Override
 			public void onReceive(Context context, Intent intent) {
@@ -105,15 +104,15 @@ public class WifiBSSIDListener extends DefaultContextListener {
 		mThread.start();
 		Looper looper = mThread.getLooper();
 		Handler handler = new Handler(looper);
-		ContextLoggerService.mAppContext.registerReceiver(mWifiBCReceiver,
+		getAppContext().registerReceiver(mWifiBCReceiver,
 				new IntentFilter(WifiManager.NETWORK_STATE_CHANGED_ACTION),
 				null, handler);
-		Log.d(TAG, "context: " + ContextLoggerService.mAppContext.hashCode());
+		Log.d(TAG, "context: " + getAppContext().hashCode());
 	}
 
 	@Override
 	public void stopListening() {
-		ContextLoggerService.mAppContext.unregisterReceiver(mWifiBCReceiver);
+		getAppContext().unregisterReceiver(mWifiBCReceiver);
 		mThread.quit();
 	}
 
@@ -127,9 +126,10 @@ public class WifiBSSIDListener extends DefaultContextListener {
 
 	@Override
 	public boolean checkPermissions() {
-		if (ContextLoggerService.mAppContext
-				.checkCallingOrSelfPermission("android.permission.ACCESS_WIFI_STATE") != PackageManager.PERMISSION_GRANTED)
+		if (getAppContext().checkCallingOrSelfPermission(
+				"android.permission.ACCESS_WIFI_STATE") != PackageManager.PERMISSION_GRANTED) {
 			return false;
+		}
 		return true;
 	}
 }

@@ -23,9 +23,7 @@ package cz.cuni.kacz.contextlogger.listeners;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import android.net.TrafficStats;
 import android.provider.Settings.SettingNotFoundException;
-import cz.cuni.kacz.contextlogger.ContextLoggerService;
 import cz.cuni.kacz.contextlogger.DataManager;
 import cz.cuni.kacz.contextlogger.TimeSource;
 
@@ -36,26 +34,26 @@ public class ScreenBrightnessListener extends DefaultContextListener {
 	 */
 	private static final long serialVersionUID = 1L;
 
-	private boolean running = false;
+	private final boolean running = false;
 	private Timer timer;
 	int period = 100;
 	int oldBrightness = 0;
 
 	// log names and types
-	private String labelBrightness = "Screen brightness";
-	private int typeBrightness = DataManager.INT;
+	private final String labelBrightness = "Screen brightness";
+	private final int typeBrightness = DataManager.INT;
 
 	@Override
 	public void startListening() {
 		timer = new Timer();
 		timer.scheduleAtFixedRate(new TimerTask() {
+			@Override
 			public void run() {
 				long time = TimeSource.getTimeOfDay();
 				int brightness = 0;
 				try {
 					brightness = android.provider.Settings.System.getInt(
-							ContextLoggerService.mAppContext
-									.getContentResolver(),
+							getAppContext().getContentResolver(),
 							android.provider.Settings.System.SCREEN_BRIGHTNESS);
 				} catch (SettingNotFoundException e) {
 					// TODO Auto-generated catch block

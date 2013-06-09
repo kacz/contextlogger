@@ -24,15 +24,10 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.net.NetworkInfo;
-import android.net.NetworkInfo.State;
-import android.net.wifi.WifiInfo;
-import android.net.wifi.WifiManager;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
 import android.util.Log;
-import cz.cuni.kacz.contextlogger.ContextLoggerService;
 import cz.cuni.kacz.contextlogger.DataManager;
 import cz.cuni.kacz.contextlogger.TimeSource;
 
@@ -52,6 +47,7 @@ public class ScreenStateListener extends DefaultContextListener {
 	String labelScreenState = "Screen state";
 	int typeScreenState = DataManager.INT;
 
+	@Override
 	public void startListening() {
 		mScreenBCReceiver = new BroadcastReceiver() {
 			@Override
@@ -73,13 +69,13 @@ public class ScreenStateListener extends DefaultContextListener {
 		Handler handler = new Handler(looper);
 		IntentFilter filter = new IntentFilter(Intent.ACTION_SCREEN_ON);
 		filter.addAction(Intent.ACTION_SCREEN_OFF);
-		ContextLoggerService.mAppContext.registerReceiver(mScreenBCReceiver,
+		getAppContext().registerReceiver(mScreenBCReceiver,
 				filter, null, handler);
 	}
 
 	@Override
 	public void stopListening() {
-		ContextLoggerService.mAppContext.unregisterReceiver(mScreenBCReceiver);
+		getAppContext().unregisterReceiver(mScreenBCReceiver);
 		mThread.quit();
 	}
 

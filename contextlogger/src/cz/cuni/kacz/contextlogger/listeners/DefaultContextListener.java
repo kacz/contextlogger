@@ -22,6 +22,8 @@ package cz.cuni.kacz.contextlogger.listeners;
 
 import java.io.Serializable;
 
+import android.content.Context;
+import cz.cuni.kacz.contextlogger.ContextLoggerService;
 import cz.cuni.kacz.contextlogger.DataManager;
 
 public abstract class DefaultContextListener implements ContextListener,
@@ -35,20 +37,25 @@ public abstract class DefaultContextListener implements ContextListener,
 	protected DataManager mDataManager = null;
 	protected String TAG = this.getClass().getSimpleName();
 
+	@Override
 	public abstract void startListening();
 
+	@Override
 	public abstract void stopListening();
 
 	public abstract void initLogTypes();
 
+	@Override
 	public boolean checkPermissions() {
 		return true;
 	}
 
+	@Override
 	public String getTag() {
 		return TAG;
 	}
 
+	@Override
 	public void init(DataManager dm) {
 		mDataManager = dm;
 		initLogTypes();
@@ -58,4 +65,7 @@ public abstract class DefaultContextListener implements ContextListener,
 		mDataManager.registerListener(label, type);
 	}
 
+	protected Context getAppContext() {
+		return ContextLoggerService.mAppContext;
+	}
 }

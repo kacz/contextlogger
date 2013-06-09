@@ -29,7 +29,6 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
 import android.util.Log;
-import cz.cuni.kacz.contextlogger.ContextLoggerService;
 import cz.cuni.kacz.contextlogger.DataManager;
 import cz.cuni.kacz.contextlogger.TimeSource;
 
@@ -68,15 +67,15 @@ public class WifiStateListener extends DefaultContextListener {
 		mThread.start();
 		Looper looper = mThread.getLooper();
 		Handler handler = new Handler(looper);
-		ContextLoggerService.mAppContext.registerReceiver(mWifiBCReceiver,
+		getAppContext().registerReceiver(mWifiBCReceiver,
 				new IntentFilter(WifiManager.WIFI_STATE_CHANGED_ACTION), null,
 				handler);
-		Log.d(TAG, "context: " + ContextLoggerService.mAppContext.hashCode());
+		Log.d(TAG, "context: " + getAppContext().hashCode());
 	}
 
 	@Override
 	public void stopListening() {
-		ContextLoggerService.mAppContext.unregisterReceiver(mWifiBCReceiver);
+		getAppContext().unregisterReceiver(mWifiBCReceiver);
 		mThread.quit();
 	}
 

@@ -25,7 +25,6 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import cz.cuni.kacz.contextlogger.ContextLoggerService;
 import cz.cuni.kacz.contextlogger.DataManager;
 import cz.cuni.kacz.contextlogger.TimeSource;
 
@@ -49,8 +48,8 @@ public class AcceleraionListener extends DefaultContextListener {
 	@Override
 	public void startListening() {
 		// TODO Auto-generated method stub
-		mSensorManager = (SensorManager) ContextLoggerService.mAppContext
-				.getSystemService(Context.SENSOR_SERVICE);
+		mSensorManager = (SensorManager) getAppContext().getSystemService(
+				Context.SENSOR_SERVICE);
 		Sensor mAccelerationSensor = mSensorManager
 				.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
 		if (mAccelerationSensor != null) {

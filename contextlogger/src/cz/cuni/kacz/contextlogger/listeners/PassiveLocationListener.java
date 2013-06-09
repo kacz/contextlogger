@@ -28,7 +28,6 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.HandlerThread;
 import android.os.Looper;
-import cz.cuni.kacz.contextlogger.ContextLoggerService;
 import cz.cuni.kacz.contextlogger.DataManager;
 import cz.cuni.kacz.contextlogger.TimeSource;
 
@@ -45,8 +44,8 @@ public class PassiveLocationListener extends DefaultContextListener {
 
 	@Override
 	public void startListening() {
-		mLocManager = (LocationManager) ContextLoggerService.mAppContext
-				.getSystemService(Context.LOCATION_SERVICE);
+		mLocManager = (LocationManager) getAppContext().getSystemService(
+				Context.LOCATION_SERVICE);
 		mLocListener = new LocationListener() {
 
 			@Override
@@ -101,8 +100,8 @@ public class PassiveLocationListener extends DefaultContextListener {
 
 	@Override
 	public boolean checkPermissions() {
-		if (ContextLoggerService.mAppContext
-				.checkCallingOrSelfPermission("android.permission.ACCESS_FINE_LOCATION") != PackageManager.PERMISSION_GRANTED) {
+		if (getAppContext().checkCallingOrSelfPermission(
+				"android.permission.ACCESS_FINE_LOCATION") != PackageManager.PERMISSION_GRANTED) {
 			return false;
 		}
 		return true;

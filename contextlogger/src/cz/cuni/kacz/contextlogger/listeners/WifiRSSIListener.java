@@ -20,9 +20,6 @@
 
 package cz.cuni.kacz.contextlogger.listeners;
 
-import cz.cuni.kacz.contextlogger.ContextLoggerService;
-import cz.cuni.kacz.contextlogger.DataManager;
-import cz.cuni.kacz.contextlogger.TimeSource;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -32,6 +29,8 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
 import android.util.Log;
+import cz.cuni.kacz.contextlogger.DataManager;
+import cz.cuni.kacz.contextlogger.TimeSource;
 
 public class WifiRSSIListener extends DefaultContextListener {
 
@@ -47,8 +46,8 @@ public class WifiRSSIListener extends DefaultContextListener {
 	private int lastRSSI = 0;
 
 	// log names and types
-	private String labelRSSI = "Wifi strength";
-	private int typeRSSI = DataManager.INT;
+	private final String labelRSSI = "Wifi strength";
+	private final int typeRSSI = DataManager.INT;
 
 	@Override
 	public void startListening() {
@@ -69,17 +68,17 @@ public class WifiRSSIListener extends DefaultContextListener {
 		mThread.start();
 		Looper looper = mThread.getLooper();
 		Handler handler = new Handler(looper);
-		ContextLoggerService.mAppContext.registerReceiver(mWifiBCReceiver,
+		getAppContext().registerReceiver(mWifiBCReceiver,
 				new IntentFilter(WifiManager.RSSI_CHANGED_ACTION), null,
 				handler);
-		Log.d(TAG, "context: " + ContextLoggerService.mAppContext.hashCode());
+		Log.d(TAG, "context: " + getAppContext().hashCode());
 		// ContextLoggerService.mAppContext.registerReceiver(mWifiBCReceiver,
 		// new IntentFilter(WifiManager.RSSI_CHANGED_ACTION));
 	}
 
 	@Override
 	public void stopListening() {
-		ContextLoggerService.mAppContext.unregisterReceiver(mWifiBCReceiver);
+		getAppContext().unregisterReceiver(mWifiBCReceiver);
 		mThread.quit();
 	}
 
