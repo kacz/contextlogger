@@ -60,6 +60,19 @@ public class GpsLocationListener extends DefaultContextListener {
 	String labelGpsUsedSats = "Gps sats used";
 	int typeGpsUsedSats = DataManager.INT;
 
+	long minTime;
+	float minDistance;
+
+	public GpsLocationListener() {
+		minTime = 3 * 1000; // 3 sec
+		minDistance = 0;
+	}
+
+	public GpsLocationListener(long time, float dist) {
+		minTime = time;
+		minDistance = dist;
+	}
+
 	@Override
 	public void startListening() {
 		mLocManager = (LocationManager) getAppContext().getSystemService(
@@ -117,7 +130,7 @@ public class GpsLocationListener extends DefaultContextListener {
 		Looper looper = mThread.getLooper();
 
 		mLocManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
-				3 * 1000, 0, mLocListener, looper);
+				minTime, minDistance, mLocListener, looper);
 
 	}
 
