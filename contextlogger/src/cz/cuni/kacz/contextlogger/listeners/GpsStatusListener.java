@@ -34,6 +34,7 @@ public class GpsStatusListener extends DefaultContextListener {
 	GpsStatus.Listener mGpsStatusListener;
 	LocationManager mLocManager;
 	GpsStatus mGpsStatus = null;
+	String oldPrns = null;
 
 	String labelGpsStatus = "GPS status";
 	int typeGpsStatus = DataManager.INT;
@@ -56,6 +57,8 @@ public class GpsStatusListener extends DefaultContextListener {
 					break;
 				case GpsStatus.GPS_EVENT_STOPPED:
 					mDataManager.insertLog(labelGpsStatus, time, 0);
+					oldPrns = null;
+					mDataManager.insertLog(labelGpsPrns, time, oldPrns);
 					break;
 				case GpsStatus.GPS_EVENT_SATELLITE_STATUS:
 					if (mGpsStatus == null) {
@@ -68,7 +71,12 @@ public class GpsStatusListener extends DefaultContextListener {
 					for (GpsSatellite sat : sats) {
 						prns.append(sat.getPrn()).append(',');
 					}
-					mDataManager.insertLog(labelGpsPrns, time, prns.toString());
+					String prnsStr = prns.toString();
+					if (!prnsStr.equals(oldPrns)) {
+						mDataManager.insertLog(labelGpsPrns, time, prnsStr);
+						oldPrns = prnsStr;
+					}
+
 					break;
 				}
 
