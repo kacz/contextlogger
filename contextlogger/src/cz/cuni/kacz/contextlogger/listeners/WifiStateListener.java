@@ -24,7 +24,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.pm.PackageManager;
 import android.net.wifi.WifiManager;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -47,8 +46,8 @@ public class WifiStateListener extends DefaultContextListener {
 	private HandlerThread mThread = null;
 
 	// log names and types
-	private String labelWifiState = "Wifi state";
-	private int typeWifiState = DataManager.INT;
+	private final String labelWifiState = "Wifi state";
+	private final int typeWifiState = DataManager.INT;
 
 	@Override
 	public void startListening() {
@@ -84,7 +83,6 @@ public class WifiStateListener extends DefaultContextListener {
 	@Override
 	public void initLogTypes() {
 		addLogType(labelWifiState, typeWifiState);
-		Log.d(TAG, "vajon: " + checkPermissions());
 	}
 
 }

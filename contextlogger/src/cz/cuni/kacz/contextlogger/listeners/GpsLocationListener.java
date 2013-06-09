@@ -67,6 +67,7 @@ public class GpsLocationListener extends DefaultContextListener {
 				.getSystemService(Context.LOCATION_SERVICE);
 		mLocListener = new LocationListener() {
 
+			@Override
 			public void onLocationChanged(Location location) {
 				long time = TimeSource.getTimeOfDay();
 				mDataManager.insertLog(labelGpsLat, time,
@@ -91,16 +92,19 @@ public class GpsLocationListener extends DefaultContextListener {
 						extras.getInt("satellites", -1));
 			}
 
+			@Override
 			public void onProviderDisabled(String provider) {
 				long time = TimeSource.getTimeOfDay();
 				mDataManager.insertLog(labelGpsProviderStatus, time, 0);
 			}
 
+			@Override
 			public void onProviderEnabled(String provider) {
 				long time = TimeSource.getTimeOfDay();
 				mDataManager.insertLog(labelGpsProviderStatus, time, 1);
 			}
 
+			@Override
 			public void onStatusChanged(String provider, int status,
 					Bundle extras) {
 				// TODO Auto-generated method stub
@@ -125,25 +129,26 @@ public class GpsLocationListener extends DefaultContextListener {
 
 	@Override
 	public void initLogTypes() {
-		mDataManager.registerListener(labelGpsProviderStatus,
+		addLogType(labelGpsProviderStatus,
 				typeGpsProviderStatus);
-		mDataManager.registerListener(labelGpsLat, typeGpsLat);
-		mDataManager.registerListener(labelGpsLong, typeGpsLong);
-		mDataManager.registerListener(labelGpsAltitude, typeGpsAltitude);
+		addLogType(labelGpsLat, typeGpsLat);
+		addLogType(labelGpsLong, typeGpsLong);
+		addLogType(labelGpsAltitude, typeGpsAltitude);
 
-		mDataManager.registerListener(labelGpsBearing, typeGpsBearing);
-		mDataManager.registerListener(labelGpsSpeed, typeGpsSpeed);
-		mDataManager.registerListener(labelGpsSpeedKph, typeGpsSpeedKph);
-		mDataManager.registerListener(labelGpsAccuracy, typeGpsAccuracy);
+		addLogType(labelGpsBearing, typeGpsBearing);
+		addLogType(labelGpsSpeed, typeGpsSpeed);
+		addLogType(labelGpsSpeedKph, typeGpsSpeedKph);
+		addLogType(labelGpsAccuracy, typeGpsAccuracy);
 
-		mDataManager.registerListener(labelGpsUsedSats, typeGpsUsedSats);
+		addLogType(labelGpsUsedSats, typeGpsUsedSats);
 	}
 
 	@Override
 	public boolean checkPermissions() {
 		if (ContextLoggerService.mAppContext
-				.checkCallingOrSelfPermission("android.permission.ACCESS_FINE_LOCATION") != PackageManager.PERMISSION_GRANTED)
+				.checkCallingOrSelfPermission("android.permission.ACCESS_FINE_LOCATION") != PackageManager.PERMISSION_GRANTED) {
 			return false;
+		}
 		return true;
 	}
 }

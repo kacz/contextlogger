@@ -49,6 +49,7 @@ public class PassiveLocationListener extends DefaultContextListener {
 				.getSystemService(Context.LOCATION_SERVICE);
 		mLocListener = new LocationListener() {
 
+			@Override
 			public void onLocationChanged(Location location) {
 				long time = TimeSource.getTimeOfDay();
 				mDataManager.insertLog(labelPassiveLat, time,
@@ -57,16 +58,19 @@ public class PassiveLocationListener extends DefaultContextListener {
 						location.getLongitude());
 			}
 
+			@Override
 			public void onProviderDisabled(String provider) {
 				// TODO Auto-generated method stub
 
 			}
 
+			@Override
 			public void onProviderEnabled(String provider) {
 				// TODO Auto-generated method stub
 
 			}
 
+			@Override
 			public void onStatusChanged(String provider, int status,
 					Bundle extras) {
 				// TODO Auto-generated method stub
@@ -91,15 +95,16 @@ public class PassiveLocationListener extends DefaultContextListener {
 
 	@Override
 	public void initLogTypes() {
-		mDataManager.registerListener(labelPassiveLat, typePassiveLat);
-		mDataManager.registerListener(labelPassiveLong, typePassiveLong);
+		addLogType(labelPassiveLat, typePassiveLat);
+		addLogType(labelPassiveLong, typePassiveLong);
 	}
 
 	@Override
 	public boolean checkPermissions() {
 		if (ContextLoggerService.mAppContext
-				.checkCallingOrSelfPermission("android.permission.ACCESS_FINE_LOCATION") != PackageManager.PERMISSION_GRANTED)
+				.checkCallingOrSelfPermission("android.permission.ACCESS_FINE_LOCATION") != PackageManager.PERMISSION_GRANTED) {
 			return false;
+		}
 		return true;
 	}
 

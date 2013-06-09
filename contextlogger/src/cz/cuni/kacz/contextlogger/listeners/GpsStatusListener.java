@@ -20,15 +20,15 @@
 
 package cz.cuni.kacz.contextlogger.listeners;
 
-import cz.cuni.kacz.contextlogger.ContextLoggerService;
-import cz.cuni.kacz.contextlogger.DataManager;
-import cz.cuni.kacz.contextlogger.TimeSource;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.location.GpsSatellite;
 import android.location.GpsStatus;
 import android.location.LocationManager;
 import android.util.Log;
+import cz.cuni.kacz.contextlogger.ContextLoggerService;
+import cz.cuni.kacz.contextlogger.DataManager;
+import cz.cuni.kacz.contextlogger.TimeSource;
 
 public class GpsStatusListener extends DefaultContextListener {
 
@@ -47,6 +47,7 @@ public class GpsStatusListener extends DefaultContextListener {
 				.getSystemService(Context.LOCATION_SERVICE);
 		mGpsStatusListener = new GpsStatus.Listener() {
 
+			@Override
 			public void onGpsStatusChanged(int event) {
 				long time = TimeSource.getTimeOfDay();
 				Log.d(TAG, "" + event);
@@ -86,15 +87,16 @@ public class GpsStatusListener extends DefaultContextListener {
 
 	@Override
 	public void initLogTypes() {
-		mDataManager.registerListener(labelGpsStatus, typeGpsStatus);
-		mDataManager.registerListener(labelGpsPrns, typeGpsPrns);
+		addLogType(labelGpsStatus, typeGpsStatus);
+		addLogType(labelGpsPrns, typeGpsPrns);
 	}
 
 	@Override
 	public boolean checkPermissions() {
 		if (ContextLoggerService.mAppContext
-				.checkCallingOrSelfPermission("android.permission.ACCESS_FINE_LOCATION") != PackageManager.PERMISSION_GRANTED)
+				.checkCallingOrSelfPermission("android.permission.ACCESS_FINE_LOCATION") != PackageManager.PERMISSION_GRANTED) {
 			return false;
+		}
 		return true;
 	}
 

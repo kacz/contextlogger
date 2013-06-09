@@ -56,6 +56,7 @@ public class AcceleraionListener extends DefaultContextListener {
 		if (mAccelerationSensor != null) {
 			mAccelerometer = new SensorEventListener() {
 
+				@Override
 				public void onSensorChanged(SensorEvent event) {
 					long time = TimeSource.getTimeOfDay();
 					mDataManager.insertLog(labelX, time, event.values[0]);
@@ -63,6 +64,7 @@ public class AcceleraionListener extends DefaultContextListener {
 					mDataManager.insertLog(labelZ, time, event.values[2]);
 				}
 
+				@Override
 				public void onAccuracyChanged(Sensor sensor, int accuracy) {
 					// TODO Auto-generated method stub
 
@@ -81,9 +83,9 @@ public class AcceleraionListener extends DefaultContextListener {
 
 	@Override
 	public void initLogTypes() {
-		mDataManager.registerListener(labelX, typeX);
-		mDataManager.registerListener(labelY, typeY);
-		mDataManager.registerListener(labelZ, typeZ);
+		addLogType(labelX, typeX);
+		addLogType(labelY, typeY);
+		addLogType(labelZ, typeZ);
 	}
 
 }
