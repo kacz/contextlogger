@@ -28,6 +28,7 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.HandlerThread;
 import android.os.Looper;
+import android.util.Log;
 import cz.cuni.kacz.contextlogger.DataManager;
 import cz.cuni.kacz.contextlogger.TimeSource;
 
@@ -41,6 +42,8 @@ public class PassiveLocationListener extends DefaultContextListener {
 	int typePassiveLat = DataManager.DOUBLE;
 	String labelPassiveLong = "Passive longitude";
 	int typePassiveLong = DataManager.DOUBLE;
+	String labelPassiveSource = "Passive location source";
+	int typePassiveSource = DataManager.STRING;
 
 	@Override
 	public void startListening() {
@@ -51,10 +54,14 @@ public class PassiveLocationListener extends DefaultContextListener {
 			@Override
 			public void onLocationChanged(Location location) {
 				long time = TimeSource.getTimeOfDay();
+				Log.d(TAG, "ts:" + time + " fix:" + location.getTime());
 				mDataManager.insertLog(labelPassiveLat, time,
 						location.getLatitude());
 				mDataManager.insertLog(labelPassiveLong, time,
 						location.getLongitude());
+				mDataManager.insertLog(labelPassiveSource, time,
+						location.getProvider());
+
 			}
 
 			@Override
@@ -96,6 +103,8 @@ public class PassiveLocationListener extends DefaultContextListener {
 	public void initLogTypes() {
 		addLogType(labelPassiveLat, typePassiveLat);
 		addLogType(labelPassiveLong, typePassiveLong);
+		addLogType(labelPassiveSource, typePassiveSource);
+
 	}
 
 	@Override
