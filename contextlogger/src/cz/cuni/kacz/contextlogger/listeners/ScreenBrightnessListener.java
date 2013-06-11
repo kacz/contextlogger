@@ -20,10 +20,13 @@
 
 package cz.cuni.kacz.contextlogger.listeners;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import android.provider.Settings.SettingNotFoundException;
 import cz.cuni.kacz.contextlogger.DataManager;
 import cz.cuni.kacz.contextlogger.TimeSource;
 
@@ -37,32 +40,79 @@ public class ScreenBrightnessListener extends DefaultContextListener {
 	private final boolean running = false;
 	private Timer timer;
 	int period = 100;
-	int oldBrightness = 0;
+	int oldBrightness = -1;
+	int oldButtonBrightness = -1;
+
+	RandomAccessFile mScreenReader;
+	RandomAccessFile mButtonReader;
+
+	// android 2.x
+	private static final String LCD_COOPER_7 = "/sys/class/leds/lcd-backlight/brightness";
+	private static final String BUTTONS_COOPER_7 = "/sys/class/leds/button-backlight/brightness";
+
+	// android 4.x
+	private static final String LCD_NEXUS_7 = "/sys/class/backlight/pwm-backlight/brightness";
+
+	private static final String LCD_S4 = "/sys/class/backlight/panel/brightness";
 
 	// log names and types
 	private final String labelBrightness = "Screen brightness";
 	private final int typeBrightness = DataManager.INT;
 
+	private final String labelButtonBrightness = "Button brightness";
+	private final int typeButtonBrightness = DataManager.INT;
+
 	@Override
 	public void startListening() {
+		if (mScreenReader == null && mButtonReader == null) {
+			return;
+		}
+
 		timer = new Timer();
 		timer.scheduleAtFixedRate(new TimerTask() {
 			@Override
+			/*
+			 * public void run() { long time = TimeSource.getTimeOfDay(); int
+			 * brightness = 0; try { brightness =
+			 * android.provider.Settings.System.getInt(
+			 * getAppContext().getContentResolver(),
+			 * android.provider.Settings.System.SCREEN_BRIGHTNESS); } catch
+			 * (SettingNotFoundException e) { // TODO Auto-generated catch block
+			 * e.printStackTrace(); } Log.d(TAG, "bright: " + brightness); if
+			 * (brightness != oldBrightness) { oldBrightness = brightness;
+			 * mDataManager.insertLog(labelBrightness, time, brightness); } }
+			 */
 			public void run() {
 				long time = TimeSource.getTimeOfDay();
-				int brightness = 0;
+
 				try {
-					brightness = android.provider.Settings.System.getInt(
-							getAppContext().getContentResolver(),
-							android.provider.Settings.System.SCREEN_BRIGHTNESS);
-				} catch (SettingNotFoundException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					mScreenReader.seek(0);
+					String brightness = mScreenReader.readLine();
+
+					int iBrightness = Integer.parseInt(brightness);
+					if (iBrightness != oldBrightness) {
+						mDataManager.insertLog(labelBrightness, time,
+								iBrightness);
+						oldBrightness = iBrightness;
+					}
+				} catch (IOException ex) {
+					ex.printStackTrace();
 				}
-				if (brightness != oldBrightness) {
-					oldBrightness = brightness;
-					mDataManager.insertLog(labelBrightness, time, brightness);
+
+				try {
+					mButtonReader.seek(0);
+					String buttonBrightness = mButtonReader.readLine();
+
+					int iButtonBrightness = Integer.parseInt(buttonBrightness);
+					if (iButtonBrightness != oldButtonBrightness) {
+						mDataManager.insertLog(labelButtonBrightness, time,
+								iButtonBrightness);
+						oldButtonBrightness = iButtonBrightness;
+					}
+				} catch (IOException ex) {
+					ex.printStackTrace();
 				}
+
 			}
 		}, 0, period);
 	}
@@ -74,7 +124,30 @@ public class ScreenBrightnessListener extends DefaultContextListener {
 
 	@Override
 	public void initLogTypes() {
+		// screen
+		try {
+			if (new File(LCD_COOPER_7).exists()) {
+				mScreenReader = new RandomAccessFile(LCD_COOPER_7, "r");
+			} else if (new File(LCD_S4).exists()) {
+				mScreenReader = new RandomAccessFile(LCD_S4, "r");
+			} else if (new File(LCD_NEXUS_7).exists()) {
+				mScreenReader = new RandomAccessFile(LCD_NEXUS_7, "r");
+			}
+		} catch (FileNotFoundException e) {
+		}
+
 		addLogType(labelBrightness, typeBrightness);
+
+		// buttons
+		try {
+			if (new File(BUTTONS_COOPER_7).exists()) {
+				mButtonReader = new RandomAccessFile(BUTTONS_COOPER_7, "r");
+			}
+
+		} catch (FileNotFoundException e) {
+		}
+
+		addLogType(labelButtonBrightness, typeButtonBrightness);
 	}
 
 }
