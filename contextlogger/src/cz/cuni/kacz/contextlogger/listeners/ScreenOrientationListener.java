@@ -39,6 +39,7 @@ public class ScreenOrientationListener extends DefaultContextListener {
 	private final boolean running = false;
 	private Timer timer;
 	int period = 100;
+	int oldRotation = 0;
 	int oldOrientation = 0;
 	long lastChangeTime = 0;
 
@@ -46,6 +47,10 @@ public class ScreenOrientationListener extends DefaultContextListener {
 	Display mDisplay;
 
 	// log names and types
+	private final String labelRotation = "Screen rotation";
+	private final int typeRotation = DataManager.INT;
+	private final String labelLastRotation = "Last screen rotation";
+	private final int typeLastRotation = DataManager.INT;
 	private final String labelOrientation = "Screen orientation";
 	private final int typeOrientation = DataManager.INT;
 	private final String labelLastOrientation = "Last screen orientation";
@@ -64,13 +69,21 @@ public class ScreenOrientationListener extends DefaultContextListener {
 			@Override
 			public void run() {
 				long time = TimeSource.getTimeOfDay();
-				int orientation = -1;
+				int rotation = -1;
 
-				orientation = mDisplay.getRotation();
+				rotation = mDisplay.getRotation();
 
-				if (orientation != oldOrientation) {
+				if (rotation != oldRotation) {
 					lastChangeTime = time;
-					mDataManager.insertLog(labelOrientation, time, orientation);
+					mDataManager.insertLog(labelRotation, time, rotation);
+					mDataManager
+							.insertLog(labelLastRotation, time, oldRotation);
+					oldRotation = rotation;
+				}
+				int orientation = -1;
+				orientation = getAppContext().getResources().getConfiguration().orientation;
+				if (orientation != oldOrientation) {
+					mDataManager.insertLog(labelOrientation, time, rotation);
 					mDataManager.insertLog(labelLastOrientation, time,
 							oldOrientation);
 					oldOrientation = orientation;
@@ -89,6 +102,8 @@ public class ScreenOrientationListener extends DefaultContextListener {
 
 	@Override
 	public void initLogTypes() {
+		addLogType(labelRotation, typeRotation);
+		addLogType(labelLastRotation, typeLastRotation);
 		addLogType(labelOrientation, typeOrientation);
 		addLogType(labelLastOrientation, typeLastOrientation);
 		addLogType(labelTimeSinceOrientationChange,
