@@ -24,7 +24,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
-import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -58,7 +57,7 @@ public class ContextLogger {
 
 	private String mTraceName = null;
 
-	Activity mCallerActivity = null;
+	Context mCallerContext = null;
 
 	private boolean mIsRunning = false;
 
@@ -91,24 +90,24 @@ public class ContextLogger {
 	 * 
 	 * @param context
 	 */
-	public boolean init(Activity activity) {
+	public boolean init(Context context) {
 		if (mInitialized) {
 			return false;
 		}
 
-		mCallerActivity = activity;
+		mCallerContext = context;
 
-		if (this.mCallerActivity == null) {
+		if (this.mCallerContext == null) {
 			Log.d(TAG, "mappcontext");
 		}
 		if (ContextLogger.class == null) {
 			Log.d(TAG, "class");
 		}
-		Intent akarmi = new Intent(this.mCallerActivity,
+		Intent akarmi = new Intent(this.mCallerContext,
 				ContextLoggerService.class);
 
-		boolean succ = mCallerActivity.bindService(new Intent(
-				this.mCallerActivity, ContextLoggerService.class), mConnection,
+		boolean succ = mCallerContext.bindService(new Intent(
+				this.mCallerContext, ContextLoggerService.class), mConnection,
 				Context.BIND_AUTO_CREATE);
 		if (!succ) {
 			Log.i(TAG, "bind unsuccessful");
@@ -121,7 +120,7 @@ public class ContextLogger {
 	}
 
 	public void stopService() {
-		mCallerActivity.unbindService(mConnection);
+		mCallerContext.unbindService(mConnection);
 	}
 
 	/**
@@ -296,7 +295,7 @@ public class ContextLogger {
 
 	public void brb() {
 		Log.e(TAG, "Big Red Button pushed.");
-		Toast.makeText(mCallerActivity, "BRB", Toast.LENGTH_SHORT).show();
+		Toast.makeText(mCallerContext, "BRB", Toast.LENGTH_SHORT).show();
 	}
 
 }
