@@ -49,9 +49,9 @@ import cz.cuni.kacz.contextlogger.IntentDataTarget;
 import cz.cuni.kacz.contextlogger.listeners.AcceleraionListener;
 import cz.cuni.kacz.contextlogger.listeners.ContextListener;
 import cz.cuni.kacz.contextlogger.listeners.CpuListener;
-import cz.cuni.kacz.contextlogger.listeners.DummyListener;
 import cz.cuni.kacz.contextlogger.listeners.GpsLocationListener;
 import cz.cuni.kacz.contextlogger.listeners.GpsStatusListener;
+import cz.cuni.kacz.contextlogger.listeners.PassiveLocationListener;
 import cz.cuni.kacz.contextlogger.listeners.ScreenBrightnessListener;
 import cz.cuni.kacz.contextlogger.listeners.ScreenOrientationListener;
 import cz.cuni.kacz.contextlogger.listeners.ScreenStateListener;
@@ -67,6 +67,16 @@ public class MainActivity extends Activity {
 	private static final String TAG = "DisplayMessageActivity";
 
 	private boolean running = false;
+
+	final Activity mainActivity = this;
+
+	Button startButton;
+	Button stopButton;
+
+	Thread mStarterThread;
+	Boolean doStart;
+	Boolean doStop;
+	Boolean stopStarter;
 
 	boolean intentTargetRegistered = false;
 	private BroadcastReceiver mBCReceiver;
@@ -107,7 +117,7 @@ public class MainActivity extends Activity {
 
 		// Create the ContextLogger class
 		mCL = ContextLogger.getInstance();
-		mCL.init(this);
+		mCL.init(this.getApplicationContext());
 
 		res = getResources();
 
@@ -157,9 +167,74 @@ public class MainActivity extends Activity {
 		filter.addAction(cz.cuni.kacz.contextlogger.IntentDataTarget.ACTION_LISTENER_ADDED);
 		getApplicationContext().registerReceiver(mBCReceiver, filter);
 
+		doStart = false;
+		doStop = false;
+		stopStarter = false;
+
+		// starter thread
+		mStarterThread = new Thread(new Runnable() {
+
+			@Override
+			public void run() {
+				// TODO Auto-generated method stub
+				while (true) {
+					synchronized (doStart) {
+						if (doStart) {
+							Log.d(TAG, "doStart");
+							mCL.startLogging();
+							running = true;
+							doStart = false;
+							mainActivity.runOnUiThread(new Runnable() {
+								@Override
+								public void run() {
+									stopButton.setEnabled(true);
+								}
+							});
+
+						}
+					}
+					synchronized (doStop) {
+						if (doStop) {
+							Log.d(TAG, "doStop");
+							mCL.stopLogging();
+							mCL.clearListeners();
+							mCL.clearTargets();
+
+							running = false;
+							doStop = false;
+							mainActivity.runOnUiThread(new Runnable() {
+								@Override
+								public void run() {
+									startButton.setEnabled(true);
+								}
+							});
+
+						}
+					}
+					synchronized (stopStarter) {
+						if (stopStarter) {
+							Log.d(TAG, "stopStarter");
+							break;
+						}
+					}
+					synchronized (mStarterThread) {
+						try {
+							mStarterThread.wait();
+						} catch (InterruptedException e) {
+							// TODO Auto-generated catch block
+							break;
+						}
+					}
+
+				}
+			}
+
+		});
+		mStarterThread.start();
+
 		// Prepare the screen
-		Button startButton = (Button) findViewById(R.id.start_button);
-		Button stopButton = (Button) findViewById(R.id.stop_button);
+		startButton = (Button) findViewById(R.id.start_button);
+		stopButton = (Button) findViewById(R.id.stop_button);
 		if (running) {
 			startButton.setVisibility(Button.GONE);
 			stopButton.setVisibility(Button.VISIBLE);
@@ -325,6 +400,12 @@ public class MainActivity extends Activity {
 				mCL.addListener(l);
 			}
 			if (sharedPref.getBoolean(
+					res.getString(R.string.pref_key_passive_location_listener),
+					false)) {
+				l = new PassiveLocationListener();
+				mCL.addListener(l);
+			}
+			if (sharedPref.getBoolean(
 					res.getString(R.string.pref_key_new_test_listener), false)) {
 				l = new ScreenOrientationListener();
 				mCL.addListener(l);
@@ -338,15 +419,23 @@ public class MainActivity extends Activity {
 			 intentTargetRegistered = true;
 			 }
 			// start the logging process
-			mCL.startLogging();
+			// mCL.startLogging();
+			//
+			// running = true;
 
-			running = true;
+			synchronized (doStart) {
+				doStart = true;
+			}
+			synchronized (mStarterThread) {
+				mStarterThread.notify();
+			}
 
 			// update the screen
 			Button startButton = (Button) findViewById(R.id.start_button);
 			startButton.setVisibility(Button.GONE);
 			Button stopButton = (Button) findViewById(R.id.stop_button);
 			stopButton.setVisibility(Button.VISIBLE);
+			stopButton.setEnabled(false);
 		}
 	}
 
@@ -355,18 +444,26 @@ public class MainActivity extends Activity {
 			Log.d(TAG, "stopLogging");
 
 			// stop the logging process
-			mCL.stopLogging();
+			// mCL.stopLogging();
+			//
+			// mCL.clearListeners();
+			// mCL.clearTargets();
+			//
+			// running = false;
 
-			mCL.clearListeners();
-			mCL.clearTargets();
-
-			running = false;
+			synchronized (doStop) {
+				doStop = true;
+			}
+			synchronized (mStarterThread) {
+				mStarterThread.notify();
+			}
 
 			// update the screen
 			Button stopButton = (Button) findViewById(R.id.stop_button);
 			stopButton.setVisibility(Button.GONE);
 			Button startButton = (Button) findViewById(R.id.start_button);
 			startButton.setVisibility(Button.VISIBLE);
+			startButton.setEnabled(false);
 
 			LinearLayout cwl = (LinearLayout) findViewById(R.id.ContextWrapperLayout);
 			View divider = new View(this);
@@ -389,8 +486,18 @@ public class MainActivity extends Activity {
 	protected void onDestroy() {
 		// TODO Auto-generated method stub
 		super.onDestroy();
-		mCL.stopLogging();
-		mCL.stopService();
+		// mCL.stopLogging();
+		// mCL.stopService();
+
+		synchronized (doStop) {
+			doStop = true;
+		}
+		synchronized (stopStarter) {
+			stopStarter = true;
+		}
+		synchronized (mStarterThread) {
+			mStarterThread.notify();
+		}
 
 		// unregister the BC receiver
 		if (intentTargetRegistered) {

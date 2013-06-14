@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
      <PreferenceCategory 
         android:title="@string/pref_tracing_cat"
@@ -82,6 +81,11 @@
 	        android:key="@string/pref_key_gps_location_listener"
 	        android:title="@string/pref_gps_location_listener"
 	        android:summary="@string/pref_gps_location_listener_summ"
+	        android:defaultValue="true" />
+	    <CheckBoxPreference
+	        android:key="@string/pref_key_passive_location_listener"
+	        android:title="@string/pref_passive_location_listener"
+	        android:summary="@string/pref_passive_location_listener_summ"
 	        android:defaultValue="true" />
 	    
 	 </PreferenceCategory>

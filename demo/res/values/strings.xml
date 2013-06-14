@@ -56,7 +56,7 @@
     <string name="pref_cpu_listener_summ">Cpu usage</string>
 	<string name="pref_key_cpu_listener">pref_cpu_listener</string>
 	
-	<string name="pref_gps_status_listener">GPS status</string>
+	<string name="pref_passive_location_listener">Passive location</string><string name="pref_passive_location_listener_summ">passive location</string><string name="pref_key_passive_location_listener">passive_location_listener</string><string name="pref_gps_status_listener">GPS status</string>
     <string name="pref_gps_status_listener_summ">GPS satellites avaibility</string>
 	<string name="pref_key_gps_status_listener">gps_status_listener</string>
 	
