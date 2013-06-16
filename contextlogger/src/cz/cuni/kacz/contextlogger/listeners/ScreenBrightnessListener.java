@@ -85,6 +85,7 @@ public class ScreenBrightnessListener extends DefaultContextListener {
 			public void run() {
 				long time = TimeSource.getTimeOfDay();
 
+				if (mScreenReader != null) {
 				try {
 					mScreenReader.seek(0);
 					String brightness = mScreenReader.readLine();
@@ -98,7 +99,9 @@ public class ScreenBrightnessListener extends DefaultContextListener {
 				} catch (IOException ex) {
 					ex.printStackTrace();
 				}
+				}
 
+				if (mButtonReader != null) {
 				try {
 					mButtonReader.seek(0);
 					String buttonBrightness = mButtonReader.readLine();
@@ -111,6 +114,7 @@ public class ScreenBrightnessListener extends DefaultContextListener {
 					}
 				} catch (IOException ex) {
 					ex.printStackTrace();
+				}
 				}
 
 			}
