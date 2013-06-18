@@ -47,17 +47,16 @@ import android.widget.TextView;
 import cz.cuni.kacz.contextlogger.ContextLogger;
 import cz.cuni.kacz.contextlogger.IntentDataTarget;
 import cz.cuni.kacz.contextlogger.listeners.AcceleraionListener;
+import cz.cuni.kacz.contextlogger.listeners.AmbientTemperatureListener;
 import cz.cuni.kacz.contextlogger.listeners.ContextListener;
 import cz.cuni.kacz.contextlogger.listeners.CpuListener;
 import cz.cuni.kacz.contextlogger.listeners.GpsLocationListener;
 import cz.cuni.kacz.contextlogger.listeners.GpsStatusListener;
 import cz.cuni.kacz.contextlogger.listeners.PassiveLocationListener;
 import cz.cuni.kacz.contextlogger.listeners.ScreenBrightnessListener;
-import cz.cuni.kacz.contextlogger.listeners.ScreenOrientationListener;
 import cz.cuni.kacz.contextlogger.listeners.ScreenStateListener;
 import cz.cuni.kacz.contextlogger.listeners.TrafficListener;
-import cz.cuni.kacz.contextlogger.listeners.WifiBSSIDListener;
-import cz.cuni.kacz.contextlogger.listeners.WifiConnectionStateListener;
+import cz.cuni.kacz.contextlogger.listeners.WifiListener;
 import cz.cuni.kacz.contextlogger.listeners.WifiRSSIListener;
 import cz.cuni.kacz.contextlogger.listeners.WifiStateListener;
 
@@ -351,13 +350,13 @@ public class MainActivity extends Activity {
 				l = new WifiStateListener();
 				mCL.addListener(l);
 			}
-			if (sharedPref
-					.getBoolean(
-							res.getString(R.string.pref_key_wifi_connection_state_listener),
-							false)) {
-				l = new WifiConnectionStateListener();
-				mCL.addListener(l);
-			}
+			// if (sharedPref
+			// .getBoolean(
+			// res.getString(R.string.pref_key_wifi_connection_state_listener),
+			// false)) {
+			// l = new WifiConnectionStateListener();
+			// mCL.addListener(l);
+			// }
 			if (sharedPref.getBoolean(
 					res.getString(R.string.pref_key_wifirssi_listener), false)) {
 				l = new WifiRSSIListener();
@@ -365,7 +364,7 @@ public class MainActivity extends Activity {
 			}
 			if (sharedPref.getBoolean(
 					res.getString(R.string.pref_key_wifibssid_listener), false)) {
-				l = new WifiBSSIDListener();
+				l = new WifiListener();
 				mCL.addListener(l);
 			}
 			if (sharedPref.getBoolean(
@@ -407,7 +406,7 @@ public class MainActivity extends Activity {
 			}
 			if (sharedPref.getBoolean(
 					res.getString(R.string.pref_key_new_test_listener), false)) {
-				l = new ScreenOrientationListener();
+				l = new AmbientTemperatureListener();
 				mCL.addListener(l);
 			}
 			// create data targets...

@@ -34,6 +34,7 @@ import android.util.Log;
 import cz.cuni.kacz.contextlogger.DataManager;
 import cz.cuni.kacz.contextlogger.TimeSource;
 
+@Deprecated
 public class WifiConnectionStateListener extends DefaultContextListener {
 
 	/**

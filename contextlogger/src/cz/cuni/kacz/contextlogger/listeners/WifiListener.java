@@ -36,7 +36,8 @@ import android.util.Log;
 import cz.cuni.kacz.contextlogger.DataManager;
 import cz.cuni.kacz.contextlogger.TimeSource;
 
-public class WifiBSSIDListener extends DefaultContextListener {
+
+public class WifiListener extends DefaultContextListener {
 
 	/**
 	 * 
@@ -50,6 +51,7 @@ public class WifiBSSIDListener extends DefaultContextListener {
 	private HandlerThread mThread = null;
 	private String lastBSSID = null;
 	private String lastSSID = null;
+	private int oldIp = 0;
 
 	// log names and types
 	private final String labelBSSID = "BSSID";
@@ -60,6 +62,9 @@ public class WifiBSSIDListener extends DefaultContextListener {
 	private final int typeIP = DataManager.STRING;
 	private final String labelSpeed = "Link speed";
 	private final int typeSpeed = DataManager.INT;
+
+	private final String labelWifiConnectionState = "Wifi connection state";
+	private final int typeWifiConnectionState = DataManager.STRING;
 
 	@Override
 	public void startListening() {
@@ -73,6 +78,10 @@ public class WifiBSSIDListener extends DefaultContextListener {
 				NetworkInfo netInfo = intent
 						.getParcelableExtra(WifiManager.EXTRA_NETWORK_INFO);
 				State state = netInfo.getState();
+
+				mDataManager.insertLog(labelWifiConnectionState, time,
+						state.name());
+
 				String bssid = "";
 				String ssid = "";
 				int ip = 0;
@@ -84,18 +93,31 @@ public class WifiBSSIDListener extends DefaultContextListener {
 					ip = wi.getIpAddress();
 					speed = wi.getLinkSpeed();
 				}
+
+				if (bssid == null) {
+					bssid = "";
+				}
 				if (!bssid.equals(lastBSSID)) {
 					mDataManager.insertLog(labelBSSID, time, bssid);
 					lastBSSID = bssid;
+				}
+
+				if (ssid == null) {
+					ssid = "";
 				}
 				if (!ssid.equals(lastSSID)) {
 					mDataManager.insertLog(labelSSID, time, ssid);
 					lastSSID = ssid;
 				}
-				String ipString = String.format("%d.%d.%d.%d", (ip & 0xff),
+
+				if (ip != oldIp) {
+					String ipString = String.format("%d.%d.%d.%d", (ip & 0xff),
 						(ip >> 8 & 0xff), (ip >> 16 & 0xff), (ip >> 24 & 0xff));
+					mDataManager.insertLog(labelIP, time, ipString);
+					oldIp = ip;
+				}
 				mDataManager.insertLog(labelSpeed, time, speed);
-				mDataManager.insertLog(labelIP, time, ipString);
+
 
 			};
 		};
@@ -122,6 +144,8 @@ public class WifiBSSIDListener extends DefaultContextListener {
 		addLogType(labelSSID, typeSSID);
 		addLogType(labelIP, typeIP);
 		addLogType(labelSpeed, typeSpeed);
+
+		addLogType(labelWifiConnectionState, typeWifiConnectionState);
 	}
 
 	@Override
