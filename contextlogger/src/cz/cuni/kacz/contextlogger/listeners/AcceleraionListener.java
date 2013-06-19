@@ -44,6 +44,8 @@ public class AcceleraionListener extends DefaultContextListener {
 	int typeY = DataManager.FLOAT;
 	String labelZ = "Z acceleration";
 	int typeZ = DataManager.FLOAT;
+	String labelSum = "Overall acceleration";
+	int typeSum = DataManager.DOUBLE;
 
 	@Override
 	public void startListening() {
@@ -61,6 +63,12 @@ public class AcceleraionListener extends DefaultContextListener {
 					mDataManager.insertLog(labelX, time, event.values[0]);
 					mDataManager.insertLog(labelY, time, event.values[1]);
 					mDataManager.insertLog(labelZ, time, event.values[2]);
+					mDataManager.insertLog(
+							labelSum,
+							time,
+							Math.sqrt(Math.pow(event.values[0], 2)
+									+ Math.pow(event.values[1], 2)
+									+ Math.pow(event.values[2], 2)));
 				}
 
 				@Override
@@ -85,6 +93,7 @@ public class AcceleraionListener extends DefaultContextListener {
 		addLogType(labelX, typeX);
 		addLogType(labelY, typeY);
 		addLogType(labelZ, typeZ);
+		addLogType(labelSum, typeSum);
 	}
 
 }
