@@ -52,7 +52,7 @@ import cz.cuni.kacz.contextlogger.listeners.GpsLocationListener;
 import cz.cuni.kacz.contextlogger.listeners.GpsStatusListener;
 import cz.cuni.kacz.contextlogger.listeners.LinearAcceleraionListener;
 import cz.cuni.kacz.contextlogger.listeners.PassiveLocationListener;
-import cz.cuni.kacz.contextlogger.listeners.RamListener;
+import cz.cuni.kacz.contextlogger.listeners.RotationListener;
 import cz.cuni.kacz.contextlogger.listeners.ScreenBrightnessListener;
 import cz.cuni.kacz.contextlogger.listeners.ScreenStateListener;
 import cz.cuni.kacz.contextlogger.listeners.TrafficListener;
@@ -406,7 +406,7 @@ public class MainActivity extends Activity {
 			}
 			if (sharedPref.getBoolean(
 					res.getString(R.string.pref_key_new_test_listener), false)) {
-				l = new RamListener(Process.myPid());
+				l = new RotationListener();
 				mCL.addListener(l);
 			}
 			// create data targets...
