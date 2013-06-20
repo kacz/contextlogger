@@ -31,9 +31,14 @@ import cz.cuni.kacz.contextlogger.TimeSource;
 
 public class RamListener extends DefaultContextListener {
 
+	public RamListener(int pid, boolean debug) {
+		mAppPid = pid;
+		mDebug = debug;
+	}
+
 	public RamListener(int pid) {
 		super();
-		appPid = pid;
+		mAppPid = pid;
 	}
 
 	/**
@@ -45,8 +50,9 @@ public class RamListener extends DefaultContextListener {
 	private Timer timer;
 	int period = 1000;
 
-	int appPid;
-	int myPid;
+	int mAppPid;
+	int mMyPid;
+	boolean mDebug = false;
 
 	// log names and types
 	private final String labelAvailMem = "System RAM available";
@@ -56,12 +62,19 @@ public class RamListener extends DefaultContextListener {
 	private final String labelRamThreshold = "System RAM threshold	";
 	private final int typeRamThreshold = DataManager.INT;
 
-	private final String labelAppDalvikPss = "App dalvik ram used";
+	private final String labelAppDalvikPss = "App dalvik ram PSS";
 	private final int typeAppDalvikPss = DataManager.INT;
-	private final String labelAppNativePss = "App native ram used";
+	private final String labelAppNativePss = "App native ram PSS";
 	private final int typeAppNativePss = DataManager.INT;
-	private final String labelAppOtherPss = "App other ram used";
+	private final String labelAppOtherPss = "App other ram PSS";
 	private final int typeAppOtherPss = DataManager.INT;
+
+	private final String labelAppDalvikPrivateDirty = "App dalvik ram private dirty";
+	private final int typeAppDalvikPrivateDirty = DataManager.INT;
+	private final String labelAppNativePrivateDirty = "App native ram private dirty";
+	private final int typeAppNativePrivateDirty = DataManager.INT;
+	private final String labelAppOtherPrivateDirty = "App other ram private dirty";
+	private final int typeAppOtherPrivateDirty = DataManager.INT;
 
 	private final String labelCLDalvikPss = "CL dalvik ram used";
 	private final int typeCLDalvikPss = DataManager.INT;
@@ -69,6 +82,13 @@ public class RamListener extends DefaultContextListener {
 	private final int typeCLNativePss = DataManager.INT;
 	private final String labelCLOtherPss = "CL other ram used";
 	private final int typeCLOtherPss = DataManager.INT;
+
+	private final String labelCLDalvikPrivateDirty = "CL dalvik ram private dirty";
+	private final int typeCLDalvikPrivateDirty = DataManager.INT;
+	private final String labelCLNativePrivateDirty = "CL native ram private dirty";
+	private final int typeCLNativePrivateDirty = DataManager.INT;
+	private final String labelCLOtherPrivateDirty = "CL other ram private dirty";
+	private final int typeCLOtherPrivateDirty = DataManager.INT;
 
 	long oldCpu = 0;
 	long oldIdle = 0;
@@ -81,7 +101,7 @@ public class RamListener extends DefaultContextListener {
 				.getSystemService(Context.ACTIVITY_SERVICE);
 		final MemoryInfo mi = new MemoryInfo();
 
-		myPid = android.os.Process.myPid();
+		mMyPid = android.os.Process.myPid();
 		timer = new Timer();
 		timer.scheduleAtFixedRate(new TimerTask() {
 			@Override
@@ -93,7 +113,7 @@ public class RamListener extends DefaultContextListener {
 				mDataManager.insertLog(labelRamThreshold, time, mi.threshold);
 
 				android.os.Debug.MemoryInfo[] mis = activityManager
-						.getProcessMemoryInfo(new int[] { appPid });
+						.getProcessMemoryInfo(new int[] { mAppPid });
 				if (mis.length > 0) {
 					mDataManager.insertLog(labelAppDalvikPss, time,
 							mis[0].dalvikPss);
@@ -101,10 +121,18 @@ public class RamListener extends DefaultContextListener {
 							mis[0].nativePss);
 					mDataManager.insertLog(labelAppOtherPss, time,
 							mis[0].otherPss);
+					mDataManager.insertLog(labelAppDalvikPrivateDirty, time,
+							mis[0].dalvikPrivateDirty);
+					mDataManager.insertLog(labelAppNativePrivateDirty, time,
+							mis[0].nativePrivateDirty);
+					mDataManager.insertLog(labelAppOtherPrivateDirty, time,
+							mis[0].otherPrivateDirty);
 				}
 
 				// CL
-				mis = activityManager.getProcessMemoryInfo(new int[] { myPid });
+				if (mDebug) {
+				mis = activityManager
+						.getProcessMemoryInfo(new int[] { mMyPid });
 				if (mis.length > 0) {
 					mDataManager.insertLog(labelCLDalvikPss, time,
 							mis[0].dalvikPss);
@@ -112,6 +140,13 @@ public class RamListener extends DefaultContextListener {
 							mis[0].nativePss);
 					mDataManager.insertLog(labelCLOtherPss, time,
 							mis[0].otherPss);
+					mDataManager.insertLog(labelCLDalvikPrivateDirty, time,
+							mis[0].dalvikPrivateDirty);
+					mDataManager.insertLog(labelCLNativePrivateDirty, time,
+							mis[0].nativePrivateDirty);
+					mDataManager.insertLog(labelCLOtherPrivateDirty, time,
+							mis[0].otherPrivateDirty);
+				}
 				}
 			}
 		}, 0, period);
@@ -127,14 +162,23 @@ public class RamListener extends DefaultContextListener {
 		addLogType(labelAvailMem, typeAvailMem);
 		addLogType(labelLowMem, typeLowMem);
 		addLogType(labelRamThreshold, typeRamThreshold);
+
 		addLogType(labelAppDalvikPss, typeAppDalvikPss);
 		addLogType(labelAppNativePss, typeAppNativePss);
 		addLogType(labelAppOtherPss, typeAppOtherPss);
 
-		addLogType(labelCLDalvikPss, typeCLDalvikPss);
-		addLogType(labelCLNativePss, typeCLNativePss);
-		addLogType(labelCLOtherPss, typeCLOtherPss);
+		addLogType(labelAppDalvikPrivateDirty, typeAppDalvikPrivateDirty);
+		addLogType(labelAppNativePrivateDirty, typeAppNativePrivateDirty);
+		addLogType(labelAppOtherPrivateDirty, typeAppOtherPrivateDirty);
 
+		if (mDebug) {
+			addLogType(labelCLDalvikPss, typeCLDalvikPss);
+			addLogType(labelCLNativePss, typeCLNativePss);
+			addLogType(labelCLOtherPss, typeCLOtherPss);
+			addLogType(labelCLDalvikPrivateDirty, typeCLDalvikPrivateDirty);
+			addLogType(labelCLNativePrivateDirty, typeCLNativePrivateDirty);
+			addLogType(labelCLOtherPrivateDirty, typeCLOtherPrivateDirty);
+		}
 	}
 
 }
