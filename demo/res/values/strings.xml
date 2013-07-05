@@ -28,10 +28,90 @@
     <string name="pref_acceleration_listener_summ">Acceleration in directions X,Y,Z</string>
     <string name="pref_key_acceleration_listener">pref_acceleration_listener</string>
 	
+    <string name="pref_temperature_listener">Temperature</string>
+    <string name="pref_temperature_listener_summ">Temperature around the device</string>
+    <string name="pref_key_temperature_listener">pref_temperature_listener</string>
+    
+    <string name="pref_barometer_listener">Barometer</string>
+    <string name="pref_barometer_listener_summ">Atmosperic pressure around the device</string>
+    <string name="pref_key_barometer_listener">pref_barometer_listener</string>
+    
+    <string name="pref_battery_listener">Battery</string>
+    <string name="pref_battery_listener_summ">TODO</string>
+    <string name="pref_key_battery_listener">pref_battery_listener</string>
+    
+    <string name="pref_cpu_listener">Cpu</string>
+    <string name="pref_cpu_listener_summ">Cpu usage</string>
+	<string name="pref_key_cpu_listener">pref_cpu_listener</string>
+	
+	<string name="pref_gps_location_listener">GPS location</string>
+    <string name="pref_gps_location_listener_summ">GPS location</string>
+	<string name="pref_key_gps_location_listener">gps_location_listener</string>
+	
+	<string name="pref_gps_status_listener">GPS status</string>
+    <string name="pref_gps_status_listener_summ">GPS satellites avaibility</string>
+	<string name="pref_key_gps_status_listener">gps_status_listener</string>
+	
+	<string name="pref_gyroscope_listener">Gyroscope</string>
+    <string name="pref_gyroscope_listener_summ">TODO</string>
+	<string name="pref_key_gyroscope_listener">pref_gyroscope_listener</string>
+
+	<string name="pref_light_listener">Ambient light</string>
+    <string name="pref_light_listener_summ">Level of ambient light around the device</string>
+	<string name="pref_key_light_listener">pref_light_listener</string>
+	
+	<string name="pref_linear_acceleration_listener">Linear cceleration</string>
+    <string name="pref_linear_acceleration_listener_summ">Linear acceleration in directions X,Y,Z</string>
+    <string name="pref_key_linear_acceleration_listener">pref_linear_acceleration_listener</string>
+	
+    <string name="pref_magneto_listener">Magnetic field</string>
+    <string name="pref_magneto_listener_summ">Force of magnetic field in directions X,Y,Z</string>
+    <string name="pref_key_magneto_listener">pref_magneto_listener</string>
+    
+    <string name="pref_passive_location_listener">Passive location</string>
+    <string name="pref_passive_location_listener_summ">Passive location</string>
+    <string name="pref_key_passive_location_listener">passive_location_listener</string>
+	
+    <string name="pref_proximity_listener">Proximity</string>
+    <string name="pref_proximity_listener_summ">Distance of objects</string>
+	<string name="pref_key_proximity_listener">pref_proximity_listener</string>
+    
+	<string name="pref_ram_listener">RAM</string>
+    <string name="pref_ram_listener_summ">Memory usage</string>
+	<string name="pref_key_ram_listener">pref_ram_listener</string>
+	
+	<string name="pref_rotation_listener">Rotation</string>
+    <string name="pref_rotation_listener_summ">Rotation around axes X,Y,Z</string>
+    <string name="pref_key_rotation_listener">pref_rotation_listener</string>
+    
+    <string name="pref_screen_brightness_listener">Screen brigthness</string>
+    <string name="pref_screen_brightness_listener_summ">Screen brigthness level</string>
+	<string name="pref_key_screen_brightness_listener">pref_screen_brightness_listener</string>
+	
+	<string name="pref_screen_orientation_listener">Screen orientation</string>
+    <string name="pref_screen_orientation_listener_summ">Landscape/protrait</string>
+	<string name="pref_key_screen_orientation_listener">pref_screen_orientation_listener</string>
+	
+    <string name="pref_screen_state_listener">Screen state</string>
+    <string name="pref_screen_state_listener_summ">On/Off state</string>
+	<string name="pref_key_screen_state_listener">pref_screen_state_listener</string>
+	
+	<string name="pref_telephony_listener">Telephony</string>
+    <string name="pref_telephony_listener_summ">TODO</string>
+    <string name="pref_key_telephony_listener">pref_telephony_listener</string>
+    
 	<string name="pref_traffic_listener">Traffic</string>
     <string name="pref_traffic_listener_summ">Network traffic meter</string>
     <string name="pref_key_traffic_listener">pref_traffic_listener</string>
     
+    <string name="pref_traffic_speed_listener">Network speed</string>
+    <string name="pref_traffic_speed_listener_summ">Network speed meter</string>
+    <string name="pref_key_traffic_speed_listener">pref_traffic_speed_listener</string>
+    
+    <string name="pref_wifi_listener">Wifi</string>
+    <string name="pref_wifi_listener_summ">TODO</string>
+	<string name="pref_key_wifi_listener">pref_wifi_listener</string>
+	
     <string name="pref_wifi_state_listener">Wifi state</string>
     <string name="pref_wifi_state_listener_summ">Wifi service state</string>
 	<string name="pref_key_wifi_state_listener">pref_wifi_state_listener</string>
@@ -40,34 +120,7 @@
     <string name="pref_wifirssi_listener_summ">Wifi strength</string>
 	<string name="pref_key_wifirssi_listener">pref_wifirssi_listener</string>
 	
-	<string name="pref_wifi_connection_state_listener">Wifi connection</string>
-    <string name="pref_wifi_connection_state_listener_summ">Wifi connection state</string>
-	<string name="pref_key_wifi_connection_state_listener">pref_wifi_connection_state_listener</string>
-	
-	<string name="pref_wifibssid_listener">Wifi BSSID</string>
-    <string name="pref_wifibssid_listener_summ">Access point MAC</string>
-	<string name="pref_key_wifibssid_listener">pref_wifibssid_listener</string>
-	
-	<string name="pref_screen_state_listener">Screen state</string>
-    <string name="pref_screen_state_listener_summ">On/Off state</string>
-	<string name="pref_key_screen_state_listener">pref_screen_state_listener</string>
-	
-	<string name="pref_screen_brightness_listener">Screen brigthness</string>
-    <string name="pref_screen_brightness_listener_summ">Screen brigthness level</string>
-	<string name="pref_key_screen_brightness_listener">pref_screen_brightness_listener</string>
-	
-	<string name="pref_cpu_listener">Cpu</string>
-    <string name="pref_cpu_listener_summ">Cpu usage</string>
-	<string name="pref_key_cpu_listener">pref_cpu_listener</string>
-	
-	<string name="pref_passive_location_listener">Passive location</string><string name="pref_passive_location_listener_summ">passive location</string><string name="pref_key_passive_location_listener">passive_location_listener</string><string name="pref_gps_status_listener">GPS status</string>
-    <string name="pref_gps_status_listener_summ">GPS satellites avaibility</string>
-	<string name="pref_key_gps_status_listener">gps_status_listener</string>
-	
-	<string name="pref_gps_location_listener">GPS location</string>
-    <string name="pref_gps_location_listener_summ">GPS location</string>
-	<string name="pref_key_gps_location_listener">gps_location_listener</string>
-	
+
 	<string name="pref_new_test_listener">TEST</string>
     <string name="pref_new_test_listener_summ">newly implemented listener</string>
 	<string name="pref_key_new_test_listener">new_test_listener</string>

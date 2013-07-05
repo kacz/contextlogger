@@ -45,16 +45,28 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import cz.cuni.kacz.contextlogger.ContextLogger;
+import cz.cuni.kacz.contextlogger.listeners.AcceleraionListener;
+import cz.cuni.kacz.contextlogger.listeners.AmbientTemperatureListener;
+import cz.cuni.kacz.contextlogger.listeners.BarometerListener;
+import cz.cuni.kacz.contextlogger.listeners.BatteryListener;
 import cz.cuni.kacz.contextlogger.listeners.ContextListener;
 import cz.cuni.kacz.contextlogger.listeners.CpuListener;
 import cz.cuni.kacz.contextlogger.listeners.GpsLocationListener;
 import cz.cuni.kacz.contextlogger.listeners.GpsStatusListener;
+import cz.cuni.kacz.contextlogger.listeners.GyroscopeListener;
+import cz.cuni.kacz.contextlogger.listeners.LightListener;
 import cz.cuni.kacz.contextlogger.listeners.LinearAcceleraionListener;
+import cz.cuni.kacz.contextlogger.listeners.MagnetoListener;
 import cz.cuni.kacz.contextlogger.listeners.PassiveLocationListener;
+import cz.cuni.kacz.contextlogger.listeners.ProximityListener;
 import cz.cuni.kacz.contextlogger.listeners.RamListener;
+import cz.cuni.kacz.contextlogger.listeners.RotationListener;
 import cz.cuni.kacz.contextlogger.listeners.ScreenBrightnessListener;
+import cz.cuni.kacz.contextlogger.listeners.ScreenOrientationListener;
 import cz.cuni.kacz.contextlogger.listeners.ScreenStateListener;
+import cz.cuni.kacz.contextlogger.listeners.TelephonyListener;
 import cz.cuni.kacz.contextlogger.listeners.TrafficListener;
+import cz.cuni.kacz.contextlogger.listeners.TrafficSpeedListener;
 import cz.cuni.kacz.contextlogger.listeners.WifiListener;
 import cz.cuni.kacz.contextlogger.listeners.WifiRSSIListener;
 import cz.cuni.kacz.contextlogger.listeners.WifiStateListener;
@@ -331,58 +343,38 @@ public class MainActivity extends Activity {
 
 			ContextListener l;
 			mCL.clearListeners();
-			// mCL.clearTargets();
+
 			if (sharedPref.getBoolean(
 					res.getString(R.string.pref_key_acceleration_listener),
 					false)) {
-				l = new LinearAcceleraionListener();
+				l = new AcceleraionListener();
 				mCL.addListener(l);
 			}
 			if (sharedPref.getBoolean(
-					res.getString(R.string.pref_key_traffic_listener), false)) {
-				l = new TrafficListener();
-				mCL.addListener(l);
-			}
-			if (sharedPref
-					.getBoolean(res
-							.getString(R.string.pref_key_wifi_state_listener),
-							false)) {
-				l = new WifiStateListener();
-				mCL.addListener(l);
-			}
-			// if (sharedPref
-			// .getBoolean(
-			// res.getString(R.string.pref_key_wifi_connection_state_listener),
-			// false)) {
-			// l = new WifiConnectionStateListener();
-			// mCL.addListener(l);
-			// }
-			if (sharedPref.getBoolean(
-					res.getString(R.string.pref_key_wifirssi_listener), false)) {
-				l = new WifiRSSIListener();
-				mCL.addListener(l);
-			}
-			if (sharedPref.getBoolean(
-					res.getString(R.string.pref_key_wifibssid_listener), false)) {
-				l = new WifiListener();
-				mCL.addListener(l);
-			}
-			if (sharedPref.getBoolean(
-					res.getString(R.string.pref_key_screen_state_listener),
+					res.getString(R.string.pref_key_temperature_listener),
 					false)) {
-				l = new ScreenStateListener();
+				l = new AmbientTemperatureListener();
 				mCL.addListener(l);
 			}
-			if (sharedPref
-					.getBoolean(
-							res.getString(R.string.pref_key_screen_brightness_listener),
-							false)) {
-				l = new ScreenBrightnessListener();
+			if (sharedPref.getBoolean(
+					res.getString(R.string.pref_key_barometer_listener), false)) {
+				l = new BarometerListener();
+				mCL.addListener(l);
+			}
+			if (sharedPref.getBoolean(
+					res.getString(R.string.pref_key_battery_listener), false)) {
+				l = new BatteryListener();
 				mCL.addListener(l);
 			}
 			if (sharedPref.getBoolean(
 					res.getString(R.string.pref_key_cpu_listener), false)) {
 				l = new CpuListener();
+				mCL.addListener(l);
+			}
+			if (sharedPref.getBoolean(
+					res.getString(R.string.pref_key_gps_location_listener),
+					false)) {
+				l = new GpsLocationListener();
 				mCL.addListener(l);
 			}
 			if (sharedPref
@@ -393,9 +385,24 @@ public class MainActivity extends Activity {
 				mCL.addListener(l);
 			}
 			if (sharedPref.getBoolean(
-					res.getString(R.string.pref_key_gps_location_listener),
+					res.getString(R.string.pref_key_gyroscope_listener), false)) {
+				l = new GyroscopeListener();
+				mCL.addListener(l);
+			}
+			if (sharedPref.getBoolean(
+					res.getString(R.string.pref_key_light_listener), false)) {
+				l = new LightListener();
+				mCL.addListener(l);
+			}
+			if (sharedPref.getBoolean(res
+					.getString(R.string.pref_key_linear_acceleration_listener),
 					false)) {
-				l = new GpsLocationListener();
+				l = new LinearAcceleraionListener();
+				mCL.addListener(l);
+			}
+			if (sharedPref.getBoolean(
+					res.getString(R.string.pref_key_magneto_listener), false)) {
+				l = new MagnetoListener();
 				mCL.addListener(l);
 			}
 			if (sharedPref.getBoolean(
@@ -405,18 +412,87 @@ public class MainActivity extends Activity {
 				mCL.addListener(l);
 			}
 			if (sharedPref.getBoolean(
-					res.getString(R.string.pref_key_new_test_listener), false)) {
-				l = new RamListener(android.os.Process.myPid());
+					res.getString(R.string.pref_key_proximity_listener), false)) {
+				l = new ProximityListener();
+				mCL.addListener(l);
+			}
+			if (sharedPref.getBoolean(
+					res.getString(R.string.pref_key_ram_listener), false)) {
+				l = new RamListener(android.os.Process.myPid(), false);
+				mCL.addListener(l);
+			}
+			if (sharedPref.getBoolean(
+					res.getString(R.string.pref_key_rotation_listener), false)) {
+				l = new RotationListener();
+				mCL.addListener(l);
+			}
+			if (sharedPref
+					.getBoolean(
+							res.getString(R.string.pref_key_screen_brightness_listener),
+							false)) {
+				l = new ScreenBrightnessListener();
+				mCL.addListener(l);
+			}
+			if (sharedPref.getBoolean(res
+					.getString(R.string.pref_key_screen_orientation_listener),
+					false)) {
+				l = new ScreenOrientationListener();
+				mCL.addListener(l);
+			}
+			if (sharedPref.getBoolean(
+					res.getString(R.string.pref_key_screen_state_listener),
+					false)) {
+				l = new ScreenStateListener();
+				mCL.addListener(l);
+			}
+			if (sharedPref.getBoolean(
+					res.getString(R.string.pref_key_telephony_listener), false)) {
+				l = new TelephonyListener();
+				mCL.addListener(l);
+			}
+			if (sharedPref.getBoolean(
+					res.getString(R.string.pref_key_traffic_listener), false)) {
+				l = new TrafficListener();
+				mCL.addListener(l);
+			}
+			if (sharedPref.getBoolean(
+					res.getString(R.string.pref_key_traffic_speed_listener),
+					false)) {
+				l = new TrafficSpeedListener();
+				mCL.addListener(l);
+			}
+			if (sharedPref.getBoolean(
+					res.getString(R.string.pref_key_wifi_listener), false)) {
+				l = new WifiListener();
+				mCL.addListener(l);
+			}
+			if (sharedPref
+					.getBoolean(res
+							.getString(R.string.pref_key_wifi_state_listener),
+							false)) {
+				l = new WifiStateListener();
+				mCL.addListener(l);
+			}
+			if (sharedPref.getBoolean(
+					res.getString(R.string.pref_key_wifirssi_listener), false)) {
+				l = new WifiRSSIListener();
 				mCL.addListener(l);
 			}
 
+
+			// if (sharedPref.getBoolean(
+			// res.getString(R.string.pref_key_new_test_listener), false)) {
+			// l = new RamListener(android.os.Process.myPid());
+			// mCL.addListener(l);
+			// }
+
 			// set data targets...
-			 if (sharedPref.getBoolean(
+			if (sharedPref.getBoolean(
 					res.getString(R.string.pref_key_target_intent), false)) {
 				mCL.useIntentTarget(true);
 				Log.d(TAG, "intent setting set" + R.string.pref_target_intent);
 				intentTargetRegistered = true;
-			 }
+			}
 
 			if (sharedPref.getBoolean(
 					res.getString(R.string.pref_key_target_textfile), false)) {
