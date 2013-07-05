@@ -45,7 +45,6 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import cz.cuni.kacz.contextlogger.ContextLogger;
-import cz.cuni.kacz.contextlogger.IntentDataTarget;
 import cz.cuni.kacz.contextlogger.listeners.ContextListener;
 import cz.cuni.kacz.contextlogger.listeners.CpuListener;
 import cz.cuni.kacz.contextlogger.listeners.GpsLocationListener;
@@ -117,6 +116,7 @@ public class MainActivity extends Activity {
 		// Create the ContextLogger class
 		mCL = ContextLogger.getInstance();
 		mCL.init(this.getApplicationContext());
+		mCL.setTraceName("CLDemo");
 
 		res = getResources();
 
@@ -197,7 +197,7 @@ public class MainActivity extends Activity {
 							Log.d(TAG, "doStop");
 							mCL.stopLogging();
 							mCL.clearListeners();
-							mCL.clearTargets();
+							// mCL.clearTargets();
 
 							running = false;
 							doStop = false;
@@ -324,14 +324,14 @@ public class MainActivity extends Activity {
 
 			SharedPreferences sharedPref = PreferenceManager
 					.getDefaultSharedPreferences(this);
+
 			boolean tracing = sharedPref.getBoolean(
 					res.getString(R.string.pref_key_trace), false);
-
 			mCL.enableTracing(tracing);
 
 			ContextListener l;
 			mCL.clearListeners();
-			mCL.clearTargets();
+			// mCL.clearTargets();
 			if (sharedPref.getBoolean(
 					res.getString(R.string.pref_key_acceleration_listener),
 					false)) {
@@ -409,18 +409,19 @@ public class MainActivity extends Activity {
 				l = new RamListener(android.os.Process.myPid());
 				mCL.addListener(l);
 			}
-			// create data targets...
-			// TODO
 
+			// set data targets...
 			 if (sharedPref.getBoolean(
-					res.getString(R.string.pref_target_intent), false)) {
-				mCL.addTarget(new IntentDataTarget());
-			 intentTargetRegistered = true;
+					res.getString(R.string.pref_key_target_intent), false)) {
+				mCL.useIntentTarget(true);
+				Log.d(TAG, "intent setting set" + R.string.pref_target_intent);
+				intentTargetRegistered = true;
 			 }
-			// start the logging process
-			// mCL.startLogging();
-			//
-			// running = true;
+
+			if (sharedPref.getBoolean(
+					res.getString(R.string.pref_key_target_textfile), false)) {
+				mCL.useTextFileTarget(true);
+			}
 
 			synchronized (doStart) {
 				doStart = true;

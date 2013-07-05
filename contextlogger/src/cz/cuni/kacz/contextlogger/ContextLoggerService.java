@@ -20,12 +20,15 @@
 
 package cz.cuni.kacz.contextlogger;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
@@ -92,8 +95,7 @@ public class ContextLoggerService extends Service {
 			switch (msg.what) {
 			case MSG_INIT_LISTENERS:
 				Log.i(TAG, "initListeners MSG rcvd");
-				initTargets((ArrayList<DataTarget>) msg.getData()
-						.getSerializable("targets"));
+				initTargets(msg.getData());
 				initListeners((ArrayList<ContextListener>) msg.getData()
 						.getSerializable("listeners"));
 				break;
@@ -223,12 +225,35 @@ public class ContextLoggerService extends Service {
 		Log.d(TAG, "min:" + min + " max:" + max + " avg:" + avg);
 	}
 
-	private void initTargets(List<DataTarget> targets) {
+	private void initTargets(Bundle msg) {
 		Log.d(TAG, "initTargets");
-		for (DataTarget dt : targets) {
+
+		String fileName = msg.getString("fileName");
+		if (fileName == null) {
+			fileName = "default-"
+					+ new SimpleDateFormat("-yyMMdd-hhmmss").format(new Date());
+		}
+		// add the file target
+		DataTarget dt = new FileDataTarget(fileName);
+		dt.initCtx(getApplicationContext());
+		mDataManager.addDataTarget(dt);
+
+		if (msg.getBoolean("useTextFileDataTarget")) {
+			dt = new TextFileDataTarget(fileName);
 			dt.initCtx(getApplicationContext());
 			mDataManager.addDataTarget(dt);
 		}
+		if (msg.getBoolean("useIntentDataTarget")) {
+			Log.d(TAG, "intent setting received");
+			dt = new IntentDataTarget();
+			dt.initCtx(getApplicationContext());
+			mDataManager.addDataTarget(dt);
+		}
+
+		// for (DataTarget dt : targets) {
+		// dt.initCtx(getApplicationContext());
+		// mDataManager.addDataTarget(dt);
+		// }
 		// DataTarget dt = new IntentDataTarget();
 		// dt.initCtx(getApplicationContext());
 		// mDataManager.addDataTarget(dt);

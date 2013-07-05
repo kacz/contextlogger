@@ -55,7 +55,27 @@ public class ContextLogger {
 
 	private static final String DEFAULT_TRACE_NAME = "CLTrace";
 
-	private String mTraceName = null;
+	private String mTraceName = DEFAULT_TRACE_NAME;
+	private String mTracePath;
+
+	public void setTraceName(String traceName) {
+		this.mTraceName = traceName;
+	}
+
+
+	private boolean mUseIntentDataTarget;
+
+	public void useIntentTarget(boolean use) {
+		this.mUseIntentDataTarget = use;
+	}
+
+	public void useTextFileTarget(boolean use) {
+		this.mUseTextFileDataTarget = use;
+	}
+
+	private boolean mUseTextFileDataTarget;
+
+
 
 	Context mCallerContext = null;
 
@@ -73,7 +93,8 @@ public class ContextLogger {
 
 	private final ArrayList<ContextListener> mListeners = new ArrayList<ContextListener>();
 
-	private ArrayList<DataTarget> mTargets = new ArrayList<DataTarget>();
+	// private final ArrayList<DataTarget> mTargets = new
+	// ArrayList<DataTarget>();
 
 	public static ContextLogger getInstance() {
 		return sInstance;
@@ -165,12 +186,7 @@ public class ContextLogger {
 		}
 		mIsRunning = true;
 
-		// Set the filename for current run
-		String dateString = new SimpleDateFormat("-yyMMdd-hhmmss")
-				.format(new Date());
-		mTraceName = Environment.getExternalStoragePublicDirectory(
-				Environment.DIRECTORY_DOWNLOADS).getAbsolutePath()
-				+ "/" + DEFAULT_TRACE_NAME + dateString;
+
 
 		// send the listeners to the service
 		initListeners();
@@ -187,7 +203,7 @@ public class ContextLogger {
 
 		// start tracing if needed
 		if (mDoTrace) {
-			Debug.startMethodTracing(mTraceName, TRACE_BUFF_SUZE);
+			Debug.startMethodTracing(mTracePath, TRACE_BUFF_SUZE);
 			// Debug.startMethodTracing(mTraceName);
 			Log.d(TAG, "method tracing started");
 		}
@@ -200,16 +216,29 @@ public class ContextLogger {
 			return;
 		}
 
-		mTargets = new ArrayList<DataTarget>();
-		mTargets.add(new FileDataTarget(mTraceName));
-		mTargets.add(new IntentDataTarget());
+
+		// Set the filename for current run
+		String dateString = new SimpleDateFormat("-yyMMdd-hhmmss")
+				.format(new Date());
+		mTracePath = Environment.getExternalStoragePublicDirectory(
+				Environment.DIRECTORY_DOWNLOADS).getAbsolutePath()
+				+ "/" + mTraceName + dateString;
+
+		// mTargets = new ArrayList<DataTarget>();
+		// mTargets.add(new FileDataTarget(tracePath));
+		// mTargets.add(new IntentDataTarget());
 
 		// send the listeners to the service
 		Message msg = Message.obtain(null,
 				ContextLoggerService.MSG_INIT_LISTENERS, 0, 0);
 		Bundle data = new Bundle();
 		data.putSerializable("listeners", mListeners);
-		data.putSerializable("targets", mTargets);
+		// data.putSerializable("targets", mTargets);
+
+		data.putString("fileName", mTracePath);
+		data.putBoolean("useTextFileDataTarget", mUseTextFileDataTarget);
+		data.putBoolean("useIntentDataTarget", mUseIntentDataTarget);
+		Log.d(TAG, "intent setting set:" + mUseIntentDataTarget);
 		msg.setData(data);
 
 		try {
@@ -270,17 +299,17 @@ public class ContextLogger {
 		mListeners.add(listener);
 	};
 
-	public void clearTargets() {
-		mTargets.clear();
-	}
+	// public void clearTargets() {
+	// mTargets.clear();
+	// }
 
-	public void addTarget(DataTarget target) {
-		if (mIsRunning == true) {
-			Log.e(TAG, "Logging already in progress.");
-			return;
-		}
-		mTargets.add(target);
-	}
+	// public void addTarget(DataTarget target) {
+	// if (mIsRunning == true) {
+	// Log.e(TAG, "Logging already in progress.");
+	// return;
+	// }
+	// mTargets.add(target);
+	// }
 	/**
 	 * 
 	 * @param enable

@@ -15,8 +15,12 @@
     <string name="pref_trace_summ">Enable method tracing</string>
     
     <string name="pref_target_cat">Data targets</string>
+    <string name="pref_key_target_intent">pref_target_intent</string>
     <string name="pref_target_intent">Display</string>
     <string name="pref_target_intent_summ">Show logs on the display</string>
+    <string name="pref_key_target_textfile">pref_target_textfile</string>
+    <string name="pref_target_textfile">Text file</string>
+    <string name="pref_target_textfile_summ">Save logs in human readable format</string>
     
     <string name="pref_logging_cat">Logging</string>
     

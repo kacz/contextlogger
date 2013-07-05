@@ -13,7 +13,12 @@
         android:title="@string/pref_target_cat"
         android:key="pref_target_cat">
 	    <CheckBoxPreference
-	        android:key="pref_target_intent"
+	        android:key="@string/pref_key_target_textfile"
+	        android:title="@string/pref_target_textfile"
+	        android:summary="@string/pref_target_textfile_summ"
+	        android:defaultValue="false" />
+	    <CheckBoxPreference
+	        android:key="@string/pref_key_target_intent"
 	        android:title="@string/pref_target_intent"
 	        android:summary="@string/pref_target_intent_summ"
 	        android:defaultValue="true" />
