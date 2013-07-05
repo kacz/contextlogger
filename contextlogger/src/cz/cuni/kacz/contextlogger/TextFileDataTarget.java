@@ -22,6 +22,7 @@ package cz.cuni.kacz.contextlogger;
 
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -189,6 +190,28 @@ public class TextFileDataTarget extends DefaultDataTarget {
 
 			mHeaderWriter.close();
 			mDataStream.close();
+
+			// concat files
+			FileOutputStream out = new FileOutputStream(mFileName
+					+ ".text.clog", true /* append */);
+			FileInputStream in = new FileInputStream(mFileName + ".text.cdata");
+			byte[] fileBytes;
+			int bytesRead = 0;
+			int COPY_BUFFER_SIZE = 1000;
+			fileBytes = new byte[COPY_BUFFER_SIZE];
+			bytesRead = in.read(fileBytes, 0, COPY_BUFFER_SIZE);
+			while (bytesRead != -1) {
+				out.write(fileBytes, 0, bytesRead);
+				bytesRead = in.read(fileBytes, 0, COPY_BUFFER_SIZE);
+			}
+			out.flush();
+			fileBytes = null;
+
+			File file = new File(mFileName + ".text.cdata");
+			file.delete();
+
+			in.close();
+			out.close();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
