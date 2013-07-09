@@ -44,6 +44,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 import cz.cuni.kacz.contextlogger.ContextLogger;
 import cz.cuni.kacz.contextlogger.listeners.AcceleraionListener;
 import cz.cuni.kacz.contextlogger.listeners.AmbientTemperatureListener;
@@ -199,6 +200,9 @@ public class MainActivity extends Activity {
 								@Override
 								public void run() {
 									stopButton.setEnabled(true);
+									Toast.makeText(mainActivity,
+											"ContextLogging started",
+											Toast.LENGTH_SHORT).show();
 								}
 							});
 
@@ -217,6 +221,9 @@ public class MainActivity extends Activity {
 								@Override
 								public void run() {
 									startButton.setEnabled(true);
+									Toast.makeText(mainActivity,
+											"ContextLogging stopped",
+											Toast.LENGTH_SHORT).show();
 								}
 							});
 
