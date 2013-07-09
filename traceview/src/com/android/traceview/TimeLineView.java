@@ -2036,7 +2036,7 @@ public class TimeLineView extends Composite implements Observer {
 						int[] poly = { 0,
 								y1 + logRowHeight + logRowYMarginHalf, 0,
 								y1 + logRowHeight + logRowYMarginHalf, -1, -1,
-								-1, -1 };
+								-1, -logRowHeight };
 
 						Pattern p = new Pattern(display, 0f, y1
 								+ logRowYMarginHalf, 0f, y1 + logRowHeight
@@ -2053,7 +2053,7 @@ public class TimeLineView extends Composite implements Observer {
 							poly[6] = e.getKey();
 							poly[7] = y1 + logRowHeight + logRowYMarginHalf
 									- e.getValue();
-							if (poly[7] != -logRowHeight)
+							if (poly[1] != -logRowHeight)
 							 {
 								gcImage.fillPolygon(poly);
 							}
