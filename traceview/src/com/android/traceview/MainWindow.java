@@ -281,7 +281,8 @@ public class MainWindow extends ApplicationWindow {
             return;
         }
 
-        String traceName = args[len - 1];
+		String baseTraceName = args[len - 1];
+		String traceName = baseTraceName;
         File file = new File(traceName);
         if (file.exists() && file.isDirectory()) {
             System.out.printf("Qemu trace files not supported yet.\n");
@@ -309,7 +310,7 @@ public class MainWindow extends ApplicationWindow {
                 }
             }
 
-			String contextLogName = traceName + ".clog";
+			String contextLogName = baseTraceName + ".clog";
             try {
                 reader = new DmTraceReader(traceName, regression);
             } catch (IOException e) {
