@@ -160,7 +160,9 @@ public class ContextLogData implements TimeLineView.LogRow {
 			double doubleValue = floorDoubleEntry.getValue()
 					+ (double) (timestamp - floorDoubleEntry.getKey())
 					/ (double) (ceilingDoubleEntry.getKey() - floorDoubleEntry
-							.getKey()) * ceilingDoubleEntry.getValue();
+							.getKey())
+					* (ceilingDoubleEntry.getValue() - floorDoubleEntry
+							.getValue());
 			return doubleValue;
 		}
 		return null;
