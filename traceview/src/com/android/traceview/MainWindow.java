@@ -28,6 +28,7 @@ import java.util.Properties;
 
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.window.ApplicationWindow;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
@@ -107,10 +108,21 @@ public class MainWindow extends ApplicationWindow {
         GridData data = new GridData(GridData.FILL_BOTH);
         sashForm1.setLayoutData(data);
 
-        // Create the timeline view
-		new TimeLineView(sashForm1, mReader, mLogReader, selectionController);
 
-		if (mLogReader != null) {
+
+		if (mLogReader != null && mReader.haveRealTime() == false) {
+			// display some error
+			MessageDialog
+					.openError(
+							getShell(),
+							"Real time missing",
+							"Context log analysis disabled, since real time missing from the trace file.");
+		}
+		if (mLogReader != null && mReader.haveRealTime() == true) {
+			// Create the timeline view
+			new TimeLineView(sashForm1, mReader, mLogReader,
+					selectionController);
+
 			final TabFolder tabFolder = new TabFolder(sashForm1, SWT.BORDER);
 
 			// Create the profile view
@@ -129,6 +141,9 @@ public class MainWindow extends ApplicationWindow {
 			tabItem.setText("ProblemView");
 			tabItem.setControl(problemView);
 		} else {
+			// Create the timeline view
+			new TimeLineView(sashForm1, mReader, null, selectionController);
+
 			// Create the profile view
 			new ProfileView(sashForm1, mReader, selectionController);
 		}
