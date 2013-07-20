@@ -40,6 +40,7 @@ import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
@@ -182,7 +183,10 @@ public class ProblemView extends Composite {
 
 		Composite mConstraintComposite = new Composite(
 				constraintHolderComposite, SWT.NONE);
-		mConstraintComposite.setLayout(new FillLayout());
+		RowLayout constraintLayout = new RowLayout();
+		constraintLayout.pack = true;
+		constraintLayout.type = SWT.HORIZONTAL;
+		mConstraintComposite.setLayout(constraintLayout);
 
 		Label constraintLabel = new Label(mConstraintComposite, SWT.NONE);
 		constraintLabel.setText("Constraint:");
