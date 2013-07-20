@@ -878,9 +878,17 @@ public class ProblemView extends Composite {
 
 				// Collections.reverse(sorted);
 
+				int counter = 0;
+				int lastPercentage = 0;
 				for (Map.Entry<Long, Integer> e : sorted) {
+
 					int percentage = 100 * e.getValue()
 							/ mInsideTimestamps.size();
+					counter += 1;
+					if (counter > 5 && lastPercentage != percentage) {
+						break;
+					}
+					lastPercentage = percentage;
 					mResultBox.append("\t" + percentage + "% " + e.getKey()
 							+ "\n");
 				}
