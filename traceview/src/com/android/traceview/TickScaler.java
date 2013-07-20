@@ -106,7 +106,7 @@ class TickScaler {
     }
 
     public void computeTicks(boolean useGivenEndPoints) {
-        int numTicks = mNumPixels / mPixelsPerTick;
+		long numTicks = mNumPixels / mPixelsPerTick;
         mRangeVal = mMaxVal - mMinVal;
         mTickIncrement = mRangeVal / numTicks;
         double dlogTickIncrement = Math.log10(mTickIncrement);
@@ -127,16 +127,16 @@ class TickScaler {
             // Round up the max val to the next minor tick
             double minorTickIncrement = mTickIncrement / 5;
             double dval = mMaxVal / minorTickIncrement;
-            int ival = (int) dval;
+			long ival = (long) dval;
             if (ival != dval)
-                mMaxVal = (ival + 1) * minorTickIncrement;
+				mMaxVal = (ival + 1) * minorTickIncrement;
 
             // Round down the min val to a multiple of tickIncrement
-            ival = (int) (mMinVal / mTickIncrement);
+			ival = (long) (mMinVal / mTickIncrement);
             mMinVal = ival * mTickIncrement;
             mMinMajorTick = mMinVal;
         } else {
-            int ival = (int) (mMinVal / mTickIncrement);
+			long ival = (long) (mMinVal / mTickIncrement);
             mMinMajorTick = ival * mTickIncrement;
             if (mMinMajorTick < mMinVal)
                 mMinMajorTick = mMinMajorTick + mTickIncrement;

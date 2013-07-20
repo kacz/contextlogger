@@ -3475,6 +3475,7 @@ public class TimeLineView extends Composite implements Observer {
             }
             mScaleInfo.setMinVal(tMinNew);
             mScaleInfo.setMaxVal(tMaxNew);
+			mScaleInfo.computeTicks(false);
             mSurface.redraw();
 			if (logsAvailable) {
 				mLogSurface.redraw();
