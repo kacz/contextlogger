@@ -103,6 +103,9 @@ public class DataManager {
 							}
 							break;
 						case STRING:
+							if (entry.stringValue == null) {
+								entry.stringValue = "null";
+							}
 							for (DataTarget dt : mDataTargets) {
 								dt.insertLog(listenerId, entry.time,
 										entry.stringValue);
