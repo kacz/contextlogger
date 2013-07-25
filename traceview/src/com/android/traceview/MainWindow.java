@@ -324,6 +324,9 @@ public class MainWindow extends ApplicationWindow {
                     System.exit(1);
                 }
             }
+			if (baseTraceName.contains(".trace")) {
+				baseTraceName = baseTraceName.replace(".trace", "");
+			}
 
 			String contextLogName = baseTraceName + ".clog";
             try {

@@ -647,11 +647,11 @@ public class TimeLineView extends Composite implements Observer {
         });
 
 		// debug
-		System.out.println("trace start: " + reader.getStartTime());
-		if (logsAvailable) {
-			System.out.println("log start: " + logReader.getStartTime());
-			System.out.println("diff: " + mStartDiff);
-		} 
+		// System.out.println("trace start: " + reader.getStartTime());
+		// if (logsAvailable) {
+		// System.out.println("log start: " + logReader.getStartTime());
+		// System.out.println("diff: " + mStartDiff);
+		// }
         setData(reader.getThreadTimeRecords());
 		if (logsAvailable) {
 			setLogData(logReader.getLogRecords());
