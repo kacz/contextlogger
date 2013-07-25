@@ -1947,6 +1947,12 @@ public class TimeLineView extends Composite implements Observer {
 							lastY = e.getValue();
 						}
 
+						if (lastX != -1 && lastX < lastPix) {
+							gcImage.drawLine(lastX, y1 + logRowHeight
+									+ logRowYMarginHalf - lastY, lastPix, y1
+									+ logRowHeight + logRowYMarginHalf - lastY);
+						}
+
 						break;
 					}
 				case LONG:
@@ -1996,6 +2002,12 @@ public class TimeLineView extends Composite implements Observer {
 							}
 							lastX = e.getKey();
 							lastY = e.getValue();
+						}
+
+						if (lastX != -1 && lastX < lastPix) {
+							gcImage.drawLine(lastX, y1 + logRowHeight
+									+ logRowYMarginHalf - lastY, lastPix, y1
+									+ logRowHeight + logRowYMarginHalf - lastY);
 						}
 
 						break;
