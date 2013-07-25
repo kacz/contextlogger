@@ -83,14 +83,16 @@ public class ScreenOrientationListener extends DefaultContextListener {
 				int orientation = -1;
 				orientation = getAppContext().getResources().getConfiguration().orientation;
 				if (orientation != oldOrientation) {
-					mDataManager.insertLog(labelOrientation, time, rotation);
+					mDataManager.insertLog(labelOrientation, time, orientation);
 					mDataManager.insertLog(labelLastOrientation, time,
 							oldOrientation);
 					oldOrientation = orientation;
 				}
 
-				mDataManager.insertLog(labelTimeSinceOrientationChange, time,
-						(double) (time - lastChangeTime) / 1000000);
+				if (lastChangeTime != 0) {
+					mDataManager.insertLog(labelTimeSinceOrientationChange, time,
+							(double) (time - lastChangeTime) / 1000000);
+				}
 			}
 		}, 0, period);
 	}
