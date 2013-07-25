@@ -37,7 +37,7 @@
     <string name="pref_key_barometer_listener">pref_barometer_listener</string>
     
     <string name="pref_battery_listener">Battery</string>
-    <string name="pref_battery_listener_summ">TODO</string>
+    <string name="pref_battery_listener_summ">Battery status</string>
     <string name="pref_key_battery_listener">pref_battery_listener</string>
     
     <string name="pref_cpu_listener">Cpu</string>
@@ -53,7 +53,7 @@
 	<string name="pref_key_gps_status_listener">gps_status_listener</string>
 	
 	<string name="pref_gyroscope_listener">Gyroscope</string>
-    <string name="pref_gyroscope_listener_summ">TODO</string>
+    <string name="pref_gyroscope_listener_summ">Angular speed around axes X,Y,Z</string>
 	<string name="pref_key_gyroscope_listener">pref_gyroscope_listener</string>
 
 	<string name="pref_light_listener">Ambient light</string>
@@ -97,7 +97,7 @@
 	<string name="pref_key_screen_state_listener">pref_screen_state_listener</string>
 	
 	<string name="pref_telephony_listener">Telephony</string>
-    <string name="pref_telephony_listener_summ">TODO</string>
+    <string name="pref_telephony_listener_summ">Cell service state</string>
     <string name="pref_key_telephony_listener">pref_telephony_listener</string>
     
 	<string name="pref_traffic_listener">Traffic</string>
@@ -109,7 +109,7 @@
     <string name="pref_key_traffic_speed_listener">pref_traffic_speed_listener</string>
     
     <string name="pref_wifi_listener">Wifi</string>
-    <string name="pref_wifi_listener_summ">TODO</string>
+    <string name="pref_wifi_listener_summ">Wifi connection status</string>
 	<string name="pref_key_wifi_listener">pref_wifi_listener</string>
 	
     <string name="pref_wifi_state_listener">Wifi state</string>
