@@ -31,6 +31,13 @@ import java.io.OutputStreamWriter;
 import android.content.pm.PackageManager;
 import android.util.Log;
 
+/**
+ * DataTarget for saving context logs into a text file. The structure of the
+ * file is similar to the output of the cz.cuni.kacz.contextlogger.DataTarget.
+ * 
+ * @author kacz
+ * 
+ */
 public class TextFileDataTarget extends DefaultDataTarget {
 
 	private static final String TAG = "FileDataTarget";
@@ -46,6 +53,12 @@ public class TextFileDataTarget extends DefaultDataTarget {
 	private BufferedWriter mDataStream;
 	private BufferedWriter mHeaderWriter;
 
+	/**
+	 * DataTarget saving the logs into a text file.
+	 * 
+	 * @param fileName
+	 *            Name of the text file to save into.
+	 */
 	public TextFileDataTarget(String fileName) {
 		mFileName = fileName;
 	}

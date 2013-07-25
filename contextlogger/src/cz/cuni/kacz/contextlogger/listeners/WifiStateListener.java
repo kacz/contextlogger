@@ -32,6 +32,12 @@ import android.util.Log;
 import cz.cuni.kacz.contextlogger.DataManager;
 import cz.cuni.kacz.contextlogger.TimeSource;
 
+/**
+ * ContextListener for logging Wifi setvice information.
+ * 
+ * @author kacz
+ * 
+ */
 public class WifiStateListener extends DefaultContextListener {
 
 	/**

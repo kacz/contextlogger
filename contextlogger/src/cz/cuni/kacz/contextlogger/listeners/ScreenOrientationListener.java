@@ -29,6 +29,12 @@ import android.view.WindowManager;
 import cz.cuni.kacz.contextlogger.DataManager;
 import cz.cuni.kacz.contextlogger.TimeSource;
 
+/**
+ * ContextListener for logging screen orientation information.
+ * 
+ * @author kacz
+ * 
+ */
 public class ScreenOrientationListener extends DefaultContextListener {
 
 	/**

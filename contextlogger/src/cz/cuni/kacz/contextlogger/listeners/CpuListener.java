@@ -26,11 +26,15 @@ import java.io.RandomAccessFile;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import android.net.TrafficStats;
-import android.util.Log;
 import cz.cuni.kacz.contextlogger.DataManager;
 import cz.cuni.kacz.contextlogger.TimeSource;
 
+/**
+ * ContextListener for logging CPU information.
+ * 
+ * @author kacz
+ * 
+ */
 public class CpuListener extends DefaultContextListener {
 
 	/**
@@ -38,15 +42,15 @@ public class CpuListener extends DefaultContextListener {
 	 */
 	private static final long serialVersionUID = 1L;
 
-	private boolean running = false;
+	private final boolean running = false;
 	private Timer timer;
 	int period = 1000;
 
 	RandomAccessFile mReader;
 
 	// log names and types
-	private String labelCpu = "CPU";
-	private int typeCpu = DataManager.FLOAT;
+	private final String labelCpu = "CPU";
+	private final int typeCpu = DataManager.FLOAT;
 
 	long oldCpu = 0;
 	long oldIdle = 0;
@@ -63,6 +67,7 @@ public class CpuListener extends DefaultContextListener {
 
 		timer = new Timer();
 		timer.scheduleAtFixedRate(new TimerTask() {
+			@Override
 			public void run() {
 				long time = TimeSource.getTimeOfDay();
 

@@ -29,6 +29,12 @@ import android.util.Log;
 import cz.cuni.kacz.contextlogger.DataManager;
 import cz.cuni.kacz.contextlogger.TimeSource;
 
+/**
+ * ContextListener for logging GPS location provider status information.
+ * 
+ * @author kacz
+ * 
+ */
 public class GpsStatusListener extends DefaultContextListener {
 
 	GpsStatus.Listener mGpsStatusListener;

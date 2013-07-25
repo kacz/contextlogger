@@ -33,6 +33,13 @@ import java.io.OutputStreamWriter;
 import android.content.pm.PackageManager;
 import android.util.Log;
 
+/**
+ * DataTarget for saving context logs into a binary file. The structure of the
+ * file is described in the thesis.
+ * 
+ * @author kacz
+ * 
+ */
 public class FileDataTarget extends DefaultDataTarget {
 
 	/**
@@ -53,6 +60,12 @@ public class FileDataTarget extends DefaultDataTarget {
 	private DataOutputStream mDataStream;
 	private BufferedWriter mHeaderWriter;
 
+	/**
+	 * DataTarget saving the logs into a binary file.
+	 * 
+	 * @param fileName
+	 *            Name of the binary file to save into.
+	 */
 	public FileDataTarget(String fileName) {
 		mFileName = fileName;
 	}

@@ -37,26 +37,41 @@ import android.util.Log;
 import android.widget.Toast;
 import cz.cuni.kacz.contextlogger.listeners.ContextListener;
 
+/**
+ * Main class of the background process of the ContextLogger library. It is
+ * responsible for the communication with the foreground application and for the
+ * managing of the components of the library.
+ * 
+ * @author kacz
+ * 
+ */
 public class ContextLoggerService extends Service {
 
 	static final String TAG = "ContextLoggerService";
+
 	static final int MSG_INIT_LISTENERS = 1;
 	static final int MSG_START_LOGGING = 2;
 	static final int MSG_STOP_LOGGING = 3;
 
+	/** Reference to the ApplicationContext the service is bond to. */
 	public static Context mAppContext = null;
+
+	/** Intent action used in the IntentDataTarget. */
 	public String ACTION = "START_LOGGING";
 
 	/**
 	 * Target we publish for clients to send messages to IncomingHandler.
 	 */
 	final Messenger mMessenger = new Messenger(new IncomingHandler());
+
+	/** List of ContextListeners we will use in the next logging session. */
 	private List<ContextListener> mListeners = null;
 
 	static {
 		System.loadLibrary("timesource");
 	}
 
+	/** DataManager instance responsible for storing the context logs. */
 	DataManager mDataManager = null;
 
 	@Override
@@ -64,13 +79,6 @@ public class ContextLoggerService extends Service {
 		Log.i(TAG, "onCreate");
 		mAppContext = getApplicationContext();
 		mDataManager = new DataManager();
-		// mDataManager
-		// .addDataTarget(new IntentDataTarget(getApplicationContext()));
-		// mDataManager.addDataTarget(new
-		// FileDataTarget(getApplicationContext(),
-		// "probaxx"));
-		// mDataManager.addDataTarget(new TextFileDataTarget(
-		// getApplicationContext(), "probaxx"));
 		Log.i(TAG, "onCreate ready");
 	}
 
@@ -113,10 +121,13 @@ public class ContextLoggerService extends Service {
 		}
 	}
 
+	/**
+	 * Starts the logging session.
+	 */
 	private void startLogging() {
 		Log.d(TAG, "startlogging");
 
-		timerTest();
+		// timerTest();
 
 		// start the listeners
 		for (ContextListener l : mListeners) {
@@ -124,6 +135,7 @@ public class ContextLoggerService extends Service {
 		}
 	}
 
+	/** Android system time source comparision function. */
 	private void timerTest() {
 		// test timers
 		long[] direct = new long[10];
@@ -225,6 +237,16 @@ public class ContextLoggerService extends Service {
 		Log.d(TAG, "min:" + min + " max:" + max + " avg:" + avg);
 	}
 
+	/**
+	 * Initializes the data targets used in this session. FileDataTarget is
+	 * always initialized. Other data targets are created if the foreground
+	 * application requested them. Filename for the data target comes from the
+	 * message.
+	 * 
+	 * @param msg
+	 *            Bundle message containing filename and flags for additional
+	 *            data targets.
+	 */
 	private void initTargets(Bundle msg) {
 		Log.d(TAG, "initTargets");
 
@@ -250,18 +272,16 @@ public class ContextLoggerService extends Service {
 			mDataManager.addDataTarget(dt);
 		}
 
-		// for (DataTarget dt : targets) {
-		// dt.initCtx(getApplicationContext());
-		// mDataManager.addDataTarget(dt);
-		// }
-		// DataTarget dt = new IntentDataTarget();
-		// dt.initCtx(getApplicationContext());
-		// mDataManager.addDataTarget(dt);
-		// dt = new FileDataTarget("/mnt/sdcard/Download/akarmi");
-		// dt.initCtx(getApplicationContext());
-		// mDataManager.addDataTarget(dt);
 	}
 
+	/**
+	 * Initializes the ContextListeners. Each listener from the list is checked
+	 * for permissions. If the permissions are satisfied, listener is added to
+	 * the list of initialized listeners.
+	 * 
+	 * @param listeners
+	 *            List of listeners comeing from the foreground application.
+	 */
 	private void initListeners(List<ContextListener> listeners) {
 		Log.d(TAG, "initListeners");
 
@@ -282,6 +302,9 @@ public class ContextLoggerService extends Service {
 		}
 	}
 
+	/**
+	 * Stops the logging session.
+	 */
 	private void stopLogging() {
 		mDataManager.finish();
 		Log.d(TAG, "stoplogging");

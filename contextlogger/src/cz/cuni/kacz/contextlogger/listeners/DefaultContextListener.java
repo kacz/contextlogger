@@ -26,6 +26,13 @@ import android.content.Context;
 import cz.cuni.kacz.contextlogger.ContextLoggerService;
 import cz.cuni.kacz.contextlogger.DataManager;
 
+/**
+ * Default implementation of the ContextLogger interface. Provides default
+ * implementation of the checkPermissions() and init() functions.
+ * 
+ * @author kacz
+ * 
+ */
 public abstract class DefaultContextListener implements ContextListener,
 		Serializable {
 

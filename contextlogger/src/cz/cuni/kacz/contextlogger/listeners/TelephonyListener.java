@@ -31,6 +31,12 @@ import android.telephony.TelephonyManager;
 import cz.cuni.kacz.contextlogger.DataManager;
 import cz.cuni.kacz.contextlogger.TimeSource;
 
+/**
+ * ContextListener for logging telephony service status information.
+ * 
+ * @author kacz
+ * 
+ */
 public class TelephonyListener extends DefaultContextListener {
 
 	private TelephonyManager mTelephonyManager;

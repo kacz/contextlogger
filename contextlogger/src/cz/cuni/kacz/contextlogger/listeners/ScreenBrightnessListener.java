@@ -30,6 +30,12 @@ import java.util.TimerTask;
 import cz.cuni.kacz.contextlogger.DataManager;
 import cz.cuni.kacz.contextlogger.TimeSource;
 
+/**
+ * ContextListener for logging screen brightness information.
+ * 
+ * @author kacz
+ * 
+ */
 public class ScreenBrightnessListener extends DefaultContextListener {
 
 	/**

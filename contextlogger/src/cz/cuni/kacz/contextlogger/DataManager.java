@@ -31,18 +31,45 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import android.util.Log;
 
+/**
+ * Component responsible for passing the context log records to all the data
+ * targets. Contains a blocking queue of log records. Runs a worker thread for
+ * consuming the records from the queue.
+ * 
+ * @author kacz
+ * 
+ */
+/**
+ * @author kacz
+ * 
+ */
 public class DataManager {
 
 	private final String TAG = "DataManager";
 
 	boolean stop;
 
+	/** Queue of data targets. */
 	private final ConcurrentLinkedQueue<DataTarget> mDataTargets;
 
+	/**
+	 * Log name - log ID map.
+	 */
 	private Map<String, Integer> mListenerIDs = null;
+
+	/**
+	 * List containing types of each log.
+	 */
 	private List<Integer> mValueTypes = null;
 
+	/**
+	 * Consuming thread of context log records.
+	 */
 	Thread mWorker = null;
+
+	/**
+	 * Queue containing log recirds.
+	 */
 	private BlockingQueue<LogEntry> mLogs = null;
 
 	public static final int INT = 1;
@@ -51,6 +78,10 @@ public class DataManager {
 	public static final int DOUBLE = 4;
 	public static final int STRING = 5;
 
+	/**
+	 * Package private constructor for the DataManager class. Starts the worker
+	 * thread responsible for passing the records to the data targets.
+	 */
 	DataManager() {
 		mDataTargets = new ConcurrentLinkedQueue<DataTarget>();
 		
@@ -122,6 +153,12 @@ public class DataManager {
 		mWorker.start();
 	}
 
+	/**
+	 * Add data target to the list of targets.
+	 * 
+	 * @param t
+	 *            DataTarget to add.
+	 */
 	public void addDataTarget(DataTarget t) {
 		if (t.checkPermissions()) {
 			t.open();
@@ -130,6 +167,10 @@ public class DataManager {
 		}
 	}
 
+	/**
+	 * Stop the work of data targets. They will not accept more log records and
+	 * close their opened files if any.
+	 */
 	public void finish() {
 		stop = true;
 		Log.d(TAG, "stop true");
@@ -140,35 +181,89 @@ public class DataManager {
 		mValueTypes.clear();
 	}
 
+	/**
+	 * Passes a LONG type log to the data targets.
+	 * 
+	 * @param listenerName
+	 *            Name of the piece of context represented by the record.
+	 * @param time
+	 *            Timestamp of the record.
+	 * @param value
+	 *            Value of the record.
+	 */
 	public void insertLog(String listenerName, long time, long value) {
 		mLogs.add(new LogEntry(time, listenerName, value));
-		/*
-		 * for(DataTarget dt : mDataTargets) { dt.insertLog(listenerName, time,
-		 * value); }
-		 */
 		Log.d(TAG, "insertLog: " + String.valueOf(value) + " long");
 	}
 
+	/**
+	 * Passes a FLOAT type log to the data targets.
+	 * 
+	 * @param listenerName
+	 *            Name of the piece of context represented by the record.
+	 * @param time
+	 *            Timestamp of the record.
+	 * @param value
+	 *            Value of the record.
+	 */
 	public void insertLog(String listenerName, long time, float value) {
 		mLogs.add(new LogEntry(time, listenerName, value));
 		Log.d(TAG, "insertLog: " + String.valueOf(value) + " float");
 	}
 
+	/**
+	 * Passes a INT type log to the data targets.
+	 * 
+	 * @param listenerName
+	 *            Name of the piece of context represented by the record.
+	 * @param time
+	 *            Timestamp of the record.
+	 * @param value
+	 *            Value of the record.
+	 */
 	public void insertLog(String listenerName, long time, int value) {
 		mLogs.add(new LogEntry(time, listenerName, value));
 		Log.d(TAG, "insertLog: " + String.valueOf(value) + " int");
 	}
 
+	/**
+	 * Passes a DOUBLE type log to the data targets.
+	 * 
+	 * @param listenerName
+	 *            Name of the piece of context represented by the record.
+	 * @param time
+	 *            Timestamp of the record.
+	 * @param value
+	 *            Value of the record.
+	 */
 	public void insertLog(String listenerName, long time, double value) {
 		mLogs.add(new LogEntry(time, listenerName, value));
 		Log.d(TAG, "insertLog: " + String.valueOf(value) + " double");
 	}
 
+	/**
+	 * Passes a STING type log to the data targets.
+	 * 
+	 * @param listenerName
+	 *            Name of the piece of context represented by the record.
+	 * @param time
+	 *            Timestamp of the record.
+	 * @param value
+	 *            Value of the record.
+	 */
 	public void insertLog(String listenerName, long time, String value) {
 		mLogs.add(new LogEntry(time, listenerName, value));
 		Log.d(TAG, "insertLog: " + value + " string");
 	}
 
+	/**
+	 * Registers a piece of context logged by a listener.
+	 * 
+	 * @param label
+	 *            Name of the piece of context
+	 * @param type
+	 *            Type of the piece of context.
+	 */
 	public void registerListener(String label, int type) {
 		int id = mValueTypes.size();
 		mListenerIDs.put(label, id);

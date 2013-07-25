@@ -22,16 +22,47 @@ package cz.cuni.kacz.contextlogger.listeners;
 
 import cz.cuni.kacz.contextlogger.DataManager;
 
+/**
+ * ContextListener interface can be implemented by classes with the aim to
+ * capture context data and save it.
+ * 
+ * @author kacz
+ * 
+ */
 public interface ContextListener {
 
+	/**
+	 * Start the listening. After this method gets called, the listener starts
+	 * to produce log records and save them to DataManager's queue.
+	 */
 	public void startListening();
 
+	/**
+	 * Stop the listening.
+	 */
 	public void stopListening();
 
+	/**
+	 * Initialize the listener. Save a reference to the DataManager.
+	 * 
+	 * @param dm
+	 *            Reference to the DataManager.
+	 */
 	public void init(DataManager dm);
 
+	/**
+	 * Function to check whether the application has the correct permissions to
+	 * access data required by this listener.
+	 * 
+	 * @return If every permission is granted returns true, otherwise false.
+	 */
 	public boolean checkPermissions();
 
+	/**
+	 * Return the name of the listener.
+	 * 
+	 * @return the name of the listener.
+	 */
 	public String getTag();
 
 }

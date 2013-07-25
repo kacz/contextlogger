@@ -32,6 +32,12 @@ import android.util.Log;
 import cz.cuni.kacz.contextlogger.DataManager;
 import cz.cuni.kacz.contextlogger.TimeSource;
 
+/**
+ * ContextListener for logging passive location data.
+ * 
+ * @author kacz
+ * 
+ */
 public class PassiveLocationListener extends DefaultContextListener {
 
 	private LocationManager mLocManager;

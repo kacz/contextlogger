@@ -23,6 +23,12 @@ package cz.cuni.kacz.contextlogger;
 import android.content.Intent;
 import android.util.Log;
 
+/**
+ * DataTarget for broadcasting context logs back to the system.
+ * 
+ * @author kacz
+ * 
+ */
 public class IntentDataTarget extends DefaultDataTarget {
 
 	/**

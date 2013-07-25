@@ -31,6 +31,12 @@ import android.util.Log;
 import cz.cuni.kacz.contextlogger.DataManager;
 import cz.cuni.kacz.contextlogger.TimeSource;
 
+/**
+ * ContextListener for logging screen state information.
+ * 
+ * @author kacz
+ * 
+ */
 public class ScreenStateListener extends DefaultContextListener {
 
 	/**

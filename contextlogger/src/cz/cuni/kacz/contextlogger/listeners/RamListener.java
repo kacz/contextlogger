@@ -20,6 +20,12 @@
 
 package cz.cuni.kacz.contextlogger.listeners;
 
+/**
+ * ContextListener for logging RAM information.
+ * 
+ * @author kacz
+ * 
+ */
 import java.util.Timer;
 import java.util.TimerTask;
 

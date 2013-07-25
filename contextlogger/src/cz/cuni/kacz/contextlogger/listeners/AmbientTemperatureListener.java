@@ -28,6 +28,12 @@ import android.hardware.SensorManager;
 import cz.cuni.kacz.contextlogger.DataManager;
 import cz.cuni.kacz.contextlogger.TimeSource;
 
+/**
+ * ContextListener for logging temperature data.
+ * 
+ * @author kacz
+ * 
+ */
 public class AmbientTemperatureListener extends DefaultContextListener {
 
 	/**

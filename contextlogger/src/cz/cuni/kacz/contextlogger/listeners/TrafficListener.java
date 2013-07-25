@@ -29,6 +29,12 @@ import android.os.Process;
 import cz.cuni.kacz.contextlogger.DataManager;
 import cz.cuni.kacz.contextlogger.TimeSource;
 
+/**
+ * ContextListener for logging network traffic information.
+ * 
+ * @author kacz
+ * 
+ */
 public class TrafficListener extends DefaultContextListener {
 
 	/**

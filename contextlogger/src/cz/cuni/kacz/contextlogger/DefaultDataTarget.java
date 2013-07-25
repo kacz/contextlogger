@@ -4,6 +4,13 @@ import java.io.Serializable;
 
 import android.content.Context;
 
+/**
+ * Default implementation of the DataTarget interface. Defines a final method
+ * for saving a reference to the application context.
+ * 
+ * @author kacz
+ * 
+ */
 public abstract class DefaultDataTarget implements DataTarget, Serializable {
 
 	/**
@@ -13,7 +20,8 @@ public abstract class DefaultDataTarget implements DataTarget, Serializable {
 
 	Context mContext;
 
-	public void initCtx(Context ctx) {
+	@Override
+	public final void initCtx(Context ctx) {
 		mContext = ctx;
 	}
 }

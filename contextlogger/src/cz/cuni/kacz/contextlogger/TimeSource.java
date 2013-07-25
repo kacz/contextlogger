@@ -20,12 +20,18 @@
 
 package cz.cuni.kacz.contextlogger;
 
+/**
+ * Class for accessing system time sources.
+ * 
+ * @author kacz
+ * 
+ */
 public class TimeSource {
 	public static long nanoTime() {
 		return System.nanoTime();
 	}
 
+	/** Access method to the systems gettimeofday() function */
 	public native static long getTimeOfDay();
 
-	public static native String stringFromJNI();
 }

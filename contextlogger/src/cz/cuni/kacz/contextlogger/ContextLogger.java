@@ -40,11 +40,19 @@ import android.widget.Toast;
 import cz.cuni.kacz.contextlogger.listeners.ContextListener;
 
 /**
+ * ContextLogger proxy class.
+ * <p>
+ * This singleton class provides public API of the ContextLogger library. The
+ * application can hold a reference to it and use it for the communication with
+ * the background process.
  * 
  * @author kacz
  * 
  */
-
+/**
+ * @author kacz
+ * 
+ */
 public class ContextLogger {
 
 	private static final ContextLogger sInstance = new ContextLogger();;
@@ -54,10 +62,15 @@ public class ContextLogger {
 	private static final String TAG = "ContextLogger";
 
 	private static final String DEFAULT_TRACE_NAME = "CLTrace";
-
 	private String mTraceName = DEFAULT_TRACE_NAME;
+
 	private String mTracePath;
 
+	/**
+	 * Set the filename of the trace and context log files.
+	 * 
+	 * @param traceName
+	 */
 	public void setTraceName(String traceName) {
 		this.mTraceName = traceName;
 	}
@@ -65,16 +78,41 @@ public class ContextLogger {
 
 	private boolean mUseIntentDataTarget;
 
+	/**
+	 * Enables or disables IntentDataTarget.
+	 * 
+	 * @param use
+	 *            True for enable, false for disable.
+	 */
 	public void useIntentTarget(boolean use) {
 		this.mUseIntentDataTarget = use;
 	}
 
+	private boolean mUseTextFileDataTarget;
+
+	/**
+	 * Enables or disables TextFiletDataTarget.
+	 * 
+	 * @param use
+	 *            True for enable, false for disable.
+	 */
 	public void useTextFileTarget(boolean use) {
 		this.mUseTextFileDataTarget = use;
 	}
 
-	private boolean mUseTextFileDataTarget;
-
+	/**
+	 * Enables or disables method tracing.
+	 * 
+	 * @param enable
+	 *            True for enable, false for disable.
+	 */
+	public void enableTracing(boolean enable) {
+		if (mIsRunning == true) {
+			Log.e(TAG, "Logging already in progress.");
+			return;
+		}
+		mDoTrace = enable;
+	};
 
 
 	Context mCallerContext = null;
@@ -89,22 +127,29 @@ public class ContextLogger {
 	/** Flag indicating whether we have called bind on the service. */
 	boolean mBound;
 
+	/** Default size of the trace file. */
 	private final int TRACE_BUFF_SUZE = 128 * 1024 * 1024;// 128M
 
+	/** List of ContextListeners to use. */
 	private final ArrayList<ContextListener> mListeners = new ArrayList<ContextListener>();
 
+	/**
+	 * Returns reference to the singleton instance.
+	 * 
+	 * @return Reference to the singleton.
+	 */
 	public static ContextLogger getInstance() {
 		return sInstance;
 	}
 
+	/** Private constructor of the singleton. */
 	private ContextLogger() {
 		mInitialized = false;
 	};
 
 	/**
-	 * 
-	 * Constructor. Sets up application context reference and starts the logger
-	 * service process.
+	 * Initializes the library. Sets up application context reference and starts
+	 * the logger service process.
 	 * 
 	 * @param context
 	 */
@@ -121,8 +166,6 @@ public class ContextLogger {
 		if (ContextLogger.class == null) {
 			Log.d(TAG, "class");
 		}
-		Intent akarmi = new Intent(this.mCallerContext,
-				ContextLoggerService.class);
 
 		boolean succ = mCallerContext.bindService(new Intent(
 				this.mCallerContext, ContextLoggerService.class), mConnection,
@@ -137,6 +180,9 @@ public class ContextLogger {
 		}
 	}
 
+	/**
+	 * Stops the background service.
+	 */
 	public void stopService() {
 		mCallerContext.unbindService(mConnection);
 	}
@@ -168,22 +214,26 @@ public class ContextLogger {
 	};
 
 	/**
-	 * 
+	 * Starts the logging session. Sends the listeners to the background
+	 * process. Sends a message to the background process to start the the
+	 * logging. If method tracing is requested, it will be also started. If the
+	 * background process in not connected or the logging was already started,
+	 * this method does nothing.
 	 */
 	public void startLogging() {
 		Log.d(TAG, "startLogging");
 
+		// background process not connected
 		if (!mBound) {
 			return;
 		}
 
+		// logging already started
 		if (mIsRunning == true) {
 			Log.e(TAG, "Logging already in progress.");
 			return;
 		}
 		mIsRunning = true;
-
-
 
 		// send the listeners to the service
 		initListeners();
@@ -201,18 +251,21 @@ public class ContextLogger {
 		// start tracing if needed
 		if (mDoTrace) {
 			Debug.startMethodTracing(mTracePath, TRACE_BUFF_SUZE);
-			// Debug.startMethodTracing(mTraceName);
 			Log.d(TAG, "method tracing started");
 		}
 		Log.d(TAG, "startLogging - START_MSG sent");
 	};
 
-	public void initListeners() {
+	/**
+	 * Initializes the listeners. Serializes and sends the list of listeners to
+	 * the background process. They will be then registered and become ready to
+	 * start listening.
+	 */
+	private void initListeners() {
 		Log.d(TAG, "initListeners");
 		if (!mBound) {
 			return;
 		}
-
 
 		// Set the filename for current run
 		String dateString = new SimpleDateFormat("-yyMMdd-hhmmss")
@@ -242,7 +295,7 @@ public class ContextLogger {
 	}
 
 	/**
-	 * 
+	 * Stops the logging session.
 	 */
 	public void stopLogging() {
 		Log.d(TAG, "stopLogging");
@@ -252,19 +305,18 @@ public class ContextLogger {
 		}
 		mIsRunning = false;
 
-
-
 		if (mBound) {
-		// Create and send a message to the service, using a supported 'what'
-		// value
-		Message msg = Message.obtain(null,
-				ContextLoggerService.MSG_STOP_LOGGING, 0, 0);
-		try {
-			mService.send(msg);
-		} catch (RemoteException e) {
-			e.printStackTrace();
+			// Create and send a message to the service, using a supported
+			// 'what'
+			// value
+			Message msg = Message.obtain(null,
+					ContextLoggerService.MSG_STOP_LOGGING, 0, 0);
+			try {
+				mService.send(msg);
+			} catch (RemoteException e) {
+				e.printStackTrace();
 
-		}
+			}
 		}
 
 		// stop tracing
@@ -276,12 +328,18 @@ public class ContextLogger {
 		return;
 	};
 
+	/**
+	 * Clears the list of listeners.
+	 */
 	public void clearListeners() {
 		mListeners.clear();
 	};
 
 	/**
+	 * Adds a ContextListener to the list.
 	 * 
+	 * @param listener
+	 *            ContextListener to add.
 	 */
 	public void addListener(ContextListener listener) {
 		if (mIsRunning == true) {
@@ -291,18 +349,10 @@ public class ContextLogger {
 		mListeners.add(listener);
 	};
 
-	/**
-	 * 
-	 * @param enable
-	 */
-	public void enableTracing(boolean enable) {
-		if (mIsRunning == true) {
-			Log.e(TAG, "Logging already in progress.");
-			return;
-		}
-		mDoTrace = enable;
-	};
 
+	/**
+	 * Big-red-button signal.
+	 */
 	public void brb() {
 		Log.e(TAG, "Big Red Button pushed.");
 		Toast.makeText(mCallerContext, "BRB", Toast.LENGTH_SHORT).show();
