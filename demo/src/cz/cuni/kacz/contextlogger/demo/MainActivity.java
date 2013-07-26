@@ -210,6 +210,7 @@ public class MainActivity extends Activity {
 					}
 					synchronized (doStop) {
 						if (doStop) {
+							if (running) {
 							Log.d(TAG, "doStop");
 							mCL.stopLogging();
 							mCL.clearListeners();
@@ -226,6 +227,7 @@ public class MainActivity extends Activity {
 											Toast.LENGTH_SHORT).show();
 								}
 							});
+							}
 
 						}
 					}
