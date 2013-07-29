@@ -19,19 +19,12 @@
  */
 package cz.cuni.kacz.contextlogger.demo;
 
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
-import android.net.NetworkInfo;
-import android.net.NetworkInfo.State;
-import android.net.wifi.WifiManager;
-import android.os.Handler;
-import android.os.HandlerThread;
-import android.os.Looper;
+import java.util.Timer;
+import java.util.TimerTask;
+
 import android.util.Log;
-import cz.cuni.kacz.contextlogger.ContextLoggerService;
 import cz.cuni.kacz.contextlogger.DataManager;
+import cz.cuni.kacz.contextlogger.TimeSource;
 import cz.cuni.kacz.contextlogger.listeners.DefaultContextListener;
 
 public class TestListener extends DefaultContextListener {
@@ -41,57 +34,42 @@ public class TestListener extends DefaultContextListener {
 	 */
 	private static final long serialVersionUID = 1L;
 
-	private static final String TAG = "TestListener";
-
-	private BroadcastReceiver mWifiBCReceiver = null;
-	private HandlerThread mThread = null;
-	private String lastBSSID = null;
+	// private static final String TAG = "DummyListener";
+	private final boolean running = false;
+	private Timer timer;
+	int n = 0;
+	int period = 1000;
 
 	// log names and types
-	private String labelTest = "Test";
-	private int typeTest = DataManager.STRING;
+	private final String labelDummy = "CLDemo listener";
+	private final int typeDummy = DataManager.INT;
+
+	public TestListener(int period) {
+		this.period = period;
+	}
 
 	@Override
 	public void startListening() {
-		mWifiBCReceiver = new BroadcastReceiver() {
+		Log.d(TAG, "startlogging called");
+		timer = new Timer();
+		timer.scheduleAtFixedRate(new TimerTask() {
 			@Override
-			public void onReceive(Context context, Intent intent) {
-				long time = System.nanoTime();
-				Log.i(TAG, "state change action rcvd");
-				NetworkInfo netInfo = intent
-						.getParcelableExtra(WifiManager.EXTRA_NETWORK_INFO);
-				State state = netInfo.getState();
-				String bssid = "";
-				if (state == State.CONNECTED) {
-					bssid = intent.getStringExtra(WifiManager.EXTRA_BSSID);
-				}
-				if (!bssid.equals(lastBSSID)) {
-					mDataManager.insertLog(labelTest, time, bssid);
-					lastBSSID = bssid;
-				}
-
-			};
-		};
-
-		mThread = new HandlerThread(TAG);
-		mThread.start();
-		Looper looper = mThread.getLooper();
-		Handler handler = new Handler(looper);
-		ContextLoggerService.mAppContext.registerReceiver(mWifiBCReceiver,
-				new IntentFilter(WifiManager.NETWORK_STATE_CHANGED_ACTION),
-				null, handler);
-		Log.d(TAG, "context: " + ContextLoggerService.mAppContext.hashCode());
+			public void run() {
+				long time = TimeSource.getTimeOfDay();
+				mDataManager.insertLog(labelDummy, time, n++);
+			}
+		}, 0, period);
 	}
 
 	@Override
 	public void stopListening() {
-		ContextLoggerService.mAppContext.unregisterReceiver(mWifiBCReceiver);
-		mThread.quit();
+		Log.d(TAG, "stoplogging called");
+		timer.cancel();
 	}
 
 	@Override
 	public void initLogTypes() {
-		addLogType(labelTest, typeTest);
+		addLogType(labelDummy, typeDummy);
 	}
 
 }

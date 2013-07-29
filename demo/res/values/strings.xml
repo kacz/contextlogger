@@ -120,6 +120,9 @@
     <string name="pref_wifirssi_listener_summ">Wifi strength</string>
 	<string name="pref_key_wifirssi_listener">pref_wifirssi_listener</string>
 	
+	<string name="pref_test_listener">CLDemo listener</string>
+    <string name="pref_test_listener_summ">Listener implemented in the demo application</string>
+	<string name="pref_key_test_listener">pref_test_listener</string>
 
 	<string name="pref_new_test_listener">TEST</string>
     <string name="pref_new_test_listener_summ">newly implemented listener</string>

@@ -487,6 +487,11 @@ public class MainActivity extends Activity {
 				l = new WifiRSSIListener();
 				mCL.addListener(l);
 			}
+			if (sharedPref.getBoolean(
+					res.getString(R.string.pref_key_test_listener), false)) {
+				l = new TestListener(1000);
+				mCL.addListener(l);
+			}
 
 
 			// if (sharedPref.getBoolean(
