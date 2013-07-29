@@ -27,6 +27,12 @@ import cz.cuni.kacz.contextlogger.DataManager;
 import cz.cuni.kacz.contextlogger.TimeSource;
 import cz.cuni.kacz.contextlogger.listeners.DefaultContextListener;
 
+/**
+ * Simple contextlistener implemented in the calling application
+ * 
+ * @author kacz
+ * 
+ */
 public class TestListener extends DefaultContextListener {
 
 	/**
