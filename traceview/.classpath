@@ -6,6 +6,6 @@
 	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/common"/>
 	<classpathentry exported="true" kind="var" path="ANDROID_OUT_FRAMEWORK/swt.jar"/>
 	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/sdkstats"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/contextlogger"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/ContextLogger"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
