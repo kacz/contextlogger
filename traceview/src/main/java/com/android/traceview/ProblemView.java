@@ -195,10 +195,10 @@ public class ProblemView extends Composite {
 				SWT.DROP_DOWN
 				| SWT.BORDER
 				| SWT.READ_ONLY);
-		// for (Entry<Integer, ContextLogData> ld : mLogMap.entrySet()) {
-		// logTypeCombo.add(ld.getValue().getName(), ld.getKey());
-		// System.out.println(ld.getValue().getName() + " " + ld.getKey());
-		// }
+		for (Entry<Integer, ContextLogData> ld : mLogMap.entrySet()) {
+			logTypeCombo.add(ld.getValue().getName(), ld.getKey());
+			//System.out.println(ld.getValue().getName() + " " + ld.getKey());
+		}
 		logTypeCombo.setEnabled(false);
 
 		final FormData hide = new FormData();
