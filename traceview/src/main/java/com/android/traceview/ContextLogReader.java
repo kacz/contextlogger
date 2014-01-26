@@ -22,6 +22,7 @@ public class ContextLogReader {
 	
 	private final String mTraceFileName;
 	private Map<Integer, ContextLogData> mLogMap = null;
+	private Map<String, ContextLogData> mLogMapByName = null;
 	ContextLogData[] mSortedLogs;
 	int mVersionNumber;
 	long mStartTime;
@@ -44,6 +45,7 @@ public class ContextLogReader {
 	public ContextLogReader(String traceFileName) throws IOException {
         mTraceFileName = traceFileName;
 		mLogMap = new TreeMap<Integer, ContextLogData>();
+		mLogMapByName = new TreeMap<String, ContextLogData>();
         
         
         generateTrees();
@@ -242,7 +244,10 @@ new FileInputStream(
         int id = Integer.decode(idStr);
 		int typeInt = Integer.decode(typeStr);
 		LogType type = LogType.byType(typeInt);
-		mLogMap.put(id, new ContextLogData(id, type, name));
+		
+		ContextLogData cld = new ContextLogData(id, type, name);
+		mLogMap.put(id, cld);
+		mLogMapByName.put(name, cld);
 	}
 	
 	private void analyzeData() {
@@ -410,6 +415,10 @@ new FileInputStream(
 		return mLogMap;
 	}
 
+	public Map<String, ContextLogData> getLogMapByName() {
+		return mLogMapByName;
+	}
+	
 	public long getStartTime() {
 		return mStartTime;
 	}

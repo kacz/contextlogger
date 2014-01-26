@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NavigableMap;
+import java.util.Set;
 
 import org.eclipse.jface.fieldassist.ContentProposalAdapter;
 import org.eclipse.jface.fieldassist.SimpleContentProposalProvider;
@@ -49,14 +50,16 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 
 import com.android.traceview.IntervalSelection.Action;
+import com.android.traceview.ProblemConstraint.Relation;
 import com.android.traceview.TimeLineView.Record;
 
 import cz.cuni.kacz.contextlogger.LogType;
 
 public class ProblemView extends Composite {
+	
+	private final CombinedReader mCombinedReader;
 
     private final SelectionController mSelectionController;
-    private final ProfileProvider mProfileProvider;
     private MethodData mCurrentHighlightedMethod;
 
 	private MethodHandler mMethodHandler;
@@ -64,23 +67,25 @@ public class ProblemView extends Composite {
 	private final Map<Integer, ContextLogData> mLogMap;
 	private final ArrayList<Record> mTraceRecords;
 
-	private List<Long> mTimestamps;
-	private List<Long> mInsideTimestamps;
+//	private List<Long> mTimestamps;
+//	private List<Long> mInsideTimestamps;
 
-	private List<IntervalSelection> mIntervals;
+//	private List<IntervalSelection> mIntervals;
 
-	private ContextLogData mSelectedLog;
+//	private ContextLogData mSelectedLog;
 
 	private final Color mColorNoMatch;
 	private final Color mColorMatch;
 
 	private final SimpleContentProposalProvider mScp;
 
-	private final String BRBname = "cz/cuni/kacz/contextlogger/ContextLogger.brb ()V";
-	private final MethodData BRBMethodData;
+//	private final String BRBname = "cz/cuni/kacz/contextlogger/ContextLogger.brb ()V";
+//	private final MethodData BRBMethodData;
 
-	private static long mStartDiff;
+//	private static long mStartDiff;
 
+	private Problem mProblem;
+	private ProblemDefinition mProblemDefinition;
 	// UI elements
 	Text mResultBox;
 
@@ -100,6 +105,12 @@ public class ProblemView extends Composite {
 	final Combo floatRelationCombo;
 	final Text mFloatValueBox;
 
+	protected ContextLogData mSelectedLog1;
+	
+	ProblemConstraint mProblemConstraint;
+	String mFunctionName;
+	String mLogname;
+
     public interface MethodHandler {
         void handleMethod(MethodData method);
     }
@@ -111,27 +122,19 @@ public class ProblemView extends Composite {
 		setLayout(new GridLayout(2, true));
         this.mSelectionController = selectController;
 
+        mCombinedReader = new CombinedReader(reader, logReader);
 		Display display = getDisplay();
-
-		mProfileProvider = reader.getProfileProvider();
 
 		mLogMap = logReader.getLogMap();
 
 		mTraceRecords = reader.getThreadTimeRecords();
 
-		MethodData[] brbCandidates = findAllName(BRBname);
-		if (brbCandidates.length == 1) {
-			BRBMethodData = brbCandidates[0];
-		} else {
-			BRBMethodData = null;
-		}
-
-		mSelectedLog = null;
-		mIntervals = new ArrayList<IntervalSelection>();
-		mTimestamps = new ArrayList<Long>();
-		mInsideTimestamps = new ArrayList<Long>();
-
-		mStartDiff = reader.getStartTime() - logReader.getStartTime();
+//		MethodData[] brbCandidates = mCombinedReader.findAllMethodDataByName(BRBname);
+//		if (brbCandidates.length == 1) {
+//			BRBMethodData = brbCandidates[0];
+//		} else {
+//			BRBMethodData = null;
+//		}
 
 		// Add container holding the problem definition form
 		Composite formComposite = new Composite(this, SWT.NONE);
@@ -270,12 +273,14 @@ public class ProblemView extends Composite {
 
 				int index = logTypeCombo.getSelectionIndex();
 				System.out.println(index);
-				mSelectedLog = mLogMap.get(index);
-				if (mSelectedLog == null) {
+				mSelectedLog1 = mLogMap.get(index);
+				if (mSelectedLog1 == null) {
+					mLogname = null;
 					System.out.println("null");
 					return;
 				}
-				switch (mSelectedLog.getType()) {
+				mLogname = mSelectedLog1.getName();
+				switch (mSelectedLog1.getType()) {
 				case INT:
 				case LONG:
 					System.out.println("i");
@@ -295,7 +300,7 @@ public class ProblemView extends Composite {
 				case STRING:
 					System.out.println("s");
 					stringValueCombo.removeAll();
-					for (String s : mSelectedLog.getStringDataMap().values()) {
+					for (String s : mSelectedLog1.getStringDataMap().values()) {
 						stringValueCombo.add(s);
 					}
 					mIntComposite.setLayoutData(hide);
@@ -303,6 +308,7 @@ public class ProblemView extends Composite {
 					mStringComposite.setLayoutData(show);
 					break;
 				}
+				updateProblems();
 				constraintHolderComposite.pack();
 				updateStatistics();
 			}
@@ -328,19 +334,25 @@ public class ProblemView extends Composite {
 				try {
 					String relationStr = intRelationCombo.getText();
 					Relation rel = Relation.value(relationStr);
-					updateIntervals(rel, Long.valueOf(mIntValueBox.getText()));
+					mProblemConstraint = new ProblemConstraint(rel, LogType.LONG, Long.valueOf(mIntValueBox.getText()));
+					updateProblems();
+//					updateIntervals(rel, Long.valueOf(mIntValueBox.getText()));
 					updateStatistics();
 				} catch (NumberFormatException e) {
 					// boo
-					System.out.println("boo");
-					mIntervals.clear();
-					mSelectionController.changeIntervals(mIntervals, "ProblemView");
+					System.out.println("boo1");
+					mProblemConstraint = null;
+					updateProblems();
+//					mIntervals.clear();
+//					mSelectionController.changeIntervals(mIntervals, "ProblemView");
 				} catch (IllegalArgumentException e) {
 					// foo
-					System.out.println("foo");
-					mIntervals.clear();
-					mSelectionController.changeIntervals(mIntervals,
-							"ProblemView");
+					System.out.println("foo1");
+					mProblemConstraint = null;
+					updateProblems();
+//					mIntervals.clear();
+//					mSelectionController.changeIntervals(mIntervals,
+//							"ProblemView");
 				}
 			}
 
@@ -353,20 +365,26 @@ public class ProblemView extends Composite {
 				try {
 					String relationStr = intRelationCombo.getText();
 					Relation rel = Relation.value(relationStr);
-					updateIntervals(rel, Long.valueOf(mIntValueBox.getText()));
+					mProblemConstraint = new ProblemConstraint(rel, LogType.LONG, Long.valueOf(mIntValueBox.getText()));
+					updateProblems();
+//					updateIntervals(rel, Long.valueOf(mIntValueBox.getText()));
 					updateStatistics();
 				} catch (NumberFormatException e) {
 					// boo
-					System.out.println("boo");
-					mIntervals.clear();
-					mSelectionController.changeIntervals(mIntervals,
-							"ProblemView");
+					System.out.println("boo2");
+					mProblemConstraint = null;
+					updateProblems();
+//					mIntervals.clear();
+//					mSelectionController.changeIntervals(mIntervals,
+//							"ProblemView");
 				} catch (IllegalArgumentException e) {
 					// foo
-					System.out.println("foo");
-					mIntervals.clear();
-					mSelectionController.changeIntervals(mIntervals,
-							"ProblemView");
+					System.out.println("foo2");
+					mProblemConstraint = null;
+					updateProblems();
+//					mIntervals.clear();
+//					mSelectionController.changeIntervals(mIntervals,
+//							"ProblemView");
 				}
 			}
 		});
@@ -385,21 +403,27 @@ public class ProblemView extends Composite {
 				try {
 					String relationStr = floatRelationCombo.getText();
 					Relation rel = Relation.value(relationStr);
-					updateIntervals(rel,
-							Double.valueOf(mFloatValueBox.getText()));
+					mProblemConstraint = new ProblemConstraint(rel, LogType.FLOAT, Double.valueOf(mFloatValueBox.getText()));
+					updateProblems();
+//					updateIntervals(rel,
+//							Double.valueOf(mFloatValueBox.getText()));
 					updateStatistics();
 				} catch (NumberFormatException e) {
 					// boo
-					System.out.println("boo");
-					mIntervals.clear();
-					mSelectionController.changeIntervals(mIntervals,
-							"ProblemView");
+					System.out.println("boo3");
+					mProblemConstraint = null;
+					updateProblems();
+//					mIntervals.clear();
+//					mSelectionController.changeIntervals(mIntervals,
+//							"ProblemView");
 				} catch (IllegalArgumentException e) {
 					// foo
-					System.out.println("foo");
-					mIntervals.clear();
-					mSelectionController.changeIntervals(mIntervals,
-							"ProblemView");
+					System.out.println("foo3");
+					mProblemConstraint = null;
+					updateProblems();
+//					mIntervals.clear();
+//					mSelectionController.changeIntervals(mIntervals,
+//							"ProblemView");
 				}
 			}
 			
@@ -412,21 +436,27 @@ public class ProblemView extends Composite {
 				try {
 					String relationStr = floatRelationCombo.getText();
 					Relation rel = Relation.value(relationStr);
-					updateIntervals(rel,
-							Double.valueOf(mFloatValueBox.getText()));
+					mProblemConstraint = new ProblemConstraint(rel, LogType.FLOAT, Double.valueOf(mFloatValueBox.getText()));
+					updateProblems();
+//					updateIntervals(rel,
+//							Double.valueOf(mFloatValueBox.getText()));
 					updateStatistics();
 				} catch (NumberFormatException e) {
 					// boo
-					System.out.println("boo");
-					mIntervals.clear();
-					mSelectionController.changeIntervals(mIntervals,
-							"ProblemView");
+					System.out.println("boo4");
+					mProblemConstraint = null;
+					updateProblems();
+//					mIntervals.clear();
+//					mSelectionController.changeIntervals(mIntervals,
+//							"ProblemView");
 				} catch (IllegalArgumentException e) {
 					// foo
-					System.out.println("foo");
-					mIntervals.clear();
-					mSelectionController.changeIntervals(mIntervals,
-							"ProblemView");
+					System.out.println("foo4");
+					mProblemConstraint = null;
+					updateProblems();
+//					mIntervals.clear();
+//					mSelectionController.changeIntervals(mIntervals,
+//							"ProblemView");
 				}
 			}
 		});
@@ -445,20 +475,26 @@ public class ProblemView extends Composite {
 				try {
 					String relationStr = stringRelationCombo.getText();
 					Relation rel = Relation.value(relationStr);
-					updateIntervals(rel, stringValueCombo.getText());
+					mProblemConstraint = new ProblemConstraint(rel, LogType.STRING, stringValueCombo.getText());
+					updateProblems();
+//					updateIntervals(rel, stringValueCombo.getText());
 					updateStatistics();
 				} catch (NumberFormatException e) {
 					// boo
-					System.out.println("boo");
-					mIntervals.clear();
-					mSelectionController.changeIntervals(mIntervals,
-							"ProblemView");
+					System.out.println("boo5");
+					mProblemConstraint = null;
+					updateProblems();
+//					mIntervals.clear();
+//					mSelectionController.changeIntervals(mIntervals,
+//							"ProblemView");
 				} catch (IllegalArgumentException e) {
 					// foo
-					System.out.println("foo");
-					mIntervals.clear();
-					mSelectionController.changeIntervals(mIntervals,
-							"ProblemView");
+					System.out.println("foo5");
+					mProblemConstraint = null;
+					updateProblems();
+//					mIntervals.clear();
+//					mSelectionController.changeIntervals(mIntervals,
+//							"ProblemView");
 				}
 			}
 		});
@@ -477,20 +513,26 @@ public class ProblemView extends Composite {
 				try {
 					String relationStr = stringRelationCombo.getText();
 					Relation rel = Relation.value(relationStr);
-					updateIntervals(rel, stringValueCombo.getText());
+					mProblemConstraint = new ProblemConstraint(rel, LogType.STRING, stringValueCombo.getText());
+					updateProblems();
+//					updateIntervals(rel, stringValueCombo.getText());
 					updateStatistics();
 				} catch (NumberFormatException e) {
 					// boo
-					System.out.println("boo");
-					mIntervals.clear();
-					mSelectionController.changeIntervals(mIntervals,
-							"ProblemView");
+					System.out.println("boo6");
+					mProblemConstraint = null;
+					updateProblems();
+//					mIntervals.clear();
+//					mSelectionController.changeIntervals(mIntervals,
+//							"ProblemView");
 				} catch (IllegalArgumentException e) {
 					// foo
-					System.out.println("foo");
-					mIntervals.clear();
-					mSelectionController.changeIntervals(mIntervals,
-							"ProblemView");
+					System.out.println("foo6");
+					mProblemConstraint = null;
+					updateProblems();
+//					mIntervals.clear();
+//					mSelectionController.changeIntervals(mIntervals,
+//							"ProblemView");
 				}
 			}
 		});
@@ -506,6 +548,9 @@ public class ProblemView extends Composite {
 			@Override
 			public void widgetSelected(SelectionEvent arg0) {
 				if (problemDefButton.getSelection()) {
+					mProblemConstraint = null;
+					mFunctionName = null;
+					
 					mProblemBox.setEnabled(true);
 					logTypeCombo.setEnabled(true);
 					mIntValueBox.setEnabled(true);
@@ -516,9 +561,10 @@ public class ProblemView extends Composite {
 					stringRelationCombo.setEnabled(true);
 
 					mProblemBox.setText("");
-
-					mIntervals.clear();
-					updateTimeStamps(null);
+					
+					updateProblems();
+//					mIntervals.clear();
+//					updateTimeStamps(null);
 					updateStatistics();
 				}
 			}
@@ -535,7 +581,8 @@ public class ProblemView extends Composite {
 			@Override
 			public void widgetSelected(SelectionEvent arg0) {
 				if (BRBButton.getSelection()) {
-					mProblemBox.setText("");
+					mFunctionName = ProblemDefinition.BRB_FUNCTION_NAME;
+//					mProblemBox.setText("");
 					mProblemBox.setEnabled(false);
 					logTypeCombo.setEnabled(false);
 					mIntValueBox.setEnabled(false);
@@ -545,10 +592,13 @@ public class ProblemView extends Composite {
 					floatRelationCombo.setEnabled(false);
 					stringRelationCombo.setEnabled(false);
 
-					mIntervals.clear();
-					mSelectionController.changeIntervals(mIntervals,
-							"ProblemView");
-					updateTimeStamps(BRBMethodData);
+					mProblemConstraint = null;
+					
+//					mIntervals.clear();
+//					mSelectionController.changeIntervals(mIntervals,
+//							"ProblemView");
+//					updateTimeStamps(BRBMethodData);
+					updateProblems();
 					updateStatistics();
 				}
 			}
@@ -561,10 +611,15 @@ public class ProblemView extends Composite {
 				if (query.length() < 4) {
 					mScp.setProposals(new String[0]);
 					mProblemBox.setBackground(mColorMatch);
-					updateTimeStamps(null);
+					
+					//TODO: make empty problem
+					mFunctionName = null;
+					updateProblems();
+					
+//					updateTimeStamps(null);
 					return;
 				}
-				MethodData[] matchingMD = findAllName(query);
+				MethodData[] matchingMD = mCombinedReader.findAllMethodDataByName(query);
 
 				if (matchingMD.length == 0) {
 					mProblemBox.setBackground(mColorNoMatch);
@@ -583,7 +638,9 @@ public class ProblemView extends Composite {
 
 
 				if (matchingMD.length == 1) {
-					updateTimeStamps(matchingMD[0]);
+					mFunctionName = matchingMD[0].getName();
+					updateProblems();
+//					updateTimeStamps(matchingMD[0]);
 					updateStatistics();
 				}
 			}
@@ -591,458 +648,473 @@ public class ProblemView extends Composite {
 
     }
 
-	private void updateTimeStamps(MethodData md) {
-		ArrayList<Long> timeStamps = new ArrayList<Long>();
-		if (md != null) {
-			for (Record rec : mTraceRecords) {
-				if (rec.block.getMethodData() == md) {
-					timeStamps.add(rec.block.getStartTime());
-				}
-			}
-		}
-		mSelectionController.changeTimestamps(timeStamps, "ProblemView");
-		mTimestamps = timeStamps;
-	}
+//	private void updateTimeStamps(MethodData md) {
+//		ArrayList<Long> timeStamps = new ArrayList<Long>();
+//		if (md != null) {
+//			for (Record rec : mTraceRecords) {
+//				if (rec.block.getMethodData() == md) {
+//					timeStamps.add(rec.block.getStartTime());
+//				}
+//			}
+//		}
+//		mSelectionController.changeTimestamps(timeStamps, "ProblemView");
+//		mTimestamps = timeStamps;
+//	}
 
-	private void updateIntervals(Relation rel, long constraint) {
-		ArrayList<IntervalSelection> intervals = new ArrayList<IntervalSelection> (); 
-		if (mSelectedLog == null) {
-			mIntervals = intervals;
-		}
-		boolean inside = false;
-		long begining = -1;
-		long end;
-		NavigableMap<Long, ? extends Number> logMap;
-		switch (mSelectedLog.getType()) {
-		case INT:
-			logMap = mSelectedLog.getIntDataMap();
-			break;
-		case LONG:
-			logMap = mSelectedLog.getLongDataMap();
-			break;
-		default:
-			return;
-		}
-		for(Entry<Long,? extends Number> e : logMap.entrySet()) {
-			Long val = e.getValue().longValue();
-			// start of an interval
-			if (inside == false && eval(val, rel, constraint) == true) {
-				begining = e.getKey();
-				inside = true;
-				continue;
-			}
-			// we are inside of an interval
-			if (inside == true && eval(val, rel, constraint) == true) {
-				continue;
-			}
-			// we leave the interval
-			if (inside == true && eval(val, rel, constraint) == false) {
-				end = e.getKey();
-				inside = false;
-				intervals.add(new IntervalSelection(Action.Highlight,begining,end));
-				begining = -1;
-				continue;
-			}
-			if (inside == false && eval(val, rel, constraint) == false) {
-				continue;
-			}
+//	private void updateIntervals(Relation rel, long constraint) {
+//		ArrayList<IntervalSelection> intervals = new ArrayList<IntervalSelection> (); 
+//		if (mSelectedLog == null) {
+//			mIntervals = intervals;
+//		}
+//		boolean inside = false;
+//		long begining = -1;
+//		long end;
+//		NavigableMap<Long, ? extends Number> logMap;
+//		switch (mSelectedLog.getType()) {
+//		case INT:
+//			logMap = mSelectedLog.getIntDataMap();
+//			break;
+//		case LONG:
+//			logMap = mSelectedLog.getLongDataMap();
+//			break;
+//		default:
+//			return;
+//		}
+//		for(Entry<Long,? extends Number> e : logMap.entrySet()) {
+//			Long val = e.getValue().longValue();
+//			// start of an interval
+//			if (inside == false && eval(val, rel, constraint) == true) {
+//				begining = e.getKey();
+//				inside = true;
+//				continue;
+//			}
+//			// we are inside of an interval
+//			if (inside == true && eval(val, rel, constraint) == true) {
+//				continue;
+//			}
+//			// we leave the interval
+//			if (inside == true && eval(val, rel, constraint) == false) {
+//				end = e.getKey();
+//				inside = false;
+//				intervals.add(new IntervalSelection(Action.Highlight,begining,end));
+//				begining = -1;
+//				continue;
+//			}
+//			if (inside == false && eval(val, rel, constraint) == false) {
+//				continue;
+//			}
+//
+//		}
+//		
+//		if (begining != -1) {
+//			intervals.add(new IntervalSelection(Action.Highlight, begining,
+//					Long.MAX_VALUE));
+//		}
+//
+//		mIntervals = intervals;
+//		// debug
+//		// for (IntervalSelection i : intervals) {
+//		// System.out.println(i.getmStart() + " - " + i.getmEnd());
+//		// }
+//		mSelectionController.changeIntervals(intervals, "ProblemView");
+//	}
 
+//	private void updateIntervals(Relation rel, double constraint) {
+//		ArrayList<IntervalSelection> intervals = new ArrayList<IntervalSelection>();
+//		if (mSelectedLog == null) {
+//			mIntervals = intervals;
+//		}
+//
+//		boolean inside = false;
+//		long begining = -1;
+//		long end;
+//		long lastKey = -1;
+//		double lastValue = -1;
+//
+//		NavigableMap<Long, ? extends Number> logMap;
+//		switch (mSelectedLog.getType()) {
+//		case FLOAT:
+//			logMap = mSelectedLog.getFloatDataMap();
+//			break;
+//		case DOUBLE:
+//			logMap = mSelectedLog.getDoubleDataMap();
+//			break;
+//		default:
+//			return;
+//		}
+//
+//		for (Entry<Long, ? extends Number> e : logMap.entrySet()) {
+//			double val = e.getValue().doubleValue();
+//			// start of an interval
+//			if (inside == false && eval(val, rel, constraint) == true) {
+//				if (lastKey == -1) {
+//					begining = e.getKey();
+//				} else {
+//					begining = (long) (Math.abs(constraint - lastValue)
+//							/ Math.abs(val - lastValue)
+//							* Math.abs(e.getKey() - lastKey) + lastKey);
+//				}
+//
+//				inside = true;
+//				lastKey = e.getKey();
+//				lastValue = val;
+//				continue;
+//			}
+//			// we are inside of an interval
+//			if (inside == true && eval(val, rel, constraint) == true) {
+//				lastKey = e.getKey();
+//				lastValue = val;
+//				continue;
+//			}
+//			// we leave the interval
+//			if (inside == true && eval(val, rel, constraint) == false) {
+//				end = (long) (Math.abs(constraint - lastValue)
+//						/ Math.abs(val - lastValue)
+//						* Math.abs(e.getKey() - lastKey) + lastKey);
+//				inside = false;
+//				intervals.add(new IntervalSelection(Action.Highlight, begining,
+//						end));
+//				begining = -1;
+//
+//				lastKey = e.getKey();
+//				lastValue = val;
+//				continue;
+//			}
+//			if (inside == false && eval(val, rel, constraint) == false) {
+//				lastKey = e.getKey();
+//				lastValue = val;
+//				continue;
+//			}
+//
+//		}
+//
+//		if (begining != -1) {
+//			intervals.add(new IntervalSelection(Action.Highlight, begining,
+//					Long.MAX_VALUE));
+//		}
+//
+//		mIntervals = intervals;
+//		// debug
+//		// for (IntervalSelection i : intervals) {
+//		// System.out.println(i.getmStart() + " - " + i.getmEnd());
+//		// }
+//		mSelectionController.changeIntervals(intervals, "ProblemView");
+//	}
+
+//	private void updateIntervals(Relation rel, String constraint) {
+//		ArrayList<IntervalSelection> intervals = new ArrayList<IntervalSelection>();
+//		if (mSelectedLog == null) {
+//			mIntervals = intervals;
+//		}
+//
+//		boolean inside = false;
+//		long begining = -1;
+//		long end;
+//		boolean equals = (rel == Relation.EQ);
+//
+//		NavigableMap<Long, String> logMap = mSelectedLog.getStringDataMap();
+//		for (Entry<Long, String> e : logMap.entrySet()) {
+//			if (inside == false && e.getValue().equals(constraint) == equals) {
+//				begining = e.getKey();
+//				inside = true;
+//				continue;
+//			}
+//			if (inside == true && e.getValue().equals(constraint) == equals) {
+//				continue;
+//			}
+//			if (inside == true && e.getValue().equals(constraint) != equals) {
+//				end = e.getKey();
+//				inside = false;
+//				intervals.add(new IntervalSelection(Action.Highlight, begining,
+//						end));
+//				begining = -1;
+//				continue;
+//			}
+//		}
+//		if (begining != -1) {
+//			intervals.add(new IntervalSelection(Action.Highlight, begining,
+//					Long.MAX_VALUE));
+//		}
+//
+//		mIntervals = intervals;
+//		// debug
+//		// for (IntervalSelection i : intervals) {
+//		// System.out.println(i.getmStart() + " - " + i.getmEnd());
+//		// }
+//		mSelectionController.changeIntervals(intervals, "ProblemView");
+//	}
+
+
+	protected void updateProblems() {
+		
+		ProblemDefinition olDef = this.mProblemDefinition;
+		
+		if(ProblemDefinition.BRB_FUNCTION_NAME.equals(this.mFunctionName)) {
+			this.mProblemDefinition = new BRBProblemDefinition();
+		} else if(this.mFunctionName == null 
+					&& ( this.mLogname == null
+					     || this.mProblemConstraint == null)) {
+			this.mProblemDefinition = null;
+		} else {
+			this.mProblemDefinition = new DefaultProblemDefinition(mLogname, mProblemConstraint, mFunctionName);
 		}
 		
-		if (begining != -1) {
-			intervals.add(new IntervalSelection(Action.Highlight, begining,
-					Long.MAX_VALUE));
+		if(this.mProblem == null) {
+			this.mProblem = new Problem(this.mProblemDefinition,this.mCombinedReader);
+		} else {
+			this.mProblem.setProblemDefinition(mProblemDefinition);
 		}
-
-		mIntervals = intervals;
-		// debug
-		// for (IntervalSelection i : intervals) {
-		// System.out.println(i.getmStart() + " - " + i.getmEnd());
-		// }
-		mSelectionController.changeIntervals(intervals, "ProblemView");
+		
+		mSelectionController.changeIntervals(mProblem.getIntervals(), "ProblemView");
+		mSelectionController.changeTimestamps(mProblem.getTimestamps(), "ProblemView");
+		mSelectionController.changeInsideTimestamps(mProblem.getInsideTimestamps(), "ProblemView");
+		// TODO Auto-generated method stub
+		
 	}
-
-	private void updateIntervals(Relation rel, double constraint) {
-		ArrayList<IntervalSelection> intervals = new ArrayList<IntervalSelection>();
-		if (mSelectedLog == null) {
-			mIntervals = intervals;
-		}
-
-		boolean inside = false;
-		long begining = -1;
-		long end;
-		long lastKey = -1;
-		double lastValue = -1;
-
-		NavigableMap<Long, ? extends Number> logMap;
-		switch (mSelectedLog.getType()) {
-		case FLOAT:
-			logMap = mSelectedLog.getFloatDataMap();
-			break;
-		case DOUBLE:
-			logMap = mSelectedLog.getDoubleDataMap();
-			break;
-		default:
-			return;
-		}
-
-		for (Entry<Long, ? extends Number> e : logMap.entrySet()) {
-			double val = e.getValue().doubleValue();
-			// start of an interval
-			if (inside == false && eval(val, rel, constraint) == true) {
-				if (lastKey == -1) {
-					begining = e.getKey();
-				} else {
-					begining = (long) (Math.abs(constraint - lastValue)
-							/ Math.abs(val - lastValue)
-							* Math.abs(e.getKey() - lastKey) + lastKey);
-				}
-
-				inside = true;
-				lastKey = e.getKey();
-				lastValue = val;
-				continue;
-			}
-			// we are inside of an interval
-			if (inside == true && eval(val, rel, constraint) == true) {
-				lastKey = e.getKey();
-				lastValue = val;
-				continue;
-			}
-			// we leave the interval
-			if (inside == true && eval(val, rel, constraint) == false) {
-				end = (long) (Math.abs(constraint - lastValue)
-						/ Math.abs(val - lastValue)
-						* Math.abs(e.getKey() - lastKey) + lastKey);
-				inside = false;
-				intervals.add(new IntervalSelection(Action.Highlight, begining,
-						end));
-				begining = -1;
-
-				lastKey = e.getKey();
-				lastValue = val;
-				continue;
-			}
-			if (inside == false && eval(val, rel, constraint) == false) {
-				lastKey = e.getKey();
-				lastValue = val;
-				continue;
-			}
-
-		}
-
-		if (begining != -1) {
-			intervals.add(new IntervalSelection(Action.Highlight, begining,
-					Long.MAX_VALUE));
-		}
-
-		mIntervals = intervals;
-		// debug
-		// for (IntervalSelection i : intervals) {
-		// System.out.println(i.getmStart() + " - " + i.getmEnd());
-		// }
-		mSelectionController.changeIntervals(intervals, "ProblemView");
-	}
-
-	private void updateIntervals(Relation rel, String constraint) {
-		ArrayList<IntervalSelection> intervals = new ArrayList<IntervalSelection>();
-		if (mSelectedLog == null) {
-			mIntervals = intervals;
-		}
-
-		boolean inside = false;
-		long begining = -1;
-		long end;
-		boolean equals = (rel == Relation.EQ);
-
-		NavigableMap<Long, String> logMap = mSelectedLog.getStringDataMap();
-		for (Entry<Long, String> e : logMap.entrySet()) {
-			if (inside == false && e.getValue().equals(constraint) == equals) {
-				begining = e.getKey();
-				inside = true;
-				continue;
-			}
-			if (inside == true && e.getValue().equals(constraint) == equals) {
-				continue;
-			}
-			if (inside == true && e.getValue().equals(constraint) != equals) {
-				end = e.getKey();
-				inside = false;
-				intervals.add(new IntervalSelection(Action.Highlight, begining,
-						end));
-				begining = -1;
-				continue;
-			}
-		}
-		if (begining != -1) {
-			intervals.add(new IntervalSelection(Action.Highlight, begining,
-					Long.MAX_VALUE));
-		}
-
-		mIntervals = intervals;
-		// debug
-		// for (IntervalSelection i : intervals) {
-		// System.out.println(i.getmStart() + " - " + i.getmEnd());
-		// }
-		mSelectionController.changeIntervals(intervals, "ProblemView");
-	}
-
 
 	private void updateStatistics() {
+		
 		mResultBox.setText("");
-		if (!mIntervals.isEmpty()) {
-			mInsideTimestamps = computeInsideTimestamps(mTimestamps, mIntervals);
-		} else {
-			mInsideTimestamps = mTimestamps;
-		}
-		for (ContextLogData cl : mLogMap.values()) {
-			mResultBox.append(cl.getName() + ":\n");
-			switch (cl.getType()) {
-			case STRING:
- {
-				Map<String, Integer> stringMap = new HashMap<String, Integer>();
-				for (Long ts : mInsideTimestamps) {
-					String val = cl.getStringValueAt(ts + mStartDiff);
-					if (stringMap.containsKey(val)) {
-						int count = stringMap.get(val);
-						stringMap.put(val, count + 1);
-					} else {
-						stringMap.put(val, 1);
+		
+		List<ProblemOccurence> occurrences = mProblem.getOccurences();
+		
+		Map<String, ContextLogData> logMap = mProblem.getLogMapByName();
+		
+		for(Entry<String, ContextLogData> entry: logMap.entrySet()) {
+			String name = entry.getKey();
+			LogType type = entry.getValue().getType();
+			
+			mResultBox.append(name + ":\n");
+			
+			switch(type) {
+			case INT:
+			case LONG: {
+				List<Long> values = new ArrayList<Long>();
+				for(ProblemOccurence po : occurrences) {
+					Object o = po.getContextValues().get(name);
+					if(o == null) {
+						continue;
 					}
-				}
-				List<Map.Entry<String, Integer>> sorted = new ArrayList<Map.Entry<String, Integer>>(stringMap.entrySet());
-				Collections.sort(sorted, new Comparator<Map.Entry<String, Integer>>() {
-
-					@Override
-					public int compare(Entry<String, Integer> e1,
-							Entry<String, Integer> e2) {
-						if(e1.getValue() < e2.getValue()) {
-									return 1;
-						}
-						if(e1.getValue() > e2.getValue()) {
-									return -1;
-						}
-								return 0;
-								// return e1.getKey().compareTo(e2.getKey());
+					if(!(o instanceof Integer) && !(o instanceof Long)) {
+						throw new IllegalStateException();
 					}
 					
+					long val = ((Number)o).longValue();
+					values.add(val);
 				}
-					);
-
-				Collections.reverse(sorted);
-
-				for (Map.Entry<String, Integer> e : sorted) {
-					int percentage = 100 * e.getValue()
-							/ mInsideTimestamps.size();
-					mResultBox.append("\t" + percentage + "% " + e.getKey()
-							+ "\n");
-				}
+				mResultBox.append(ProblemStatistics.computeLongStats(values));
 				break;
 			}
-			case INT:
-			case LONG:
- {
-				Map<Long, Integer> intMap = new HashMap<Long, Integer>();
-				for (Long ts : mInsideTimestamps) {
-					Long val = null;
-					if (cl.getType() == LogType.INT) {
-						Integer intVal = cl.getIntValueAt(ts + mStartDiff);
-						if (intVal != null) {
-							val = new Long(cl.getIntValueAt(ts + mStartDiff));
-						}
-					} else {
-						val = cl.getLongValueAt(ts + mStartDiff);
+			case FLOAT:
+			case DOUBLE: {
+				List<Double> values = new ArrayList<Double>();
+				for(ProblemOccurence po : occurrences) {
+					Object o = po.getContextValues().get(name);
+					if(o == null) {
+						continue;
 					}
-					if (intMap.containsKey(val)) {
-						int count = intMap.get(val);
-						intMap.put(val, count + 1);
-					} else {
-						intMap.put(val, 1);
+					if(!(o instanceof Float) && !(o instanceof Double)) {
+						throw new IllegalStateException();
 					}
+					
+					double val = ((Number)o).doubleValue();
+					values.add(val);
 				}
-				List<Map.Entry<Long, Integer>> sorted = new ArrayList<Map.Entry<Long, Integer>>(
-						intMap.entrySet());
-				Collections.sort(sorted,
-						new Comparator<Map.Entry<Long, Integer>>() {
-
-							@Override
-							public int compare(Entry<Long, Integer> e1,
-									Entry<Long, Integer> e2) {
-								if (e1.getValue() < e2.getValue()) {
-									return 1;
-								}
-								if (e1.getValue() > e2.getValue()) {
-									return -1;
-								}
-								return 0;
-								// return e1.getKey().compareTo(e2.getKey());
-							}
-
-						});
-
-				// Collections.reverse(sorted);
-
-				int counter = 0;
-				int lastPercentage = 0;
-				for (Map.Entry<Long, Integer> e : sorted) {
-
-					int percentage = 100 * e.getValue()
-							/ mInsideTimestamps.size();
-					counter += 1;
-					if (counter > 5 && lastPercentage != percentage) {
-						break;
-					}
-					lastPercentage = percentage;
-					mResultBox.append("\t" + percentage + "% " + e.getKey()
-							+ "\n");
-				}
+				mResultBox.append(ProblemStatistics.computeDoubleStats(values));
 				break;
 			}
-			case DOUBLE:
-			case FLOAT: {
-				List<Double> sorted = new ArrayList<Double>();
-				for (Long ts : mInsideTimestamps) {
-					Double val = null;
-					if (cl.getType() == LogType.FLOAT) {
-						Float floatVal = cl.getFloatValueAt(ts + mStartDiff);
-						if (floatVal != null) {
-							val = new Double(floatVal);
-						}
-					} else {
-						val = cl.getDoubleValueAt(ts + mStartDiff);
+			case STRING: {
+				List<String> values = new ArrayList<String>();
+				for(ProblemOccurence po : occurrences) {
+					Object o = po.getContextValues().get(name);
+					if(o == null) {
+						continue;
 					}
-
-					if (val != null) {
-						sorted.add(val);
+					if(!(o instanceof String)) {
+						throw new IllegalStateException();
 					}
+					
+					values.add((String)o);
 				}
-				Collections.sort(sorted);
-
-				// 90% interval (without top,bottom 5%)
-				if (sorted.size() != 0) {
-					int first = (int) (sorted.size() * 0.05);
-					int last = (int) (sorted.size() * 0.95);
-					System.out
-							.println(sorted.size() + " " + first + " " + last);
-					mResultBox.append("\t90% interval: (" + sorted.get(first)
-							+ "-" + sorted.get(last) + ")\n");
-				}
+				mResultBox.append(ProblemStatistics.computeStringStats(values));
 				break;
 			}
 			}
 		}
+		
+//		mResultBox.setText("");
+//		if (!mIntervals.isEmpty()) {
+//			mInsideTimestamps = computeInsideTimestamps(mTimestamps, mIntervals);
+//		} else {
+//			mInsideTimestamps = mTimestamps;
+//		}
+//		for (ContextLogData cl : mLogMap.values()) {
+//			mResultBox.append(cl.getName() + ":\n");
+//			switch (cl.getType()) {
+//			case STRING:
+// {
+//				Map<String, Integer> stringMap = new HashMap<String, Integer>();
+//				for (Long ts : mInsideTimestamps) {
+//					String val = cl.getStringValueAt(ts + mStartDiff);
+//					if (stringMap.containsKey(val)) {
+//						int count = stringMap.get(val);
+//						stringMap.put(val, count + 1);
+//					} else {
+//						stringMap.put(val, 1);
+//					}
+//				}
+//				List<Map.Entry<String, Integer>> sorted = new ArrayList<Map.Entry<String, Integer>>(stringMap.entrySet());
+//				Collections.sort(sorted, new Comparator<Map.Entry<String, Integer>>() {
+//
+//					@Override
+//					public int compare(Entry<String, Integer> e1,
+//							Entry<String, Integer> e2) {
+//						if(e1.getValue() < e2.getValue()) {
+//									return 1;
+//						}
+//						if(e1.getValue() > e2.getValue()) {
+//									return -1;
+//						}
+//								return 0;
+//								// return e1.getKey().compareTo(e2.getKey());
+//					}
+//					
+//				}
+//					);
+//
+//				Collections.reverse(sorted);
+//
+//				for (Map.Entry<String, Integer> e : sorted) {
+//					int percentage = 100 * e.getValue()
+//							/ mInsideTimestamps.size();
+//					mResultBox.append("\t" + percentage + "% " + e.getKey()
+//							+ "\n");
+//				}
+//				break;
+//			}
+//			case INT:
+//			case LONG:
+// {
+//				Map<Long, Integer> intMap = new HashMap<Long, Integer>();
+//				for (Long ts : mInsideTimestamps) {
+//					Long val = null;
+//					if (cl.getType() == LogType.INT) {
+//						Integer intVal = cl.getIntValueAt(ts + mStartDiff);
+//						if (intVal != null) {
+//							val = new Long(cl.getIntValueAt(ts + mStartDiff));
+//						}
+//					} else {
+//						val = cl.getLongValueAt(ts + mStartDiff);
+//					}
+//					if (intMap.containsKey(val)) {
+//						int count = intMap.get(val);
+//						intMap.put(val, count + 1);
+//					} else {
+//						intMap.put(val, 1);
+//					}
+//				}
+//				List<Map.Entry<Long, Integer>> sorted = new ArrayList<Map.Entry<Long, Integer>>(
+//						intMap.entrySet());
+//				Collections.sort(sorted,
+//						new Comparator<Map.Entry<Long, Integer>>() {
+//
+//							@Override
+//							public int compare(Entry<Long, Integer> e1,
+//									Entry<Long, Integer> e2) {
+//								if (e1.getValue() < e2.getValue()) {
+//									return 1;
+//								}
+//								if (e1.getValue() > e2.getValue()) {
+//									return -1;
+//								}
+//								return 0;
+//								// return e1.getKey().compareTo(e2.getKey());
+//							}
+//
+//						});
+//
+//				// Collections.reverse(sorted);
+//
+//				int counter = 0;
+//				int lastPercentage = 0;
+//				for (Map.Entry<Long, Integer> e : sorted) {
+//
+//					int percentage = 100 * e.getValue()
+//							/ mInsideTimestamps.size();
+//					counter += 1;
+//					if (counter > 5 && lastPercentage != percentage) {
+//						break;
+//					}
+//					lastPercentage = percentage;
+//					mResultBox.append("\t" + percentage + "% " + e.getKey()
+//							+ "\n");
+//				}
+//				break;
+//			}
+//			case DOUBLE:
+//			case FLOAT: {
+//				List<Double> sorted = new ArrayList<Double>();
+//				for (Long ts : mInsideTimestamps) {
+//					Double val = null;
+//					if (cl.getType() == LogType.FLOAT) {
+//						Float floatVal = cl.getFloatValueAt(ts + mStartDiff);
+//						if (floatVal != null) {
+//							val = new Double(floatVal);
+//						}
+//					} else {
+//						val = cl.getDoubleValueAt(ts + mStartDiff);
+//					}
+//
+//					if (val != null) {
+//						sorted.add(val);
+//					}
+//				}
+//				Collections.sort(sorted);
+//
+//				// 90% interval (without top,bottom 5%)
+//				if (sorted.size() != 0) {
+//					int first = (int) (sorted.size() * 0.05);
+//					int last = (int) (sorted.size() * 0.95);
+//					System.out
+//							.println(sorted.size() + " " + first + " " + last);
+//					mResultBox.append("\t90% interval: (" + sorted.get(first)
+//							+ "-" + sorted.get(last) + ")\n");
+//				}
+//				break;
+//			}
+//			}
+//		}
 	}
 
-	public static List<Long> computeInsideTimestamps(List<Long> timestamps,
-			List<IntervalSelection> intervals) {
-		List<Long> insideTimestamps = new ArrayList<Long>();
-
-		int numTs = timestamps.size();
-		int numInt = intervals.size();
-		int iTs = 0;
-		int iInt = 0;
-		while (iTs < numTs && iInt < numInt) {
-			long intBegin = intervals.get(iInt).getmStart();
-			long intEnd = intervals.get(iInt).getmEnd();
-			long ts = timestamps.get(iTs) + mStartDiff;
-			if (ts >= intBegin && ts <= intEnd) {
-				insideTimestamps.add(timestamps.get(iTs));
-				iTs++;
-			}
-			if (ts < intBegin) {
-				iTs++;
-			}
-			if (ts > intEnd) {
-				iInt++;
-			}
-		}
-		return insideTimestamps;
-	}
+//	public static List<Long> computeInsideTimestamps(List<Long> timestamps,
+//			List<IntervalSelection> intervals) {
+//		List<Long> insideTimestamps = new ArrayList<Long>();
+//
+//		int numTs = timestamps.size();
+//		int numInt = intervals.size();
+//		int iTs = 0;
+//		int iInt = 0;
+//		while (iTs < numTs && iInt < numInt) {
+//			long intBegin = intervals.get(iInt).getmStart();
+//			long intEnd = intervals.get(iInt).getmEnd();
+//			long ts = timestamps.get(iTs) + mStartDiff;
+//			if (ts >= intBegin && ts <= intEnd) {
+//				insideTimestamps.add(timestamps.get(iTs));
+//				iTs++;
+//			}
+//			if (ts < intBegin) {
+//				iTs++;
+//			}
+//			if (ts > intEnd) {
+//				iInt++;
+//			}
+//		}
+//		return insideTimestamps;
+//	}
+		
     public void setMethodHandler(MethodHandler handler) {
         mMethodHandler = handler;
     }
 
-	private MethodData[] findAllName(String query) {
-    	List<MethodData> mds = new ArrayList<MethodData>(); 
-    	
-		MethodData md = mProfileProvider.findMatchingName(query);
-
-		while (md != null) {
-			mds.add(md);
-			md = mProfileProvider.findNextMatchingName(query);
-		}
-    	
-		return mds.toArray(new MethodData[0]);
-    }
-
-    private void findName(String query) {
-        MethodData md = mProfileProvider.findMatchingName(query);
-    }
-
-    private void findNextName(String query) {
-        MethodData md = mProfileProvider.findNextMatchingName(query);
-    }
-
-	enum Relation {
-		LT, LTE, EQ, GTE, GT, NE;
-		public static Relation value(String v) throws IllegalArgumentException {
-			if (">".equals(v)) {
-				return GT;
-			}
-			if (">=".equals(v)) {
-				return GTE;
-			}
-			if ("<".equals(v)) {
-				return LT;
-			}
-			if ("<=".equals(v)) {
-				return LTE;
-			}
-			if ("<>".equals(v)) {
-				return NE;
-			}
-			if ("=".equals(v)) {
-				return EQ;
-			}
-			throw new IllegalArgumentException(v);
-		}
-	}
-
-	private boolean eval(long a, Relation rel, long b) {
-		switch (rel) {
-		case EQ:
-			return a == b;
-		case GT:
-			return a > b;
-		case GTE:
-			return a >= b;
-		case LT:
-			return a < b;
-		case LTE:
-			return a <= b;
-		case NE:
-			return a != b;
-		default:
-			return false;
-		}
-	}
-
-	private boolean eval(double a, Relation rel, double b) {
-		switch (rel) {
-		case EQ:
-			return a == b;
-		case GT:
-			return a > b;
-		case GTE:
-			return a >= b;
-		case LT:
-			return a < b;
-		case LTE:
-			return a <= b;
-		case NE:
-			return a != b;
-		default:
-			return false;
-		}
-	}
+	
 }

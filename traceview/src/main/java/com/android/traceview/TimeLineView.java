@@ -74,7 +74,6 @@ public class TimeLineView extends Composite implements Observer {
     private int mScrollOffsetY;
 
 	// >>>>>added
-	boolean logsAvailable;
 	private final HashMap<String, LogRowData> mLogRowByName;
 	private LogRowData[] mLogRows;
 	final SashForm mLogSashForm;
@@ -90,6 +89,8 @@ public class TimeLineView extends Composite implements Observer {
 	private static final int logRowYSpace = logRowHeight + logRowYMargin;
 
 	private final long mStartDiff;
+	
+	private final CombinedReader combinedReader;
 	// <<<<<<added
 
     public static final int PixelsPerTick = 50;
@@ -209,6 +210,8 @@ public class TimeLineView extends Composite implements Observer {
 			ContextLogReader logReader,
             SelectionController selectionController) {
         super(parent, SWT.NONE);
+        
+        combinedReader = new CombinedReader(reader,logReader);
         mRowByName = new HashMap<String, RowData>();
 		mLogRowByName = new HashMap<String, LogRowData>();
         this.mSelectionController = selectionController;
@@ -268,12 +271,8 @@ public class TimeLineView extends Composite implements Observer {
 		mOutsideTimestamps = new ArrayList<Long>();
 		mLogIntervalSelection = new ArrayList<IntervalSelection>();
 
-		logsAvailable = (logReader != null);
-		if(logsAvailable) {
-			mStartDiff = reader.getStartTime() - logReader.getStartTime();
-		} else {
-			mStartDiff = 0;
-		}
+		mStartDiff = combinedReader.getStartDiff();
+
         image.dispose();
         gc.dispose();
 
@@ -326,7 +325,7 @@ public class TimeLineView extends Composite implements Observer {
         
 		// >>>>>>>>>>>>>add
 
-		if (logsAvailable) {
+		if (combinedReader.isLogReaderAvailable()) {
 			mLogSashForm = new SashForm(mBigSashForm, SWT.HORIZONTAL);
 			mLogSashForm.setBackground(mColorGray);
 			mLogSashForm.setSashWidth(3);
@@ -394,7 +393,7 @@ public class TimeLineView extends Composite implements Observer {
 			mLogSurface = null;
 		}
 
-		if (logsAvailable) {
+		if (combinedReader.isLogReaderAvailable()) {
 			mLogLabels.addMouseMoveListener(new MouseMoveListener() {
 				@Override
 				public void mouseMove(MouseEvent me) {
@@ -547,14 +546,14 @@ public class TimeLineView extends Composite implements Observer {
             public void handleEvent(Event e) {
                 mSurface.setScaleFromHorizontalScrollBar(hBar.getSelection());
                 mSurface.redraw();
-				if (logsAvailable) {
+				if (combinedReader.isLogReaderAvailable()) {
 					mLogSurface.redraw();
 				}
             }
         });
 
 		// hBar on Surface is hidden, if LogSurface is present
-		if (logsAvailable) {
+		if (combinedReader.isLogReaderAvailable()) {
 			hBar.setVisible(false);
 		}
 
@@ -648,12 +647,12 @@ public class TimeLineView extends Composite implements Observer {
 
 		// debug
 		// System.out.println("trace start: " + reader.getStartTime());
-		// if (logsAvailable) {
+		// if (combinedReader.isLogReaderAvailable()) {
 		// System.out.println("log start: " + logReader.getStartTime());
 		// System.out.println("diff: " + mStartDiff);
 		// }
         setData(reader.getThreadTimeRecords());
-		if (logsAvailable) {
+		if (combinedReader.isLogReaderAvailable()) {
 			setLogData(logReader.getLogRecords());
 		}
     }
@@ -666,11 +665,17 @@ public class TimeLineView extends Composite implements Observer {
 		}
 		if (arg == "ProblemView") {
 			List<Long> timeStamps;
+			List<Long> insideTimeStamps;
 			List<IntervalSelection> intervals;
 
 			timeStamps = mSelectionController.getTimestamps();
 			if (timeStamps == null) {
 				timeStamps = new ArrayList<Long>();
+			}
+			
+			insideTimeStamps = mSelectionController.getInsideTimestamps();
+			if (insideTimeStamps == null) {
+				insideTimeStamps = new ArrayList<Long>();
 			}
 
 			intervals = mSelectionController.getIntervals();
@@ -681,9 +686,10 @@ public class TimeLineView extends Composite implements Observer {
 
 			mLogTimestamps = timeStamps;
 			mLogIntervalSelection = intervals;
+			mInsideTimestamps = insideTimeStamps;
 
-			mInsideTimestamps = ProblemView.computeInsideTimestamps(
-					mLogTimestamps, mLogIntervalSelection);
+//			mInsideTimestamps = ProblemView.computeInsideTimestamps(
+//					mLogTimestamps, mLogIntervalSelection);
 			mOutsideTimestamps = new ArrayList<Long>(mLogTimestamps);
 			mOutsideTimestamps.removeAll(mInsideTimestamps);
 			mSurface.redraw();
@@ -1216,7 +1222,7 @@ public class TimeLineView extends Composite implements Observer {
         private void mouseMove(MouseEvent me) {
             me.y = -1;
             mSurface.mouseMove(me);
-			if (logsAvailable) {
+			if (combinedReader.isLogReaderAvailable()) {
 				mLogSurface.mouseMove(me);
 			}
         }
@@ -2618,7 +2624,7 @@ public class TimeLineView extends Composite implements Observer {
                 }
             }
 
-			if (logsAvailable) {
+			if (combinedReader.isLogReaderAvailable()) {
 				// draw problem intervals
 				if (mLogIntervalSelection != null) {
 					for (IntervalSelection i : mLogIntervalSelection) {
@@ -2645,7 +2651,7 @@ public class TimeLineView extends Composite implements Observer {
 				}
 			}
 
-			if (logsAvailable) {
+			if (combinedReader.isLogReaderAvailable()) {
 				// draw problem calls
 				gcImage.setForeground(mColorProblemCallInside);
 				// System.out.println("ITS:" + mInsideTimestamps.size());
@@ -3258,7 +3264,7 @@ public class TimeLineView extends Composite implements Observer {
                 mMouseRow = rownum;
                 mLabels.redraw();
             }
-			if (logsAvailable) {
+			if (combinedReader.isLogReaderAvailable()) {
 				if (me.y != -1) {
 					me.y = -1;
 					mLogSurface.mouseMove(me);
@@ -3489,7 +3495,7 @@ public class TimeLineView extends Composite implements Observer {
             mScaleInfo.setMaxVal(tMaxNew);
 			mScaleInfo.computeTicks(false);
             mSurface.redraw();
-			if (logsAvailable) {
+			if (combinedReader.isLogReaderAvailable()) {
 				mLogSurface.redraw();
 			}
         }
@@ -3586,7 +3592,7 @@ public class TimeLineView extends Composite implements Observer {
                 getDisplay().timerExec(ZOOM_TIMER_INTERVAL, mZoomAnimator);
             }
             redraw();
-			if (logsAvailable) {
+			if (combinedReader.isLogReaderAvailable()) {
 				mLogSurface.redraw();
 			}
         }

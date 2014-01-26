@@ -25,6 +25,7 @@ public class SelectionController extends Observable {
 	private ArrayList<Selection> mSelections;
 	private List<IntervalSelection> mIntervals;
 	private List<Long> mTimestamps;
+	private List<Long> mInsideTimestamps;
 
     public void change(ArrayList<Selection> selections, Object arg) {
         this.mSelections = selections;
@@ -39,8 +40,14 @@ public class SelectionController extends Observable {
 		notifyObservers(arg);
 	}
 
-	public void changeTimestamps(ArrayList<Long> timestamps, Object arg) {
+	public void changeTimestamps(List<Long> timestamps, Object arg) {
 		this.mTimestamps = timestamps;
+		setChanged();
+		notifyObservers(arg);
+	}
+	
+	public void changeInsideTimestamps(List<Long> insideTimestamps, Object arg) {
+		this.mInsideTimestamps = insideTimestamps;
 		setChanged();
 		notifyObservers(arg);
 	}
@@ -55,5 +62,9 @@ public class SelectionController extends Observable {
 
 	public List<Long> getTimestamps() {
 		return mTimestamps;
+	}
+	
+	public List<Long> getInsideTimestamps() {
+		return mInsideTimestamps;
 	}
 }

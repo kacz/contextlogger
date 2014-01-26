@@ -67,6 +67,8 @@ public class DmTraceReader extends TraceReader {
     private MethodData mContextSwitch;
     private int mRecordSize;
     private ClockSource mClockSource;
+    
+    private ArrayList<TimeLineView.Record> mThreadTimeRecords;
 
     // A regex for matching the thread "id name" lines in the .key file
     private static final Pattern mIdNamePattern = Pattern.compile("(\\d+)\t(.*)");  //$NON-NLS-1$
@@ -616,6 +618,10 @@ public class DmTraceReader extends TraceReader {
      */
     @Override
     public ArrayList<TimeLineView.Record> getThreadTimeRecords() {
+    	if(mThreadTimeRecords != null) {
+    		return mThreadTimeRecords;
+    	}
+    	
         TimeLineView.Record record;
         ArrayList<TimeLineView.Record> timeRecs;
         timeRecs = new ArrayList<TimeLineView.Record>();
@@ -638,6 +644,8 @@ public class DmTraceReader extends TraceReader {
             dumpTimeRecs(timeRecs);
             System.exit(0);
         }
+        
+        mThreadTimeRecords = timeRecs;
         return timeRecs;
     }
 
