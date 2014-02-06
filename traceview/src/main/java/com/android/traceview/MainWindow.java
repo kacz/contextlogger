@@ -135,7 +135,7 @@ public class MainWindow extends ApplicationWindow {
 
 			// Create the profile view
 			ProblemView problemView = new ProblemView(tabFolder, mReader,
-					mLogReader, selectionController);
+					mLogReader, selectionController, getShell());
 
 			tabItem = new TabItem(tabFolder, SWT.NULL);
 			tabItem.setText("ProblemView");

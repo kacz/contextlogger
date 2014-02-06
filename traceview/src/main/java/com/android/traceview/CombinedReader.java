@@ -1,5 +1,7 @@
 package com.android.traceview;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,6 +35,50 @@ public class CombinedReader {
 		}
 		
 		mProfileProvider = traceReader.getProfileProvider();
+	}
+	
+	public CombinedReader(String baseTraceName) throws IllegalArgumentException {
+		if(baseTraceName == null) {
+			throw new IllegalArgumentException();
+		}
+		
+		String traceName = baseTraceName;
+        File file = new File(traceName);
+        if (file.exists() && file.isDirectory()) {
+            throw new IllegalArgumentException();
+        } else {
+            // If the filename as given doesn't exist...
+            if (!file.exists()) {
+                // Try appending .trace.
+                if (new File(traceName + ".trace").exists()) {
+                    traceName = traceName + ".trace";
+                // Otherwise, give up.
+                } else {
+                	throw new IllegalArgumentException();
+                }
+            }
+			if (baseTraceName.contains(".trace")) {
+				baseTraceName = baseTraceName.replace(".trace", "");
+			}
+
+			String contextLogName = baseTraceName + ".clog";
+            try {
+            	mTraceReader = new DmTraceReader(traceName, false);
+            } catch (IOException e) {
+            	throw new IllegalArgumentException();
+            }
+			if (new File(contextLogName).exists()) {
+				try {
+					mLogReader = new ContextLogReader(contextLogName);
+				} catch (IOException e) {
+					throw new IllegalArgumentException();
+				}
+			}
+        }
+
+        mTraceReader.getTraceUnits().setTimeScale(TraceUnits.TimeScale.MilliSeconds);
+        mProfileProvider = mTraceReader.getProfileProvider();
+        mLogReaderAvailable = true;
 	}
 	
 	/**
